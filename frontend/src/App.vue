@@ -2,7 +2,21 @@
   <div :class="{ 'min-h-screen p-6': true, 'bg-gray-50 text-gray-800': !isDark, 'bg-gray-900 text-gray-100': isDark }">
     <div class="max-w-4xl mx-auto">
       <header class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-semibold">Shisha Tracker</h1>
+        <div class="flex items-center gap-4">
+          <h1 class="text-2xl font-semibold">Shisha Tracker</h1>
+          <div class="relative">
+            <input
+              v-model="searchQuery"
+              placeholder="Suche Name, Geschmack oder Hersteller..."
+              class="p-2 border rounded pl-8 text-sm w-64"
+              aria-label="Suche"
+            />
+            <svg class="w-4 h-4 absolute left-2 top-2 text-gray-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
         <div class="flex items-center gap-2">
           <button @click="toggleDark" :class="['px-3 py-1 border rounded text-sm', isDark ? 'btn-secondary' : 'btn']">
             {{ isDark ? 'Light' : 'Dark' }} Mode
@@ -24,7 +38,7 @@
 
       <section>
         <ul class="grid gap-4">
-          <li v-for="s in shishas" :key="s.id" :class="['p-4 rounded shadow', isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900']">
+          <li v-for="s in filteredShishas" :key="s.id" :class="['p-4 rounded shadow', isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900']">
             <div class="flex justify-between items-start">
               <div>
                 <h2 class="font-medium text-lg">{{ s.name }}</h2>
@@ -122,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import StarRating from './components/StarRating.vue'
  
 interface Manufacturer { id: number; name: string }
@@ -140,7 +154,41 @@ const ratingInputs = ref<Record<number, number>>({})
 const commentText = ref<Record<number, string>>({})
 const commentUser = ref<Record<number, string>>({})
 const isDark = ref<boolean>(false)
- 
+const searchQuery = ref<string>('')
+
+const filteredShishas = computed(() => {
+  const q = (searchQuery.value || '').toLowerCase().trim()
+  if (!q) return shishas.value
+  return shishas.value.filter((s: Shisha) => {
+    const name = (s.name || '').toLowerCase()
+    const flavor = (s.flavor || '').toLowerCase()
+    const manu = (s.manufacturer?.name || '').toLowerCase()
+    return name.includes(q) || flavor.includes(q) || manu.includes(q)
+  })
+})
+
+function flavorEmoji(flavor?: string) {
+  if (!flavor) return ''
+  const f = flavor.toLowerCase()
+  const map: Record<string,string> = {
+    'mint': '🌿','minze':'🌿',
+    'apple': '🍎','apfel':'🍎',
+    'grape': '🍇','traube':'🍇',
+    'lemon': '🍋','zitrone':'🍋',
+    'watermelon':'🍉','wassermelone':'🍉',
+    'peach':'🍑','pfirsich':'🍑',
+    'cola':'🥤',
+    'vanilla':'🍨','vanille':'🍨',
+    'coffee':'☕','kaffee':'☕',
+    'berry':'🫐','beere':'🫐',
+    'orange':'🍊'
+  }
+  for (const k of Object.keys(map)) {
+    if (f.includes(k)) return map[k]
+  }
+  return ''
+}
+
 function formatTime(ts?: number) {
   if (!ts) return ''
   return new Date(ts * 1000).toLocaleString()
