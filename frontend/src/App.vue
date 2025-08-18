@@ -120,6 +120,9 @@
       </section>
 
       <footer class="mt-6">
+        <div :class="['max-w-4xl mx-auto text-center mb-1', isDark ? 'text-gray-300 font-semibold text-sm' : 'text-gray-600 font-semibold text-sm']">
+          Pod: {{ runtimeInfo.pod || 'local' }} — Host: {{ (runtimeInfo.hostname || '').slice(0,12) }} — Container: {{ (runtimeInfo.container_id || runtimeInfo.hostname || '').slice(0,12) }}
+        </div>
         <div
           :class="['max-w-4xl mx-auto text-center text-sm', isDark ? 'footer-link footer-glow' : 'text-gray-500 opacity-80']"
           :role="isDark ? 'link' : undefined"
@@ -155,6 +158,7 @@ const commentText = ref<Record<number, string>>({})
 const commentUser = ref<Record<number, string>>({})
 const isDark = ref<boolean>(false)
 const searchQuery = ref<string>('')
+const runtimeInfo = ref<{ pod?: string; hostname?: string; container_id?: string }>({})
 
 const filteredShishas = computed(() => {
   const q = (searchQuery.value || '').toLowerCase().trim()
@@ -347,11 +351,22 @@ function toggleDark() {
   else document.documentElement.classList.remove('dark')
 }
  
-onMounted(() => {
+onMounted(async () => {
   const stored = (typeof localStorage !== 'undefined' && localStorage.getItem('shisha-dark')) || '0'
   isDark.value = stored === '1'
   if (isDark.value) document.documentElement.classList.add('dark')
-  load()
+
+  // fetch runtime info (pod name / hostname) from backend
+  try {
+    const r = await fetch(`${API}/info`)
+    if (r.ok) {
+      runtimeInfo.value = await r.json()
+      // debug: log runtime info to console for easier troubleshooting
+      console.log('runtimeInfo', runtimeInfo.value)
+    }
+  } catch (_) {}
+
+  await load()
 })
 </script>
  

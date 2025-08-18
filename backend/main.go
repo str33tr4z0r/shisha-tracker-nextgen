@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -92,13 +93,14 @@ func main() {
 		api.GET("/healthz", healthHandler)
 		api.GET("/ready", readyHandler)
 		api.GET("/metrics", metricsHandler)
-
+		api.GET("/info", infoHandler)
+	
 		api.GET("/shishas", listShishas)
 		api.POST("/shishas", createShisha)
 		api.GET("/shishas/:id", getShisha)
 		api.PUT("/shishas/:id", updateShisha)
 		api.DELETE("/shishas/:id", deleteShisha)
-
+	
 		api.POST("/shishas/:id/ratings", addRating)
 		api.POST("/shishas/:id/comments", addComment)
 	}
@@ -121,6 +123,31 @@ func readyHandler(c *gin.Context) {
 
 func metricsHandler(c *gin.Context) {
 	c.String(http.StatusOK, "# shisha mock metrics\nshisha_requests_total 0\n")
+}
+
+func infoHandler(c *gin.Context) {
+	// prefer POD_NAME (set via Downward API in Kubernetes), fallback to hostname (container id)
+	pod := os.Getenv("POD_NAME")
+	hostname, _ := os.Hostname()
+	if pod == "" {
+		pod = hostname
+	}
+
+	// Try to read container id from /proc/self/hostname (works in many container runtimes).
+	// Fall back to os.Hostname() if reading fails.
+	containerID := ""
+	if b, err := os.ReadFile("/proc/self/hostname"); err == nil {
+		containerID = strings.TrimSpace(string(b))
+	}
+	if containerID == "" {
+		containerID = hostname
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"pod":          pod,
+		"hostname":     hostname,
+		"container_id": containerID,
+	})
 }
 
 func listShishas(c *gin.Context) {
