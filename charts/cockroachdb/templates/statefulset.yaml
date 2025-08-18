@@ -1,0 +1,147 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cockroachdb.fullname" . }}-headless
+  labels:
+    app: {{ include "cockroachdb.name" . }}
+spec:
+  clusterIP: None
+  ports:
+    - name: grpc
+      port: 26257
+      protocol: TCP
+      targetPort: 26257
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: {{ include "cockroachdb.name" . }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "cockroachdb.fullname" . }}
+  labels:
+    app: {{ include "cockroachdb.name" . }}
+spec:
+  serviceName: {{ include "cockroachdb.fullname" . }}-headless
+  replicas: {{ .Values.replicaCount | default 3 }}
+  selector:
+    matchLabels:
+      app: {{ include "cockroachdb.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "cockroachdb.name" . }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 60 }}
+      dnsPolicy: ClusterFirst
+      # Pod anti-affinity for spreading across nodes
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - {{ include "cockroachdb.name" . }}
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: cockroachdb
+          image: "{{ .Values.image.repository | default \"cockroachdb/cockroach\" }}:{{ .Values.image.tag | default \"latest\" }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          args:
+            - start
+            - --join={{ include "cockroachdb.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:26257
+            - --certs-dir=/cockroach-certs
+            - --store=/cockroach-data
+            - --advertise-host=$(POD_IP)
+          ports:
+            - name: grpc
+              containerPort: 26257
+            - name: http
+              containerPort: 8080
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: COCKROACH_DATABASE
+              value: {{ default "shisha" .Values.env.database.name | quote }}
+          readinessProbe:
+            httpGet:
+              path: /health?ready=1
+              port: http
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds | default 5 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds | default 30 }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds | default 30 }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds | default 5 }}
+          volumeMounts:
+            - name: cockroach-data
+              mountPath: /cockroach-data
+            - name: cockroach-certs
+              mountPath: /cockroach-certs
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      # Optionally add an initContainer for certificate bootstrap (placeholder)
+      initContainers:
+        - name: cert-bootstrap
+          image: {{ .Values.init.image | default "\"alpine:3.18\"" }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Placeholder: create certs or copy from secret into /cockroach-certs
+              mkdir -p /cockroach-certs || true
+              echo "certs placeholder" > /cockroach-certs/README
+          volumeMounts:
+            - name: cockroach-certs
+              mountPath: /cockroach-certs
+      volumes: []
+  volumeClaimTemplates:
+    - metadata:
+        name: cockroach-data
+        annotations:
+          volume.beta.kubernetes.io/storage-class: {{ .Values.persistence.storageClass | default "\"standard\"" }}
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | default "10Gi" }}
+---
+# Optional PVC for certs (emptyDir by default; uncomment if you prefer PVC-backed certs)
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: cockroach-certs
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 1Mi
+---
+# Notes:
+# - This template is a scaffold. You should create charts/cockroachdb/values.yaml with at least:
+#     replicaCount: 3
+#     image:
+#       repository: cockroachdb/cockroach
+#       tag: "v23.2.5"   # example
+#     persistence:
+#       size: 10Gi
+#       storageClass: standard
+#     env:
+#       database:
+#         name: shisha
+# - TLS cert management is left as a placeholder: integrate cert-manager or mount secrets at /cockroach-certs.
+# - The --join arg constructs a DNS name for statefulset peers; adjust according to your cluster DNS.

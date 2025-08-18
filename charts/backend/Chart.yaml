@@ -1,0 +1,9 @@
+apiVersion: v2
+name: shisha-backend
+description: Helm chart for Shisha Tracker backend (Go + Gin + GORM)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - shisha
+  - backend

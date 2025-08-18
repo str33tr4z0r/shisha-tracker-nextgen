@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: shisha-cockroachdb
+  labels:
+    app: shisha-cockroachdb
+spec:
+  ports:
+    - name: grpc
+      port: 26257
+      targetPort: 26257
+  clusterIP: None
+  selector:
+    app: shisha-cockroachdb
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: shisha-cockroachdb
+  labels:
+    app: shisha-cockroachdb
+spec:
+  serviceName: shisha-cockroachdb
+  replicas: 4
+  selector:
+    matchLabels:
+      app: shisha-cockroachdb
+  template:
+    metadata:
+      labels:
+        app: shisha-cockroachdb
+    spec:
+      containers:
+        - name: cockroach
+          image: cockroachdb/cockroach:v23.2.5
+          args:
+            - start
+            - --insecure
+            - --join=shisha-cockroachdb-0.shisha-cockroachdb,shisha-cockroachdb-1.shisha-cockroachdb,shisha-cockroachdb-2.shisha-cockroachdb,shisha-cockroachdb-3.shisha-cockroachdb
+          ports:
+            - name: grpc
+              containerPort: 26257
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            exec:
+              command: ["sh", "-ec", "cockroach node status --insecure --host=localhost | grep -q \"is_live\" || exit 1"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["sh", "-ec", "cockroach node status --insecure --host=localhost | grep -q \"is_live\" || exit 1"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          volumeMounts:
+            - name: data
+              mountPath: /cockroach/cockroach-data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi

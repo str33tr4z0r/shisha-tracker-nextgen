@@ -1,0 +1,52 @@
+services:
+  cockroachdb:
+    image: cockroachdb/cockroach:v23.2.5
+    command: ["start-single-node", "--insecure"]
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend-mock:
+    build:
+      context: ./backend/mock
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=cockroachdb
+      - DB_PORT=26257
+      - DB_NAME=shisha
+    ports:
+      - "8080:8080"
+    depends_on:
+      cockroachdb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - VITE_API_URL=http://backend-mock:8080
+    ports:
+      - "3000:80"
+    depends_on:
+      backend-mock:
+        condition: service_healthy
+
+volumes:
+  cockroach-data:
+
+networks:
+  default:
+    driver: bridge

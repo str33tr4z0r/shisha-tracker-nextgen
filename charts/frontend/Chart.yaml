@@ -1,0 +1,9 @@
+apiVersion: v2
+name: shisha-frontend
+description: Helm chart for Shisha Tracker frontend (Vue + Vite + Tailwind)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - shisha
+  - frontend

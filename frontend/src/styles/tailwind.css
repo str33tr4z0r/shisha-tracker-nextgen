@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS variables for theming --------------------------------------------------
+   Dark-mode controlled by adding the `dark` class on <html> (tailwind config
+   uses `darkMode: 'class'`). Variables below provide consistent colors for
+   components (buttons, cards, stars, badges) in light and dark modes.
+------------------------------------------------------------------------------*/
+:root{
+  --bg: #f8fafc;           /* gray-50 */
+  --surface: #ffffff;      /* white */
+  --text: #111827;         /* gray-900 */
+  --muted: #6b7280;        /* gray-500 */
+  --accent: #2563eb;       /* blue-600 */
+  --btn-bg: #2563eb;
+  --btn-fg: #ffffff;
+  --star-color: #f59e0b;   /* amber-500 */
+  --star-unfilled: #e5e7eb;/* gray-200 */
+  --card-shadow: 0 1px 2px rgba(16,24,40,0.04);
+}
+
+/* Dark mode overrides (set .dark on html) */
+.dark{
+  --bg: #0b1220;           /* near black-blue */
+  --surface: #111827;      /* gray-900 */
+  --text: #f3f4f6;         /* gray-100 */
+  --muted: #9ca3af;        /* gray-400 */
+  --accent: #60a5fa;       /* blue-400 (brighter on dark) */
+  --btn-bg: #2563eb;
+  --btn-fg: #0b1220;
+  --star-color: #f59e0b;
+  --star-unfilled: #374151;/* dark gray for unfilled stars */
+  --card-shadow: 0 6px 18px rgba(2,6,23,0.6);
+}
+
+/* Apply theme variables to base elements */
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Card surface utility */
+.card {
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  border-radius: 0.5rem;
+}
+
+/* Button utilities */
+.btn {
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+}
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.dark .btn-secondary {
+  border-color: rgba(255,255,255,0.06);
+}
+
+/* Focus styles to ensure visibility in dark mode */
+:focus {
+  outline: 2px solid rgba(99,102,241,0.6);
+  outline-offset: 2px;
+}
+
+/* Star rating helpers (used by StarRating component) */
+.star {
+  color: var(--star-color);
+  -webkit-text-fill-color: transparent; /* gradient text trick */
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.star-unfilled {
+  color: var(--star-unfilled);
+}
+
+/* Component helpers */
+.component-surface { background: var(--surface); color: var(--text); }
+.component-muted   { color: var(--muted); }
+
+/* Details/summary visibility */
+details summary {
+  color: var(--accent);
+  cursor: pointer;
+}
+details[open] summary {
+  color: var(--text);
+}
