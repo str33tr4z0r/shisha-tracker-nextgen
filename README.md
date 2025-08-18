@@ -61,3 +61,74 @@ Hinweise zum Helm-Chart
 
 Kontakt & Weiteres
 - README: Weitere Details, Migrationsskripte und API-Dokumentation folgen in [`backend/README.md`](backend/README.md:1).# shisha-tracker-nextgen
+
+## Manuelles Kubernetes‑Deployment (klassische YAML) — Reihenfolge und Befehle
+
+Wenn du statt Helm die klassischen Kubernetes‑YAMLs verwenden möchtest, ist die empfohlene Reihenfolge und die minimalen Schritte wie folgt:
+
+1) Namespace & Secrets
+```bash
+kubectl apply -f [`infra/k8s/namespace.yaml`](infra/k8s/namespace.yaml:1)
+kubectl apply -f [`infra/k8s/secrets.yaml`](infra/k8s/secrets.yaml:1)
+```
+
+2) Datenbank (CockroachDB)
+- Zuerst die StatefulSet/Service/YAMLs für CockroachDB anwenden und sicherstellen, dass PVCs gebunden sind und alle Pods READY melden:
+```bash
+kubectl apply -f [`infra/k8s/cockroachdb-service.yaml`](infra/k8s/cockroachdb-service.yaml:1)
+kubectl apply -f [`infra/k8s/cockroachdb-statefulset.yaml`](infra/k8s/cockroachdb-statefulset.yaml:1)
+kubectl -n shisha rollout status sts/cockroachdb --watch
+kubectl -n shisha get pvc
+```
+- Optional: Migrations/Initialisierung (Job) nur ausführen, wenn DB bereit ist:
+```bash
+kubectl apply -f [`infra/k8s/migration-job.yaml`](infra/k8s/migration-job.yaml:1)
+kubectl -n shisha wait --for=condition=complete job/migrations --timeout=120s
+```
+
+3) Backend
+- Backend‑Deployment + Service + Config (Env‑Vars für DB) anwenden:
+```bash
+kubectl apply -f [`infra/k8s/backend-configmap.yaml`](infra/k8s/backend-configmap.yaml:1)
+kubectl apply -f [`infra/k8s/backend-deployment.yaml`](infra/k8s/backend-deployment.yaml:1)
+kubectl apply -f [`infra/k8s/backend-service.yaml`](infra/k8s/backend-service.yaml:1)
+kubectl -n shisha rollout status deploy/shisha-backend --watch
+```
+- Prüfen: Liveness/Readiness Endpunkte:
+```bash
+kubectl -n shisha exec $(kubectl -n shisha get pod -l app=shisha-backend -o jsonpath='{.items[0].metadata.name}') -- curl -sS http://localhost:8080/api/healthz
+```
+
+4) Frontend
+- Frontend‑Deployment + Service + Ingress anwenden:
+```bash
+kubectl apply -f [`infra/k8s/frontend-deployment.yaml`](infra/k8s/frontend-deployment.yaml:1)
+kubectl apply -f [`infra/k8s/frontend-service.yaml`](infra/k8s/frontend-service.yaml:1)
+kubectl apply -f [`infra/k8s/ingress.yaml`](infra/k8s/ingress.yaml:1)   # falls Ingress verwendet wird
+kubectl -n shisha rollout status deploy/shisha-frontend --watch
+```
+
+5) Verifikation
+- Dienste prüfen:
+```bash
+kubectl -n shisha get pods,svc,ingress
+# Backend-API testen (falls Service NodePort/ClusterIP + port-forward)
+kubectl -n shisha port-forward svc/shisha-backend 8080:8080 &
+curl -sS http://localhost:8080/api/healthz
+curl -sS http://localhost:8080/api/shishas
+```
+
+Tipps / Reihenfolge‑Rationale
+- Datenbank zuerst: Backend hängt von der DB‑Verbindung ab; wenn DB nicht verfügbar ist, bleiben Backend‑Pods in Restart/Crashloop.
+- Migrationen nach erreichbarer DB: Führe Migrationsjobs erst aus, wenn die StatefulSet‑Pods READY sind.
+- Backend vor Frontend: Frontend ist in der Regel nur UI; es erwartet eine erreichbare API. Wenn Backend noch down ist, wird die UI fehlschlagen.
+- Secrets & Configs vorher erstellen: damit Deployments beim Start die richtigen ENV‑Variablen lesen.
+- Warte‑/Rollback‑Befehle: verwende `kubectl rollout status` und `kubectl rollout undo` für Deployments.
+
+Beispiel‑Reihenfolge (Kurzfassung)
+1. [`infra/k8s/namespace.yaml`](infra/k8s/namespace.yaml:1)  
+2. [`infra/k8s/secrets.yaml`](infra/k8s/secrets.yaml:1)  
+3. [`infra/k8s/cockroachdb-statefulset.yaml`](infra/k8s/cockroachdb-statefulset.yaml:1) + Service  
+4. [`infra/k8s/migration-job.yaml`](infra/k8s/migration-job.yaml:1) (optional)  
+5. [`infra/k8s/backend-deployment.yaml`](infra/k8s/backend-deployment.yaml:1) + Service  
+6. [`infra/k8s/frontend-deployment.yaml`](infra/k8s/frontend-deployment.yaml:1) + Service + [`infra/k8s/ingress.yaml`](infra/k8s/ingress.yaml:1)
