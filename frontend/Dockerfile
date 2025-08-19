@@ -2,7 +2,12 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache git
 COPY package.json package-lock.json* ./
-RUN npm ci --prefer-offline --no-audit --progress=false || npm install --no-audit --progress=false
+ENV NPM_CONFIG_PRODUCTION=false
+RUN npm ci --include=dev --prefer-offline --no-audit --progress=false || npm install --include=dev --no-audit --progress=false
+# Diagnostic: list installed packages and inspect vite bin shim
+RUN ls -la node_modules || true
+RUN ls -la node_modules/vite || true
+RUN cat node_modules/.bin/vite || true
 COPY . .
 RUN npm run build
 

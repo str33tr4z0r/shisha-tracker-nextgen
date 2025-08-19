@@ -52,6 +52,7 @@ func main() {
 		api.GET("/ready", readyHandler)
 		api.GET("/metrics", metricsHandler)
 		api.GET("/info", infoHandler)
+		api.GET("/container-id", containerIDHandler)
 	
 		api.GET("/shishas", listShishas)
 		api.POST("/shishas", createShisha)
@@ -105,6 +106,19 @@ func infoHandler(c *gin.Context) {
 		"hostname":     hostname,
 		"container_id": containerID,
 	})
+}
+
+func containerIDHandler(c *gin.Context) {
+	// return only the container id (reads /proc/self/hostname where available)
+	hostname, _ := os.Hostname()
+	containerID := ""
+	if b, err := os.ReadFile("/proc/self/hostname"); err == nil {
+		containerID = strings.TrimSpace(string(b))
+	}
+	if containerID == "" {
+		containerID = hostname
+	}
+	c.JSON(http.StatusOK, gin.H{"container_id": containerID})
 }
 
 func listShishas(c *gin.Context) {

@@ -121,8 +121,13 @@
 
       <footer class="mt-6">
         <div :class="['max-w-4xl mx-auto text-center mb-1', isDark ? 'text-gray-300 font-semibold text-sm' : 'text-gray-600 font-semibold text-sm']">
-          Pod: {{ runtimeInfo.pod || 'local' }} — Host: {{ (runtimeInfo.hostname || '').slice(0,12) }} — Container: {{ (runtimeInfo.container_id || runtimeInfo.hostname || '').slice(0,12) }}
+          Pod: {{ runtimeInfo.pod || 'local' }} — Host: {{ (runtimeInfo.hostname || '').slice(0,12) }}
         </div>
+
+        <div :class="['max-w-4xl mx-auto text-center mb-1 text-sm', isDark ? 'text-gray-300' : 'text-gray-600']">
+          <div><strong>Backend Container:</strong> {{ (backendContainerID || runtimeInfo.container_id || runtimeInfo.hostname || '').slice ? ( (backendContainerID || runtimeInfo.container_id || runtimeInfo.hostname || '').slice(0,12) ) : (backendContainerID || runtimeInfo.container_id || runtimeInfo.hostname || '') }}</div>
+        </div>
+
         <div
           :class="['max-w-4xl mx-auto text-center text-sm', isDark ? 'footer-link footer-glow' : 'text-gray-500 opacity-80']"
           :role="isDark ? 'link' : undefined"
@@ -159,6 +164,7 @@ const commentUser = ref<Record<number, string>>({})
 const isDark = ref<boolean>(false)
 const searchQuery = ref<string>('')
 const runtimeInfo = ref<{ pod?: string; hostname?: string; container_id?: string }>({})
+const backendContainerID = ref<string>('')
 
 const filteredShishas = computed(() => {
   const q = (searchQuery.value || '').toLowerCase().trim()
@@ -365,6 +371,20 @@ onMounted(async () => {
       console.log('runtimeInfo', runtimeInfo.value)
     }
   } catch (_) {}
+
+  // fetch backend container id explicitly (lightweight endpoint)
+  try {
+    const r2 = await fetch(`${API}/container-id`)
+    if (r2.ok) {
+      const body = await r2.json()
+      backendContainerID.value = body?.container_id || ''
+      // keep runtimeInfo.container_id in sync if empty
+      if (!runtimeInfo.value.container_id) runtimeInfo.value.container_id = backendContainerID.value
+      console.log('backendContainerID', backendContainerID.value)
+    }
+  } catch (e) {
+    console.warn('failed to fetch backend container-id', e)
+  }
 
   await load()
 })
