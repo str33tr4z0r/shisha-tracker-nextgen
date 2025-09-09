@@ -7,7 +7,7 @@ Projektstruktur
 - [`frontend`](frontend:1): Vue 3 + Vite + Tailwind
 - [`backend`](backend:1): Go (Gin + GORM)
 - [`charts`](charts:1): Helm-Charts für frontend, backend und cockroachdb
-- [`infra/k8s`](infra/k8s:1): zusätzliche Kubernetes-Infos
+- [`k8s`](k8s:1): zusätzliche Kubernetes-Infos
 
 Voraussetzungen
 - Kubernetes Cluster (multinode) mit StorageClass
@@ -50,7 +50,7 @@ HA & Best Practices
 
 Storage & Backups
 - PVCs werden per Chart angelegt; verwende eine StorageClass mit Replikation (z. B. provisioned by cloud provider).
-- Für Backups nutze CockroachDB native Backups oder Velero; Backup-Anleitungen kommen später in [`infra/k8s/backup`](infra/k8s/backup:1).
+- Für Backups nutze CockroachDB native Backups oder Velero; Backup-Anleitungen kommen später in [`k8s/backup`](k8s/backup:1).
 
 Debugging / Lokale Entwicklung
 - Für lokale Tests kann ein einfaches `docker-compose.yml` genutzt werden (nicht für Produktion). Dieser Inhalt wird später unter [`docker-compose.yml`](docker-compose.yml:1) ergänzt.
@@ -68,30 +68,30 @@ Wenn du statt Helm die klassischen Kubernetes‑YAMLs verwenden möchtest, ist d
 
 1) Namespace & Secrets
 ```bash
-kubectl apply -f [`infra/k8s/namespace.yaml`](infra/k8s/namespace.yaml:1)
-kubectl apply -f [`infra/k8s/secrets.yaml`](infra/k8s/secrets.yaml:1)
+kubectl apply -f [`k8s/namespace.yaml`](k8s/namespace.yaml:1)
+kubectl apply -f [`k8s/secrets.yaml`](k8s/secrets.yaml:1)
 ```
 
 2) Datenbank (CockroachDB)
 - Zuerst die StatefulSet/Service/YAMLs für CockroachDB anwenden und sicherstellen, dass PVCs gebunden sind und alle Pods READY melden:
 ```bash
-kubectl apply -f [`infra/k8s/cockroachdb-service.yaml`](infra/k8s/cockroachdb-service.yaml:1)
-kubectl apply -f [`infra/k8s/cockroachdb-statefulset.yaml`](infra/k8s/cockroachdb-statefulset.yaml:1)
+kubectl apply -f [`k8s/cockroachdb-service.yaml`](k8s/cockroachdb-service.yaml:1)
+kubectl apply -f [`k8s/cockroachdb-statefulset.yaml`](k8s/cockroachdb-statefulset.yaml:1)
 kubectl -n shisha rollout status sts/cockroachdb --watch
 kubectl -n shisha get pvc
 ```
 - Optional: Migrations/Initialisierung (Job) nur ausführen, wenn DB bereit ist:
 ```bash
-kubectl apply -f [`infra/k8s/migration-job.yaml`](infra/k8s/migration-job.yaml:1)
+kubectl apply -f [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1)
 kubectl -n shisha wait --for=condition=complete job/migrations --timeout=120s
 ```
 
 3) Backend
 - Backend‑Deployment + Service + Config (Env‑Vars für DB) anwenden:
 ```bash
-kubectl apply -f [`infra/k8s/backend-configmap.yaml`](infra/k8s/backend-configmap.yaml:1)
-kubectl apply -f [`infra/k8s/backend-deployment.yaml`](infra/k8s/backend-deployment.yaml:1)
-kubectl apply -f [`infra/k8s/backend-service.yaml`](infra/k8s/backend-service.yaml:1)
+kubectl apply -f [`k8s/backend-configmap.yaml`](k8s/backend-configmap.yaml:1)
+kubectl apply -f [`k8s/backend-deployment.yaml`](k8s/backend-deployment.yaml:1)
+kubectl apply -f [`k8s/backend-service.yaml`](k8s/backend-service.yaml:1)
 kubectl -n shisha rollout status deploy/shisha-backend --watch
 ```
 - Prüfen: Liveness/Readiness Endpunkte:
@@ -102,9 +102,9 @@ kubectl -n shisha exec $(kubectl -n shisha get pod -l app=shisha-backend -o json
 4) Frontend
 - Frontend‑Deployment + Service + Ingress anwenden:
 ```bash
-kubectl apply -f [`infra/k8s/frontend-deployment.yaml`](infra/k8s/frontend-deployment.yaml:1)
-kubectl apply -f [`infra/k8s/frontend-service.yaml`](infra/k8s/frontend-service.yaml:1)
-kubectl apply -f [`infra/k8s/ingress.yaml`](infra/k8s/ingress.yaml:1)   # falls Ingress verwendet wird
+kubectl apply -f [`k8s/frontend-deployment.yaml`](k8s/frontend-deployment.yaml:1)
+kubectl apply -f [`k8s/frontend-service.yaml`](k8s/frontend-service.yaml:1)
+kubectl apply -f [`k8s/ingress.yaml`](k8s/ingress.yaml:1)   # falls Ingress verwendet wird
 kubectl -n shisha rollout status deploy/shisha-frontend --watch
 ```
 
@@ -126,9 +126,9 @@ Tipps / Reihenfolge‑Rationale
 - Warte‑/Rollback‑Befehle: verwende `kubectl rollout status` und `kubectl rollout undo` für Deployments.
 
 Beispiel‑Reihenfolge (Kurzfassung)
-1. [`infra/k8s/namespace.yaml`](infra/k8s/namespace.yaml:1)  
-2. [`infra/k8s/secrets.yaml`](infra/k8s/secrets.yaml:1)  
-3. [`infra/k8s/cockroachdb-statefulset.yaml`](infra/k8s/cockroachdb-statefulset.yaml:1) + Service  
-4. [`infra/k8s/migration-job.yaml`](infra/k8s/migration-job.yaml:1) (optional)  
-5. [`infra/k8s/backend-deployment.yaml`](infra/k8s/backend-deployment.yaml:1) + Service  
-6. [`infra/k8s/frontend-deployment.yaml`](infra/k8s/frontend-deployment.yaml:1) + Service + [`infra/k8s/ingress.yaml`](infra/k8s/ingress.yaml:1)
+1. [`k8s/namespace.yaml`](k8s/namespace.yaml:1)  
+2. [`k8s/secrets.yaml`](k8s/secrets.yaml:1)  
+3. [`k8s/cockroachdb-statefulset.yaml`](k8s/cockroachdb-statefulset.yaml:1) + Service  
+4. [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1) (optional)  
+5. [`k8s/backend-deployment.yaml`](k8s/backend-deployment.yaml:1) + Service  
+6. [`k8s/frontend-deployment.yaml`](k8s/frontend-deployment.yaml:1) + Service + [`k8s/ingress.yaml`](k8s/ingress.yaml:1)
