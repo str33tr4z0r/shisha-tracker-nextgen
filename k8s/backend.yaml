@@ -14,6 +14,10 @@ spec:
         labels:
           app: shisha-backend-mock
       spec:
+        initContainers:
+          - name: wait-for-cockroach
+            image: busybox
+            command: ['sh','-c','until nc -z shisha-cockroachdb 26257; do echo waiting for cockroach; sleep 2; done']
         containers:
           - name: backend-mock
             image: ricardohdc/shisha-tracker-nextgen-backend-mock:latest
