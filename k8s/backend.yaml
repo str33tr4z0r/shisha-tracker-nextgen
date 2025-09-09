@@ -18,6 +18,15 @@ spec:
           - name: backend-mock
             image: ricardohdc/shisha-tracker-nextgen-backend-mock:latest
             imagePullPolicy: IfNotPresent
+            env:
+              - name: DATABASE_HOST
+                value: "shisha-cockroachdb"
+              - name: DATABASE_PORT
+                value: "26257"
+              - name: DATABASE_USER
+                value: "root"
+              - name: DATABASE_NAME
+                value: "shisha"
             ports:
               - containerPort: 8080
                 name: http
