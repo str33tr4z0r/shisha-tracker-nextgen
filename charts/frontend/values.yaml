@@ -1,6 +1,7 @@
+fullnameOverride: shisha-frontend
 replicaCount: 3
 image:
-  repository: your-registry/shisha-frontend
+  repository: shisha-tracker-nextgen-frontend
   tag: "latest"
   pullPolicy: IfNotPresent
 imagePullSecrets:
@@ -27,18 +28,20 @@ livenessProbe:
   httpGet:
     path: /
     port: http
-  initialDelaySeconds: 10
-  periodSeconds: 10
+  initialDelaySeconds: 20
+  periodSeconds: 20
+  timeoutSeconds: 2
 readinessProbe:
   httpGet:
     path: /
     port: http
   initialDelaySeconds: 5
-  periodSeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 2
 rollingUpdate:
   maxUnavailable: 1
   maxSurge: 1
-
+ 
 # Horizontal Pod Autoscaler configuration for the frontend chart.
 # Enable/disable the HPA and set min/max replica bounds. When enabled,
 # charts/frontend/templates/hpa.yaml will create an HPA that targets the
@@ -49,5 +52,5 @@ hpa:
   maxReplicas: 5
   # target CPU utilization percent for scaling (used in metrics below)
   targetCPUUtilizationPercentage: 50
-
+ 
 resourcesEnabled: true

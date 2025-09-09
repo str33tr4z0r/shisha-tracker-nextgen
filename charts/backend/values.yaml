@@ -1,6 +1,7 @@
+fullnameOverride: shisha-backend-mock
 replicaCount: 3
 image:
-  repository: your-registry/shisha-backend
+  repository: shisha-tracker-nextgen-backend-mock
   tag: "latest"
   pullPolicy: IfNotPresent
 imagePullSecrets:
@@ -27,20 +28,20 @@ livenessProbe:
   httpGet:
     path: /api/healthz
     port: http
-  initialDelaySeconds: 10
-  periodSeconds: 10
+  initialDelaySeconds: 20
+  periodSeconds: 20
 readinessProbe:
   httpGet:
-    path: /api/ready
+    path: /api/healthz
     port: http
   initialDelaySeconds: 5
-  periodSeconds: 5
+  periodSeconds: 10
 metrics:
   enabled: true
   path: /api/metrics
 env:
   database:
-    host: cockroachdb-public
+    host: shisha-cockroachdb
     port: 26257
     name: shisha
     user: root
@@ -53,7 +54,7 @@ affinity:
             - key: app
               operator: In
               values:
-                - shisha-backend
+                - shisha-backend-mock
         topologyKey: kubernetes.io/hostname
 rollingUpdate:
   maxUnavailable: 1

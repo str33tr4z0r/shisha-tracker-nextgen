@@ -1,3 +1,4 @@
+fullnameOverride: shisha-cockroachdb
 replicaCount: 4
 image:
   repository: cockroachdb/cockroach
@@ -30,7 +31,7 @@ env:
     # DEV ONLY: plaintext root password used to populate the Secret on helm install.
     # Do NOT use this value in production; override via external Secret in CI/prod.
     rootPassword: "dev-9fG7rT3bZ2pQ5sLk1mN8vX4yR2u6w"
-publicServiceName: cockroachdb-public
+publicServiceName: shisha-cockroachdb
 init:
   image: alpine:3.18
 terminationGracePeriodSeconds: 60

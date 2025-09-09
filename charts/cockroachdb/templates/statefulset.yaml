@@ -54,9 +54,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           args:
             - start
+            - --insecure
             - --join={{ include "cockroachdb.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local:26257
-            - --certs-dir=/cockroach-certs
-            - --store=/cockroach-data
+            - --store=/cockroach/cockroach-data
             - --advertise-host=$(POD_IP)
           ports:
             - name: grpc
@@ -71,22 +71,20 @@ spec:
             - name: COCKROACH_DATABASE
               value: {{ default "shisha" .Values.env.database.name | quote }}
           readinessProbe:
-            httpGet:
-              path: /health?ready=1
-              port: http
+            exec:
+              command: ["sh", "-ec", "cockroach node status --insecure --host=localhost | grep -q \"is_live\" || exit 1"]
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds | default 10 }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds | default 10 }}
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds | default 5 }}
           livenessProbe:
-            httpGet:
-              path: /health
-              port: http
+            exec:
+              command: ["sh", "-ec", "cockroach node status --insecure --host=localhost | grep -q \"is_live\" || exit 1"]
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds | default 30 }}
             periodSeconds: {{ .Values.livenessProbe.periodSeconds | default 30 }}
             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds | default 5 }}
           volumeMounts:
-            - name: cockroach-data
-              mountPath: /cockroach-data
+            - name: data
+              mountPath: /cockroach/cockroach-data
             - name: cockroach-certs
               mountPath: /cockroach-certs
               readOnly: true
@@ -110,7 +108,7 @@ spec:
       volumes: []
   volumeClaimTemplates:
     - metadata:
-        name: cockroach-data
+        name: data
         annotations:
           volume.beta.kubernetes.io/storage-class: {{ .Values.persistence.storageClass | default "\"standard\"" }}
       spec:
