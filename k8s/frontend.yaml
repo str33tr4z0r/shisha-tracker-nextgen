@@ -21,6 +21,10 @@ spec:
             ports:
               - containerPort: 80
                 name: http
+            volumeMounts:
+              - name: nginx-conf
+                mountPath: /etc/nginx/conf.d
+                readOnly: true
             readinessProbe:
               httpGet:
                 path: /
@@ -35,6 +39,10 @@ spec:
               initialDelaySeconds: 20
               periodSeconds: 20
               timeoutSeconds: 2
+        volumes:
+          - name: nginx-conf
+            configMap:
+              name: shisha-frontend-nginx
 ---
 apiVersion: v1
 kind: Service
