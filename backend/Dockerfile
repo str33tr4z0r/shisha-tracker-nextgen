@@ -1,9 +1,14 @@
 FROM golang:1.20-alpine AS builder
 WORKDIR /src
 RUN apk add --no-cache git build-base
-COPY go.mod go.sum ./
-RUN go mod download
+# Copy go.mod first for caching, then copy sources so go can resolve module dependencies
+COPY go.mod ./
 COPY . .
+# Generate go.sum and download dependencies now that sources are present
+RUN go mod tidy
+# Vendor dependencies inside the builder and force the build to use the vendor folder
+RUN go mod vendor
+ENV GOFLAGS=-mod=vendor
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/server .
  
 FROM alpine:3.18
