@@ -27,6 +27,8 @@ spec:
                 value: "root"
               - name: DATABASE_NAME
                 value: "shisha"
+              - name: DATABASE_URL
+                value: "postgresql://root@shisha-cockroachdb:26257/shisha?sslmode=disable"
             ports:
               - containerPort: 8080
                 name: http
