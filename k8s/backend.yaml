@@ -22,6 +22,10 @@ spec:
           - name: backend-mock
             image: ricardohdc/shisha-tracker-nextgen-backend-mock:latest
             imagePullPolicy: IfNotPresent
+            command:
+              - "sh"
+              - "-c"
+              - "sleep 3600"
             env:
               - name: DATABASE_HOST
                 value: "shisha-cockroachdb"
