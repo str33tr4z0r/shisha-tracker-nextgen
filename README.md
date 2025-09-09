@@ -132,3 +132,21 @@ Beispiel‑Reihenfolge (Kurzfassung)
 4. [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1) (optional)  
 5. [`k8s/backend-deployment.yaml`](k8s/backend-deployment.yaml:1) + Service  
 6. [`k8s/frontend-deployment.yaml`](k8s/frontend-deployment.yaml:1) + Service + [`k8s/ingress.yaml`](k8s/ingress.yaml:1)
+
+
+## Recent changes
+
+Committed and pushed to remote: `8b00487`  
+Commit message: chore(k8s): add shisha namespace and align Helm charts with k8s manifests
+
+Files changed:
+- [`k8s/namespace.yaml`](k8s/namespace.yaml:1)
+- [`charts/backend/values.yaml`](charts/backend/values.yaml:1)
+- [`charts/frontend/values.yaml`](charts/frontend/values.yaml:1)
+- [`charts/cockroachdb/values.yaml`](charts/cockroachdb/values.yaml:1)
+- [`charts/cockroachdb/templates/statefulset.yaml`](charts/cockroachdb/templates/statefulset.yaml:51)
+
+Kurzbeschreibung:
+- Namespace `shisha` hinzugefügt.
+- Helm-Chart-Defaults (Names, Images, Probes, DB-Service) angepasst, damit gerenderte Templates mit den `k8s/`-Manifests übereinstimmen.
+- Änderungen sind committed und gepusht (Branch: main, Commit: `8b00487`).
