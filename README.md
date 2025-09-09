@@ -150,3 +150,12 @@ Kurzbeschreibung:
 - Namespace `shisha` hinzugefügt.
 - Helm-Chart-Defaults (Names, Images, Probes, DB-Service) angepasst, damit gerenderte Templates mit den `k8s/`-Manifests übereinstimmen.
 - Änderungen sind committed und gepusht (Branch: main, Commit: `8b00487`).
+
+
+## Recent changes (continued)
+
+Build fixes committed and pushed: `e057010`  
+Details:
+- Pinned `gorm.io/driver/postgres` to `v1.5.0` in [`backend/go.mod`](backend/go.mod:1).  
+- Updated [`backend/Dockerfile`](backend/Dockerfile:1) to vendor dependencies inside the builder and use the vendor folder during build.  
+- Result: Docker build for backend now completes successfully and image is built locally (`ricardohdc/shisha-tracker-nextgen:latest`).

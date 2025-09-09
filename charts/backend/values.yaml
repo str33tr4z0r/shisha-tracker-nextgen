@@ -1,7 +1,7 @@
 fullnameOverride: shisha-backend-mock
 replicaCount: 3
 image:
-  repository: shisha-tracker-nextgen-backend-mock
+  repository: ricardohdc/shisha-tracker-nextgen-backend-mock
   tag: "latest"
   pullPolicy: IfNotPresent
 imagePullSecrets:

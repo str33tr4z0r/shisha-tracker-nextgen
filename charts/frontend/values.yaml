@@ -1,7 +1,7 @@
 fullnameOverride: shisha-frontend
 replicaCount: 3
 image:
-  repository: shisha-tracker-nextgen-frontend
+  repository: ricardohdc/shisha-tracker-nextgen-frontend
   tag: "latest"
   pullPolicy: IfNotPresent
 imagePullSecrets:

@@ -16,7 +16,7 @@ spec:
       spec:
         containers:
           - name: backend-mock
-            image: shisha-tracker-nextgen-backend-mock:latest
+            image: ricardohdc/shisha-tracker-nextgen-backend-mock:latest
             imagePullPolicy: IfNotPresent
             ports:
               - containerPort: 8080
