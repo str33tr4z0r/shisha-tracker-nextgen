@@ -124,86 +124,6 @@ func main() {
 		log.Println("Skipping automatic migrations; to run set MIGRATE_ON_START=true or use --migrate-only")
 	}
 
-	// runMigrationsWithLeaderElection uses in-cluster k8s client to elect a leader and run db.AutoMigrate.
-	// It requires the pod to have RBAC permissions to use Lease objects in the namespace.
-	func runMigrationsWithLeaderElection() error {
-		// build in-cluster config
-		cfg, err := rest.InClusterConfig()
-		if err != nil {
-			return fmt.Errorf("failed to build in-cluster config: %w", err)
-		}
-		client, err := kubernetes.NewForConfig(cfg)
-		if err != nil {
-			return fmt.Errorf("failed to create k8s client: %w", err)
-		}
-
-		id := os.Getenv("POD_NAME")
-		if id == "" {
-			id, _ = os.Hostname()
-		}
-		namespace := os.Getenv("POD_NAMESPACE")
-		if namespace == "" {
-			namespace = "default"
-		}
-
-		lock := &resourcelock.LeaseLock{
-			LeaseMeta: v1.ObjectMeta{
-				Name:      "shisha-backend-migration-lock",
-				Namespace: namespace,
-			},
-			Client: client.CoordinationV1(),
-			LockConfig: resourcelock.ResourceLockConfig{
-				Identity: id,
-			},
-		}
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		leadCtx, leadCancel := context.WithCancel(ctx)
-		defer leadCancel()
-
-		leaderErrCh := make(chan error, 1)
-
-		go func() {
-			leaderelection.RunOrDie(leadCtx, leaderelection.LeaderElectionConfig{
-				Lock:          lock,
-				LeaseDuration: 15 * time.Second,
-				RenewDeadline: 10 * time.Second,
-				RetryPeriod:   2 * time.Second,
-				Callbacks: leaderelection.LeaderCallbacks{
-					OnStartedLeading: func(c context.Context) {
-						log.Printf("acquired leadership (%s), running migrations", id)
-						if err := db.AutoMigrate(&User{}, &Manufacturer{}, &Shisha{}, &Rating{}, &Comment{}); err != nil {
-							leaderErrCh <- fmt.Errorf("migration failed: %w", err)
-							// cancel to stop leader election loop
-							leadCancel()
-							return
-						}
-						log.Println("migrations applied by leader")
-						// done, cancel to exit leader election
-						leadCancel()
-					},
-					OnStoppedLeading: func() {
-						log.Printf("stopped leading (%s)", id)
-					},
-					OnNewLeader: func(identity string) {
-						if identity == id {
-							return
-						}
-						log.Printf("new leader elected: %s", identity)
-					},
-				},
-			})
-		}()
-
-		select {
-		case err := <-leaderErrCh:
-			return err
-		case <-time.After(60 * time.Second):
-			return fmt.Errorf("leader election timeout waiting for migrations")
-		}
-	}
 
 	r := gin.Default()
 	api := r.Group("/api")
@@ -230,7 +150,84 @@ func main() {
 	addr := fmt.Sprintf(":%s", port)
 	r.Run(addr)
 }
+	
+func runMigrationsWithLeaderElection() error {
+	// build in-cluster config
+	cfg, err := rest.InClusterConfig()
+	if err != nil {
+		return fmt.Errorf("failed to build in-cluster config: %w", err)
+	}
+	client, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to create k8s client: %w", err)
+	}
 
+	id := os.Getenv("POD_NAME")
+	if id == "" {
+		id, _ = os.Hostname()
+	}
+	namespace := os.Getenv("POD_NAMESPACE")
+	if namespace == "" {
+		namespace = "default"
+	}
+
+	lock := &resourcelock.LeaseLock{
+		LeaseMeta: v1.ObjectMeta{
+			Name:      "shisha-backend-migration-lock",
+			Namespace: namespace,
+		},
+		Client: client.CoordinationV1(),
+		LockConfig: resourcelock.ResourceLockConfig{
+			Identity: id,
+		},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	leadCtx, leadCancel := context.WithCancel(ctx)
+	defer leadCancel()
+
+	leaderErrCh := make(chan error, 1)
+
+	go func() {
+		leaderelection.RunOrDie(leadCtx, leaderelection.LeaderElectionConfig{
+			Lock:          lock,
+			LeaseDuration: 15 * time.Second,
+			RenewDeadline: 10 * time.Second,
+			RetryPeriod:   2 * time.Second,
+			Callbacks: leaderelection.LeaderCallbacks{
+				OnStartedLeading: func(c context.Context) {
+					log.Printf("acquired leadership (%s), running migrations", id)
+					if err := db.AutoMigrate(&User{}, &Manufacturer{}, &Shisha{}, &Rating{}, &Comment{}); err != nil {
+						leaderErrCh <- fmt.Errorf("migration failed: %w", err)
+						leadCancel()
+						return
+					}
+					log.Println("migrations applied by leader")
+					leadCancel()
+				},
+				OnStoppedLeading: func() {
+					log.Printf("stopped leading (%s)", id)
+				},
+				OnNewLeader: func(identity string) {
+					if identity == id {
+						return
+					}
+					log.Printf("new leader elected: %s", identity)
+				},
+			},
+		})
+	}()
+
+	select {
+	case err := <-leaderErrCh:
+		return err
+	case <-time.After(60 * time.Second):
+		return fmt.Errorf("leader election timeout waiting for migrations")
+	}
+}
+	
 func healthHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
