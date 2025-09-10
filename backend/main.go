@@ -1,16 +1,23 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 )
 
 type User struct {
@@ -50,6 +57,18 @@ type Comment struct {
 var db *gorm.DB
 
 func main() {
+	// CLI flags: --migrate-only to run migrations and exit, --migrate-on-start to run migrations on normal start
+	migrateOnly := false
+	migrateOnStartFlag := false
+	// simple flag parsing without importing flag package at top to avoid big changes
+	for _, a := range os.Args[1:] {
+		if a == "--migrate-only" {
+			migrateOnly = true
+		} else if a == "--migrate-on-start" {
+			migrateOnStartFlag = true
+		}
+	}
+
 	// allow full DATABASE_URL or construct DSN from individual env vars (used by Helm values)
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
@@ -82,14 +101,107 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
-	
-	// Respect SKIP_MIGRATIONS environment variable to allow manual control in Kubernetes
-	skip := strings.ToLower(os.Getenv("SKIP_MIGRATIONS"))
-	if skip == "true" || skip == "1" || skip == "yes" {
-		log.Println("Skipping automatic migrations because SKIP_MIGRATIONS is set")
-	} else {
+
+	// Migration control:
+	// - --migrate-only : run migrations and exit
+	// - --migrate-on-start or MIGRATE_ON_START=true : run migrations during normal start (use cautiously)
+	// By default migrations are skipped on normal start to allow safe rolling deploys.
+	if migrateOnly {
 		if err := db.AutoMigrate(&User{}, &Manufacturer{}, &Shisha{}, &Rating{}, &Comment{}); err != nil {
 			log.Fatalf("migration failed: %v", err)
+		}
+		log.Println("migrations applied (migrate-only); exiting")
+		return
+	}
+
+	migrateOnStartEnv := strings.ToLower(os.Getenv("MIGRATE_ON_START"))
+	if migrateOnStartFlag || migrateOnStartEnv == "true" {
+		// Use Kubernetes leader election so that only one pod runs migrations during rolling updates.
+		if err := runMigrationsWithLeaderElection(); err != nil {
+			log.Fatalf("migration (leader) failed: %v", err)
+		}
+	} else {
+		log.Println("Skipping automatic migrations; to run set MIGRATE_ON_START=true or use --migrate-only")
+	}
+
+	// runMigrationsWithLeaderElection uses in-cluster k8s client to elect a leader and run db.AutoMigrate.
+	// It requires the pod to have RBAC permissions to use Lease objects in the namespace.
+	func runMigrationsWithLeaderElection() error {
+		// build in-cluster config
+		cfg, err := rest.InClusterConfig()
+		if err != nil {
+			return fmt.Errorf("failed to build in-cluster config: %w", err)
+		}
+		client, err := kubernetes.NewForConfig(cfg)
+		if err != nil {
+			return fmt.Errorf("failed to create k8s client: %w", err)
+		}
+
+		id := os.Getenv("POD_NAME")
+		if id == "" {
+			id, _ = os.Hostname()
+		}
+		namespace := os.Getenv("POD_NAMESPACE")
+		if namespace == "" {
+			namespace = "default"
+		}
+
+		lock := &resourcelock.LeaseLock{
+			LeaseMeta: v1.ObjectMeta{
+				Name:      "shisha-backend-migration-lock",
+				Namespace: namespace,
+			},
+			Client: client.CoordinationV1(),
+			LockConfig: resourcelock.ResourceLockConfig{
+				Identity: id,
+			},
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		leadCtx, leadCancel := context.WithCancel(ctx)
+		defer leadCancel()
+
+		leaderErrCh := make(chan error, 1)
+
+		go func() {
+			leaderelection.RunOrDie(leadCtx, leaderelection.LeaderElectionConfig{
+				Lock:          lock,
+				LeaseDuration: 15 * time.Second,
+				RenewDeadline: 10 * time.Second,
+				RetryPeriod:   2 * time.Second,
+				Callbacks: leaderelection.LeaderCallbacks{
+					OnStartedLeading: func(c context.Context) {
+						log.Printf("acquired leadership (%s), running migrations", id)
+						if err := db.AutoMigrate(&User{}, &Manufacturer{}, &Shisha{}, &Rating{}, &Comment{}); err != nil {
+							leaderErrCh <- fmt.Errorf("migration failed: %w", err)
+							// cancel to stop leader election loop
+							leadCancel()
+							return
+						}
+						log.Println("migrations applied by leader")
+						// done, cancel to exit leader election
+						leadCancel()
+					},
+					OnStoppedLeading: func() {
+						log.Printf("stopped leading (%s)", id)
+					},
+					OnNewLeader: func(identity string) {
+						if identity == id {
+							return
+						}
+						log.Printf("new leader elected: %s", identity)
+					},
+				},
+			})
+		}()
+
+		select {
+		case err := <-leaderErrCh:
+			return err
+		case <-time.After(60 * time.Second):
+			return fmt.Errorf("leader election timeout waiting for migrations")
 		}
 	}
 
@@ -100,13 +212,13 @@ func main() {
 		api.GET("/ready", readyHandler)
 		api.GET("/metrics", metricsHandler)
 		api.GET("/info", infoHandler)
-	
+
 		api.GET("/shishas", listShishas)
 		api.POST("/shishas", createShisha)
 		api.GET("/shishas/:id", getShisha)
 		api.PUT("/shishas/:id", updateShisha)
 		api.DELETE("/shishas/:id", deleteShisha)
-	
+
 		api.POST("/shishas/:id/ratings", addRating)
 		api.POST("/shishas/:id/comments", addComment)
 	}

@@ -1,3 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shisha-backend-migrations
+data:
+  001_create_schema.sql: |
+    -- 001_create_schema.sql
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL
+    );
+    
+    CREATE TABLE IF NOT EXISTS manufacturers (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE
+    );
+    
+    CREATE TABLE IF NOT EXISTS shishas (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      flavor TEXT,
+      manufacturer_id INTEGER REFERENCES manufacturers(id) ON DELETE SET NULL
+    );
+    
+    CREATE TABLE IF NOT EXISTS ratings (
+      id SERIAL PRIMARY KEY,
+      shisha_id INTEGER REFERENCES shishas(id) ON DELETE CASCADE,
+      "user" TEXT,
+      score INTEGER
+    );
+    
+    CREATE TABLE IF NOT EXISTS comments (
+      id SERIAL PRIMARY KEY,
+      shisha_id INTEGER REFERENCES shishas(id) ON DELETE CASCADE,
+      "user" TEXT,
+      message TEXT
+    );
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -10,52 +49,72 @@ spec:
     matchLabels:
       app: shisha-backend-mock
   template:
-      metadata:
-        labels:
-          app: shisha-backend-mock
-      spec:
-        initContainers:
-          - name: wait-for-cockroach
-            image: busybox
-            command: ['sh','-c','until nc -z shisha-cockroachdb 26257; do echo waiting for cockroach; sleep 2; done']
-        containers:
-          - name: backend-mock
-            image: ricardohdc/shisha-tracker-nextgen-backend-mock:latest
-            imagePullPolicy: IfNotPresent
-            command:
-              - "sh"
-              - "-c"
-              - "sleep 3600"
-            env:
-              - name: DATABASE_HOST
-                value: "shisha-cockroachdb"
-              - name: DATABASE_PORT
-                value: "26257"
-              - name: DATABASE_USER
-                value: "root"
-              - name: DATABASE_NAME
-                value: "shisha"
-              - name: DATABASE_URL
-                value: "postgresql://root@shisha-cockroachdb:26257/shisha?sslmode=disable"
-              - name: SKIP_MIGRATIONS
-                value: "true"
-            ports:
-              - containerPort: 8080
-                name: http
-            readinessProbe:
-              httpGet:
-                path: /api/healthz
-                port: http
-              initialDelaySeconds: 5
-              periodSeconds: 10
-              timeoutSeconds: 2
-            livenessProbe:
-              httpGet:
-                path: /api/healthz
-                port: http
-              initialDelaySeconds: 20
-              periodSeconds: 20
-              timeoutSeconds: 2
+    metadata:
+      labels:
+        app: shisha-backend-mock
+    spec:
+      initContainers:
+        - name: wait-for-cockroach
+          image: busybox
+          command: ['sh','-c','until nc -z shisha-cockroachdb 26257; do echo waiting for cockroach; sleep 2; done']
+        - name: run-migrations
+          image: postgres:15
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://root@shisha-cockroachdb:26257/shisha?sslmode=disable"
+          command:
+            - "sh"
+            - "-c"
+            - |
+              set -e
+              echo "Applying DB migrations (initContainer)"
+              psql "$DATABASE_URL" -f /migrations/001_create_schema.sql || { echo "migration command failed, continuing"; }
+          volumeMounts:
+            - name: migrations
+              mountPath: /migrations
+      containers:
+        - name: backend-mock
+          image: ricardohdc/shisha-tracker-nextgen-backend-mock:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DATABASE_HOST
+              value: "shisha-cockroachdb"
+            - name: DATABASE_PORT
+              value: "26257"
+            - name: DATABASE_USER
+              value: "root"
+            - name: DATABASE_NAME
+              value: "shisha"
+            - name: DATABASE_URL
+              value: "postgresql://root@shisha-cockroachdb:26257/shisha?sslmode=disable"
+            - name: SKIP_MIGRATIONS
+              value: "true"
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            timeoutSeconds: 2
+      volumes:
+        - name: migrations
+          configMap:
+            name: shisha-backend-migrations
+            items:
+              - key: 001_create_schema.sql
+                path: 001_create_schema.sql
+
 ---
 apiVersion: v1
 kind: Service
