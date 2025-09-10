@@ -82,9 +82,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
-
-	if err := db.AutoMigrate(&User{}, &Manufacturer{}, &Shisha{}, &Rating{}, &Comment{}); err != nil {
-		log.Fatalf("migration failed: %v", err)
+	
+	// Respect SKIP_MIGRATIONS environment variable to allow manual control in Kubernetes
+	skip := strings.ToLower(os.Getenv("SKIP_MIGRATIONS"))
+	if skip == "true" || skip == "1" || skip == "yes" {
+		log.Println("Skipping automatic migrations because SKIP_MIGRATIONS is set")
+	} else {
+		if err := db.AutoMigrate(&User{}, &Manufacturer{}, &Shisha{}, &Rating{}, &Comment{}); err != nil {
+			log.Fatalf("migration failed: %v", err)
+		}
 	}
 
 	r := gin.Default()
