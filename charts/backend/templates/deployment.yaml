@@ -26,14 +26,14 @@ spec:
               containerPort: {{ .Values.service.port }}
           readinessProbe:
             httpGet:
-              path: {{ .Values.readinessProbe.httpGet.path }}
-              port: {{ .Values.readinessProbe.httpGet.port }}
+              path: {{ .Values.readinessProbe.path }}
+              port: {{ .Values.readinessProbe.port }}
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.livenessProbe.httpGet.path }}
-              port: {{ .Values.livenessProbe.httpGet.port }}
+              path: {{ .Values.livenessProbe.path }}
+              port: {{ .Values.livenessProbe.port }}
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
           resources:
@@ -56,5 +56,19 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.env.database.passwordSecret }}
                   key: password
+            - name: STORAGE
+              value: "{{ .Values.env.storage.mode | default "gorm" }}"
+            - name: POCKETBASE_URL
+              value: "{{ .Values.env.storage.pocketbase.url | default "http://pocketbase:8090" }}"
+            {{- if .Values.env.storage.pocketbase.adminSecretName }}
+            - name: POCKETBASE_ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env.storage.pocketbase.adminSecretName }}
+                  key: password
+            {{- else }}
+            - name: POCKETBASE_ADMIN_SECRET
+              value: ""
+            {{- end }}
       affinity:
         {{- toYaml .Values.affinity | nindent 8 }}

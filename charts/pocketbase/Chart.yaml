@@ -1,0 +1,16 @@
+apiVersion: v2
+name: pocketbase
+description: PocketBase Helm chart for Shisha-Tracker (initial single instance + PVC, later scaleable)
+type: application
+version: 0.1.0
+appVersion: "0.14.0"
+home: https://pocketbase.io
+sources:
+  - https://github.com/pocketbase/pocketbase
+maintainers:
+  - name: shisha-tracker
+    email: dev@example.com
+keywords:
+  - pocketbase
+  - database
+  - shisha-tracker
