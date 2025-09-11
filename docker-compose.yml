@@ -1,33 +1,14 @@
 services:
-  cockroachdb:
-    image: cockroachdb/cockroach:v23.2.5
-    command: ["start-single-node", "--insecure"]
-    ports:
-      - "26257:26257"
-      - "8080:8080"
-    volumes:
-      - cockroach-data:/cockroach/cockroach-data
-    healthcheck:
-      # use the cockroach client (available in the image) instead of wget/curl
-      # returns 0 when the node responds
-      test: ["CMD", "cockroach", "node", "status", "--insecure", "--host=localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   backend-mock:
     build:
       context: ./backend/mock
       dockerfile: Dockerfile
     environment:
-      - DB_HOST=cockroachdb
-      - DB_PORT=26257
+      - STORAGE=pb
+      - POCKETBASE_URL=http://pocketbase:8090
       - DB_NAME=shisha
     ports:
       - "8081:8080"
-    depends_on:
-      cockroachdb:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/healthz"]
       interval: 10s
@@ -45,9 +26,6 @@ services:
     depends_on:
       backend-mock:
         condition: service_healthy
-
-volumes:
-  cockroach-data:
 
 networks:
   default:
