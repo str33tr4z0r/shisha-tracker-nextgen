@@ -76,6 +76,41 @@ Wichtige Hinweise
   - Alternativen für lokale Cluster: `kind load docker-image ...`, `minikube image load ...`, oder `ctr images import` (siehe [`README.md`](README.md:1) für Hinweise).
 - Helm vs. YAML: Helm bietet Parameterisierung (`--set image.tag=...`) und ist bequemer für wiederholbare Deploys, die YAML‑Reihenfolge bleibt aber gleich.
 
+Beschreibungen der wichtigsten k8s‑YAMLs (neu / aktualisiert)
+- [`k8s/pocketbase.yaml`](k8s/pocketbase.yaml:1)
+  - Stellt PocketBase als Service + Deployment mit PVC bereit. PocketBase ist der Standard‑Speicher (STORAGE=pb) für lokale/Dev‑Setups.
+- [`k8s/hpa-pocketbase.yaml`](k8s/hpa-pocketbase.yaml:1)
+  - Optionaler HorizontalPodAutoscaler für PocketBase (min/max Replicas); nur anwenden, wenn dein Cluster Metrics API (metrics-server / custom metrics) bereitstellt.
+- [`k8s/backend.yaml`](k8s/backend.yaml:1)
+  - Backend‑Deployment und Service. Änderungen: replicas wurden auf den HPA‑Minimalwert gesetzt, Ressourcen (requests/limits) hinzugefügt und eine preferred podAntiAffinity, damit Pods über Nodes verteilt werden. Liveness/Readiness‑Probes sind vorhanden.
+- [`k8s/hpa-backend.yaml`](k8s/hpa-backend.yaml:1)
+  - HPA für das Backend (z. B. minReplicas: 2, maxReplicas: 6). Skaliert anhand CPU‑Utilization; benötigt korrekte Ressourcen‑Requests in der Deployment‑Spec.
+- [`k8s/frontend.yaml`](k8s/frontend.yaml:1)
+  - Frontend‑Deployment + Service. Änderungen: replicas auf HPA‑min gesetzt, Ressourcen ergänzt und podAntiAffinity. Nginx‑Config kommt aus der ConfigMap [`k8s/shisha-frontend-nginx-configmap.yaml`](k8s/shisha-frontend-nginx-configmap.yaml:1).
+- [`k8s/hpa-frontend.yaml`](k8s/hpa-frontend.yaml:1)
+  - HPA für das Frontend (z. B. minReplicas: 3, maxReplicas: 5).
+- [`k8s/pdb-backend.yaml`](k8s/pdb-backend.yaml:1) und [`k8s/pdb-frontend.yaml`](k8s/pdb-frontend.yaml:1)
+  - PodDisruptionBudgets, die während geplanten Wartungen/Upgrades Mindestanzahl an Pods sicherstellen (minAvailable). Werte sind konservativ gewählt; passe sie an die Anzahl deiner Nodes / SLA an.
+
+Empfehlungen für produktive Setups
+- Setze Ressourcen (requests/limits) realistisch basierend auf Load‑Tests — HPA funktioniert nur zuverlässig mit Requests.
+- Verwende feste Image‑Tags in CI/CD (keine :latest) und pushe Images vor dem Apply.
+- Passe PDBs und minReplicas an Clustergröße/SLAs an.
+- Stelle sicher, dass ein metrics‑server (oder ein entsprechender Adapter) im Cluster läuft, damit HPA Metriken nutzen kann.
+
+Deploy‑Beispiel (empfohlene Reihenfolge)
+```bash
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/pocketbase.yaml
+kubectl apply -f k8s/backend.yaml
+kubectl apply -f k8s/frontend.yaml
+kubectl apply -f k8s/hpa-backend.yaml
+kubectl apply -f k8s/hpa-frontend.yaml
+kubectl apply -f k8s/pdb-backend.yaml
+kubectl apply -f k8s/pdb-frontend.yaml
+kubectl apply -f k8s/hpa-pocketbase.yaml  # optional
+```
+
 Zusätzliche Hinweise
 - Das Backend verwendet standardmäßig PocketBase (STORAGE=pb). Prüfe und setze erforderliche Environment‑Variablen in [`k8s/backend.yaml`](k8s/backend.yaml:1).
 - Für CI/Produktiv‑Setups: Migrationen als CI‑Schritt oder dedizierten Job ausführen und feste Image‑Tags verwenden.
@@ -83,9 +118,13 @@ Zusätzliche Hinweise
   - [`k8s/pocketbase.yaml`](k8s/pocketbase.yaml:1)
   - [`k8s/hpa-pocketbase.yaml`](k8s/hpa-pocketbase.yaml:1)
   - [`k8s/backend.yaml`](k8s/backend.yaml:1)
-  - [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1)
+  - [`k8s/hpa-backend.yaml`](k8s/hpa-backend.yaml:1)
   - [`k8s/frontend.yaml`](k8s/frontend.yaml:1)
+  - [`k8s/hpa-frontend.yaml`](k8s/hpa-frontend.yaml:1)
+  - [`k8s/pdb-backend.yaml`](k8s/pdb-backend.yaml:1)
+  - [`k8s/pdb-frontend.yaml`](k8s/pdb-frontend.yaml:1)
+  - [`k8s/shisha-frontend-nginx-configmap.yaml`](k8s/shisha-frontend-nginx-configmap.yaml:1)
   - [`charts/backend/values.yaml`](charts/backend/values.yaml:1)
   - [`scripts/DEPLOY_COMMANDS.md`](scripts/DEPLOY_COMMANDS.md:1)
-
+  
 Ende
