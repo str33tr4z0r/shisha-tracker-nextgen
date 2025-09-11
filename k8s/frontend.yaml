@@ -5,7 +5,7 @@ metadata:
   labels:
     app: shisha-frontend
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: shisha-frontend
@@ -14,6 +14,15 @@ spec:
         labels:
           app: shisha-frontend
       spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  topologyKey: "kubernetes.io/hostname"
+                  labelSelector:
+                    matchLabels:
+                      app: shisha-frontend
         containers:
           - name: frontend
             image: ricardohdc/shisha-tracker-nextgen-frontend:latest
@@ -21,6 +30,13 @@ spec:
             ports:
               - containerPort: 80
                 name: http
+            resources:
+              requests:
+                cpu: "200m"
+                memory: "256Mi"
+              limits:
+                cpu: "500m"
+                memory: "512Mi"
             volumeMounts:
               - name: nginx-conf
                 mountPath: /etc/nginx/conf.d
