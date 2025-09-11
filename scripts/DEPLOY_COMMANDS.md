@@ -33,19 +33,14 @@ rm /tmp/backend-${TAG}.tar
 # or run PocketBase via docker-compose / your preferred method
 ```
 
-4) Apply backend manifests
+4) Apply backend manifests (disabled until image is available)
 ```bash
-kubectl apply -f k8s/backend.yaml
-```
-
-5) Apply backend manifests (Deployment).
-Keep the Deployment scaled to 0 or with a command override until the image/import is ready:
-```bash
+# Apply Deployment but keep it scaled down so pods don't start before the image is available
 kubectl apply -f k8s/backend.yaml
 kubectl scale deploy shisha-backend-mock --replicas=0
 ```
 
-6) Update and run migration Job (one-shot)
+5) Update and run migration Job (one-shot)
 - Edit [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1) and set the `image:` to the same `${IMAGE}` you pushed (or use your cluster import).
 - Then:
 ```bash
@@ -55,15 +50,22 @@ kubectl logs -f job/shisha-migrate
 ```
 Note: automatic in‑pod leader‑election migrations are not used for the default PocketBase setup. If you need SQL migrations for a legacy SQL backend, run the dedicated migration Job or perform migrations as a CI step before rollout.
 
-7) Rollout backend
-- Remove any temporary command override (script tries this):
+6) Rollout backend
+- Set the backend image, remove any temporary command override, then scale up and verify the rollout:
 ```bash
-kubectl patch deploy shisha-backend-mock --type='json' -p '[{"op":"remove","path":"/spec/template/spec/containers/0/command"}]' || true
 kubectl set image deploy/shisha-backend-mock backend-mock="${IMAGE}"
-kubectl patch deployment shisha-backend-mock -p '{"spec":{"template":{"spec":{"serviceAccountName":"shisha-backend-sa"}}}}' || true
-kubectl set env deploy/shisha-backend-mock MIGRATE_ON_START=true
+kubectl patch deploy shisha-backend-mock --type='json' -p '[{"op":"remove","path":"/spec/template/spec/containers/0/command"}]' || true
 kubectl scale deploy shisha-backend-mock --replicas=2
 kubectl rollout status deploy/shisha-backend-mock
+```
+
+7) Apply HPA and frontend
+```bash
+# Apply HPA for PocketBase (if needed) after Deployment exists
+kubectl apply -f k8s/hpa-pocketbase.yaml
+
+# Then apply frontend manifests
+kubectl apply -f k8s/frontend.yaml
 ```
 
 8) Verify logs and readiness
