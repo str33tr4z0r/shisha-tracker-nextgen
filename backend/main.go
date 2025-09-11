@@ -1,23 +1,18 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shisha-tracker/backend/pocketbase"
+	"github.com/shisha-tracker/backend/storage"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/leaderelection"
-	"k8s.io/client-go/tools/leaderelection/resourcelock"
 )
 
 type User struct {
@@ -55,19 +50,9 @@ type Comment struct {
 }
 
 var db *gorm.DB
+var storageEngine storage.Storage
 
 func main() {
-	// CLI flags: --migrate-only to run migrations and exit, --migrate-on-start to run migrations on normal start
-	migrateOnly := false
-	migrateOnStartFlag := false
-	// simple flag parsing without importing flag package at top to avoid big changes
-	for _, a := range os.Args[1:] {
-		if a == "--migrate-only" {
-			migrateOnly = true
-		} else if a == "--migrate-on-start" {
-			migrateOnStartFlag = true
-		}
-	}
 
 	// allow full DATABASE_URL or construct DSN from individual env vars (used by Helm values)
 	dsn := os.Getenv("DATABASE_URL")
@@ -97,32 +82,29 @@ func main() {
 		}
 	}
 	var err error
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("failed to connect database: %v", err)
+	// choose storage backend: default PocketBase ("pb") or GORM (legacy)
+	storageMode := os.Getenv("STORAGE")
+	if storageMode == "" {
+		storageMode = "pb"
 	}
-
-	// Migration control:
-	// - --migrate-only : run migrations and exit
-	// - --migrate-on-start or MIGRATE_ON_START=true : run migrations during normal start (use cautiously)
-	// By default migrations are skipped on normal start to allow safe rolling deploys.
-	if migrateOnly {
-		if err := db.AutoMigrate(&User{}, &Manufacturer{}, &Shisha{}, &Rating{}, &Comment{}); err != nil {
-			log.Fatalf("migration failed: %v", err)
+	if storageMode == "pb" {
+		pbURL := os.Getenv("POCKETBASE_URL")
+		if pbURL == "" {
+			pbURL = "http://pocketbase:8090"
 		}
-		log.Println("migrations applied (migrate-only); exiting")
-		return
-	}
-
-	migrateOnStartEnv := strings.ToLower(os.Getenv("MIGRATE_ON_START"))
-	if migrateOnStartFlag || migrateOnStartEnv == "true" {
-		// Use Kubernetes leader election so that only one pod runs migrations during rolling updates.
-		if err := runMigrationsWithLeaderElection(); err != nil {
-			log.Fatalf("migration (leader) failed: %v", err)
-		}
+		storageEngine = pocketbase.NewClient(pbURL)
+		log.Printf("Using PocketBase storage backend (%s)", pbURL)
 	} else {
-		log.Println("Skipping automatic migrations; to run set MIGRATE_ON_START=true or use --migrate-only")
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("failed to connect database: %v", err)
+		}
+		storageEngine = storage.NewGormAdapter(db)
+		log.Println("Using GORM storage backend")
 	}
+
+	// Automatic DB migrations removed (using PocketBase as storage).
+	log.Println("Automatic DB migrations disabled (PocketBase in use)")
 
 
 	r := gin.Default()
@@ -152,82 +134,6 @@ func main() {
 	r.Run(addr)
 }
 	
-func runMigrationsWithLeaderElection() error {
-	// build in-cluster config
-	cfg, err := rest.InClusterConfig()
-	if err != nil {
-		return fmt.Errorf("failed to build in-cluster config: %w", err)
-	}
-	client, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return fmt.Errorf("failed to create k8s client: %w", err)
-	}
-
-	id := os.Getenv("POD_NAME")
-	if id == "" {
-		id, _ = os.Hostname()
-	}
-	namespace := os.Getenv("POD_NAMESPACE")
-	if namespace == "" {
-		namespace = "default"
-	}
-
-	lock := &resourcelock.LeaseLock{
-		LeaseMeta: v1.ObjectMeta{
-			Name:      "shisha-backend-migration-lock",
-			Namespace: namespace,
-		},
-		Client: client.CoordinationV1(),
-		LockConfig: resourcelock.ResourceLockConfig{
-			Identity: id,
-		},
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	leadCtx, leadCancel := context.WithCancel(ctx)
-	defer leadCancel()
-
-	leaderErrCh := make(chan error, 1)
-
-	go func() {
-		leaderelection.RunOrDie(leadCtx, leaderelection.LeaderElectionConfig{
-			Lock:          lock,
-			LeaseDuration: 15 * time.Second,
-			RenewDeadline: 10 * time.Second,
-			RetryPeriod:   2 * time.Second,
-			Callbacks: leaderelection.LeaderCallbacks{
-				OnStartedLeading: func(c context.Context) {
-					log.Printf("acquired leadership (%s), running migrations", id)
-					if err := db.AutoMigrate(&User{}, &Manufacturer{}, &Shisha{}, &Rating{}, &Comment{}); err != nil {
-						leaderErrCh <- fmt.Errorf("migration failed: %w", err)
-						leadCancel()
-						return
-					}
-					log.Println("migrations applied by leader")
-					leadCancel()
-				},
-				OnStoppedLeading: func() {
-					log.Printf("stopped leading (%s)", id)
-				},
-				OnNewLeader: func(identity string) {
-					if identity == id {
-						return
-					}
-					log.Printf("new leader elected: %s", identity)
-				},
-			},
-		})
-	}()
-
-	select {
-	case err := <-leaderErrCh:
-		return err
-	case <-time.After(60 * time.Second):
-		return fmt.Errorf("leader election timeout waiting for migrations")
-	}
-}
 	
 func healthHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
@@ -280,8 +186,8 @@ func containerIDHandler(c *gin.Context) {
 }
 
 func listShishas(c *gin.Context) {
-	var shishas []Shisha
-	if err := db.Preload("Manufacturer").Preload("Ratings").Preload("Comments").Find(&shishas).Error; err != nil {
+	shishas, err := storageEngine.ListShishas()
+	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -294,8 +200,12 @@ func getShisha(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	var s Shisha
-	if err := db.Preload("Manufacturer").Preload("Ratings").Preload("Comments").First(&s, id).Error; err != nil {
+	s, err := storageEngine.GetShisha(uint(id))
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	if s == nil {
 		c.Status(http.StatusNotFound)
 		return
 	}
@@ -303,29 +213,18 @@ func getShisha(c *gin.Context) {
 }
 
 func createShisha(c *gin.Context) {
-	var in Shisha
+	var in storage.Shisha
 	if err := c.BindJSON(&in); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	// manufacturer handling: find or create by name if provided
-	if in.Manufacturer.ID == 0 && in.Manufacturer.Name != "" {
-		var m Manufacturer
-		if err := db.Where("name = ?", in.Manufacturer.Name).First(&m).Error; err != nil {
-			m = Manufacturer{Name: in.Manufacturer.Name}
-			db.Create(&m)
-		}
-		in.ManufacturerID = m.ID
-	} else if in.Manufacturer.ID != 0 {
-		in.ManufacturerID = in.Manufacturer.ID
-	}
-
-	if err := db.Create(&in).Error; err != nil {
+	out, err := storageEngine.CreateShisha(&in)
+	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	c.JSON(http.StatusCreated, in)
+	c.JSON(http.StatusCreated, out)
 }
 
 func updateShisha(c *gin.Context) {
@@ -334,35 +233,17 @@ func updateShisha(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	var in Shisha
+	var in storage.Shisha
 	if err := c.BindJSON(&in); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	var existing Shisha
-	if err := db.First(&existing, id).Error; err != nil {
-		c.Status(http.StatusNotFound)
+	out, err := storageEngine.UpdateShisha(uint(id), &in)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
 		return
 	}
-
-	existing.Name = in.Name
-	existing.Flavor = in.Flavor
-
-	if in.Manufacturer.ID != 0 || in.Manufacturer.Name != "" {
-		var m Manufacturer
-		if in.Manufacturer.ID != 0 {
-			db.First(&m, in.Manufacturer.ID)
-		} else {
-			if err := db.Where("name = ?", in.Manufacturer.Name).First(&m).Error; err != nil {
-				m = Manufacturer{Name: in.Manufacturer.Name}
-				db.Create(&m)
-			}
-		}
-		existing.ManufacturerID = m.ID
-	}
-
-	db.Save(&existing)
-	c.JSON(http.StatusOK, existing)
+	c.JSON(http.StatusOK, out)
 }
 
 func deleteShisha(c *gin.Context) {
@@ -371,7 +252,7 @@ func deleteShisha(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	if err := db.Delete(&Shisha{}, id).Error; err != nil {
+	if err := storageEngine.DeleteShisha(uint(id)); err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -384,17 +265,19 @@ func addRating(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	var r Rating
-	if err := c.BindJSON(&r); err != nil {
+	var req struct {
+		User  string `json:"user"`
+		Score int    `json:"score"`
+	}
+	if err := c.BindJSON(&req); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	r.ShishaID = uint(id)
-	if err := db.Create(&r).Error; err != nil {
+	if err := storageEngine.AddRating(uint(id), req.User, req.Score); err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	c.JSON(http.StatusCreated, r)
+	c.JSON(http.StatusCreated, gin.H{"user": req.User, "score": req.Score})
 }
 
 func addComment(c *gin.Context) {
@@ -403,15 +286,17 @@ func addComment(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	var cm Comment
-	if err := c.BindJSON(&cm); err != nil {
+	var req struct {
+		User    string `json:"user"`
+		Message string `json:"message"`
+	}
+	if err := c.BindJSON(&req); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	cm.ShishaID = uint(id)
-	if err := db.Create(&cm).Error; err != nil {
+	if err := storageEngine.AddComment(uint(id), req.User, req.Message); err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	c.JSON(http.StatusCreated, cm)
+	c.JSON(http.StatusCreated, gin.H{"user": req.User, "message": req.Message})
 }
