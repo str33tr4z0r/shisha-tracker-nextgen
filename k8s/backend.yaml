@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: backend-mock
-          image: ricardohdc/shisha-tracker-nextgen-backend-mock:latest
+          image: ricardohdc/shisha-tracker-nextgen-backend:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: STORAGE
