@@ -1,75 +1,88 @@
-# Shisha Tracker — Deployment & Migration Notes
+# Shisha Tracker — Kurzanleitung
 
-Summary of recent changes
-- Removed leader-election migration logic (migrations are not needed with PocketBase).
-- RBAC manifest for leader election (`k8s/backend-rbac.yaml`) removed.
-- initContainer-based SQL migrations removed from `k8s/backend.yaml`.
-- Migration Job (`k8s/migration-job.yaml`) updated to use PocketBase environment (if needed).
-- Updated build/deploy helper script [`scripts/build_and_deploy_backend.sh`](scripts/build_and_deploy_backend.sh:1).
+Kurzbeschreibung
+- Shisha Tracker ist eine Webanwendung zum Erfassen, Verwalten und Bewerten von Shisha‑Sessions. Die App besteht aus Frontend, Backend und nutzt PocketBase als Standard‑Speicher für Entwicklung und lokale Setups.
 
-Quick: run the build script
+Deploy — Übersicht
+- Zwei Optionen zum Deployment:
+  - Helm‑Charts (empfohlen für wiederholbare Deployments)
+  - Direkte k8s‑Manifeste im Ordner [`k8s/`](k8s/:1)
+
+Deploy mit Helm
+1. PocketBase installieren
 ```bash
-chmod +x scripts/build_and_deploy_backend.sh
-./scripts/build_and_deploy_backend.sh v1.0.0
+helm install shisha-pocketbase charts/pocketbase
 ```
 
-What the script does
-- run go mod tidy and build a linux/static backend binary
-- docker build and push image ricardohdc/shisha-tracker-nextgen-backend:vX
-- update Deployment image and wait for rollout (no RBAC or leader-election required for PocketBase)
-- remove temporary command overrides and print example logs
-
-## Recommended k8s YAML apply order
-
-Apply manifests in this order to avoid races and ensure the database is available before the backend:
-
-1. PocketBase — deploy PocketBase for local/dev storage:
-   - Either use the chart: `helm install shisha-pocketbase charts/pocketbase`
-   - Or apply the manifest: `kubectl apply -f k8s/pocketbase.yaml`
-2. [`k8s/backend.yaml`](k8s/backend.yaml:1) — Backend Deployment.
-   - Keep the Deployment scaled to 0 or use a command override until the image has been pushed/imported.
-3. (Optional) [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1) — run as a one-shot Job if you need to apply SQL migrations for a legacy SQL backend (set image to the pushed/imported backend image).
-4. [`k8s/hpa-pocketbase.yaml`](k8s/hpa-pocketbase.yaml:1) — apply HPA (can be applied after the Deployment exists).
-5. [`k8s/frontend.yaml`](k8s/frontend.yaml:1) and any remaining frontend/service manifests.
-
-Example sequence (generic kubectl + container runtime):
+2. Backend (Image‑Tag setzen in [`charts/backend/values.yaml`](charts/backend/values.yaml:1) oder via --set)
 ```bash
-# Deploy PocketBase (local/dev)
-# helm install shisha-pocketbase charts/pocketbase
-kubectl apply -f k8s/pocketbase.yaml
+helm upgrade --install shisha-backend charts/backend --set image.tag=v1.0.0
+```
 
-# apply backend manifests in "disabled" state (scale 0 or command override)
+3. Frontend
+```bash
+helm upgrade --install shisha-frontend charts/frontend --set image.tag=v1.0.0
+```
+
+Hinweise
+- Relevante Chart‑Dateien: [`charts/pocketbase/Chart.yaml`](charts/pocketbase/Chart.yaml:1), [`charts/backend/Chart.yaml`](charts/backend/Chart.yaml:1), [`charts/frontend/Chart.yaml`](charts/frontend/Chart.yaml:1)
+- Bei Helm‑Deploys können Werte per `--set` oder `values.yaml` angepasst werden (z. B. Image‑Tag, Ressourcen).
+
+Deploy mit k8s‑YAMLs (kubectl)
+Reihenfolge (empfohlen):
+
+1. Namespace
+```bash
+kubectl apply -f k8s/namespace.yaml
+```
+
+2. PocketBase (Service / PVC / Deployment)
+```bash
+kubectl apply -f k8s/pocketbase.yaml
+```
+
+3. Backend (Deployment, zunächst "disabled" — scale 0 oder Command‑Override)
+```bash
 kubectl apply -f k8s/backend.yaml
 kubectl scale deploy shisha-backend-mock --replicas=0
+```
 
-# after building/pushing/importing the backend image:
-kubectl set image deploy/shisha-backend-mock backend-mock=ricardohdc/shisha-tracker-nextgen-backend:v1.0.0
-
-# run migration job (if needed)
+4. (Optional) Migration Job — falls SQL‑Migrationen für ein legacy SQL‑Backend benötigt werden
+```bash
 kubectl apply -f k8s/migration-job.yaml
 kubectl wait --for=condition=complete job/shisha-migrate --timeout=120s
 kubectl logs -f job/shisha-migrate
+```
 
-# remove any manual command override and scale the backend up
-kubectl patch deploy shisha-backend-mock --type='json' -p '[{"op":"remove","path":"/spec/template/spec/containers/0/command"}]' || true
-kubectl scale deploy shisha-backend-mock --replicas=2
-kubectl rollout status deploy/shisha-backend-mock
-
-# apply HPA (if needed) and then frontend
+5. HPA für PocketBase (falls verwendet)
+```bash
 kubectl apply -f k8s/hpa-pocketbase.yaml
+```
+
+6. Frontend + ConfigMap
+```bash
+kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml
 kubectl apply -f k8s/frontend.yaml
 ```
 
-Notes:
-- For the default PocketBase setup: automatic in‑pod leader‑election migrations are not used. Use the migration Job or run migrations as a CI step for legacy SQL storage.
-- Prefer fixed image tags (avoid :latest) and run migrations as a separate CI step or one-shot Job before rolling the Deployment.
-- If you cannot push to a registry, use docker save and import the image into your cluster's container runtime. Example:
-  - docker save -o /tmp/backend-<tag>.tar ricardohdc/shisha-tracker-nextgen-backend:<tag>
-  - ctr images import /tmp/backend-<tag>.tar   # for containerd users
-  - OR load into a cluster-local registry if available
+7. Backend Rollout: Image setzen, override entfernen, hochskalieren
+```bash
+kubectl set image deploy/shisha-backend-mock backend-mock=ricardohdc/shisha-tracker-nextgen-backend:v1.0.0
+kubectl patch deploy shisha-backend-mock --type='json' -p '[{"op":"remove","path":"/spec/template/spec/containers/0/command"}]' || true
+kubectl scale deploy shisha-backend-mock --replicas=2
+kubectl rollout status deploy/shisha-backend-mock
+```
 
-Files to review
-- [`backend/main.go`](backend/main.go:1)
-- [`k8s/backend.yaml`](k8s/backend.yaml:1)
-- [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1)
-- [`scripts/build_and_deploy_backend.sh`](scripts/build_and_deploy_backend.sh:1)
+Zusätzliche Hinweise
+- Das Backend verwendet standardmäßig PocketBase (STORAGE=pb). Prüfe und setze erforderliche Environment‑Variablen in [`k8s/backend.yaml`](k8s/backend.yaml:1).
+- Für CI/Produktiv‑Setups: Migrationen als CI‑Schritt oder dedizierten Job ausführen und feste Image‑Tags verwenden.
+- Nützliche Dateien:
+  - [`k8s/pocketbase.yaml`](k8s/pocketbase.yaml:1)
+  - [`k8s/hpa-pocketbase.yaml`](k8s/hpa-pocketbase.yaml:1)
+  - [`k8s/backend.yaml`](k8s/backend.yaml:1)
+  - [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1)
+  - [`k8s/frontend.yaml`](k8s/frontend.yaml:1)
+  - [`charts/backend/values.yaml`](charts/backend/values.yaml:1)
+  - [`scripts/DEPLOY_COMMANDS.md`](scripts/DEPLOY_COMMANDS.md:1)
+
+Ende
