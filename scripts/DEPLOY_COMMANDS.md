@@ -25,19 +25,21 @@ ctr images import /tmp/backend-${TAG}.tar
 rm /tmp/backend-${TAG}.tar
 ```
 
-3) Ensure database is applied (only if not already)
+3) Ensure storage is available (PocketBase)
 ```bash
-kubectl apply -f k8s/cockroachdb.yaml
-kubectl wait --for=condition=ready pod -l app=shisha-cockroachdb --timeout=180s || true
+# For local/dev use the provided PocketBase chart or run PocketBase as a container
+# Example (Helm chart):
+# helm install shisha-pocketbase charts/pocketbase
+# or run PocketBase via docker-compose / your preferred method
 ```
 
-4) Apply RBAC required for leader election
+4) Apply backend manifests
 ```bash
-kubectl apply -f k8s/backend-rbac.yaml
+kubectl apply -f k8s/backend.yaml
 ```
 
-5) Apply backend manifests (ConfigMap, Deployment with initContainer)
-Keep the Deployment scaled to 0 or with command override until migrations done:
+5) Apply backend manifests (Deployment).
+Keep the Deployment scaled to 0 or with a command override until the image/import is ready:
 ```bash
 kubectl apply -f k8s/backend.yaml
 kubectl scale deploy shisha-backend-mock --replicas=0
@@ -51,7 +53,7 @@ kubectl apply -f k8s/migration-job.yaml
 kubectl wait --for=condition=complete job/shisha-migrate --timeout=120s
 kubectl logs -f job/shisha-migrate
 ```
-Alternatively, you can enable in-pod leader-election migrations by setting `MIGRATE_ON_START=true` on the Deployment (requires serviceAccountName `shisha-backend-sa` and RBAC applied). If using that, skip the Job.
+Note: automatic in‑pod leader‑election migrations are not used for the default PocketBase setup. If you need SQL migrations for a legacy SQL backend, run the dedicated migration Job or perform migrations as a CI step before rollout.
 
 7) Rollout backend
 - Remove any temporary command override (script tries this):
@@ -67,7 +69,6 @@ kubectl rollout status deploy/shisha-backend-mock
 8) Verify logs and readiness
 ```bash
 kubectl get pods -l app=shisha-backend-mock -o wide
-kubectl logs <pod-name> -c run-migrations --tail=200
 kubectl logs <pod-name> -c backend-mock --tail=200
 kubectl get svc
 curl -sS http://<service-ip-or-dns>:8080/api/healthz
@@ -75,9 +76,8 @@ curl -sS http://<service-ip-or-dns>:8080/api/healthz
 
 Files referenced
 - [`scripts/build_and_deploy_backend.sh`](scripts/build_and_deploy_backend.sh:1)
-- [`k8s/backend-rbac.yaml`](k8s/backend-rbac.yaml:1)
 - [`k8s/backend.yaml`](k8s/backend.yaml:1)
 - [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1)
-- [`k8s/cockroachdb.yaml`](k8s/cockroachdb.yaml:1)
+- [`charts/pocketbase/Chart.yaml`](charts/pocketbase/Chart.yaml:1)
 
 Use these commands to complete the rebuild/push/migrate/rollout sequence. Adjust `TAG`/`IMAGE` as needed for your registry.

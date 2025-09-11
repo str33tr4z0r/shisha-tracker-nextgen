@@ -1,11 +1,11 @@
 # Shisha Tracker — Deployment & Migration Notes
 
 Summary of recent changes
-- Implemented leader-election migration logic in [`backend/main.go`](backend/main.go:1).
-- Added RBAC manifest for leader election at [`k8s/backend-rbac.yaml`](k8s/backend-rbac.yaml:1).
-- Added initContainer-based SQL migration via [`k8s/backend.yaml`](k8s/backend.yaml:1).
-- Added one-shot migration Job manifest [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1).
-- Added build/deploy helper script [`scripts/build_and_deploy_backend.sh`](scripts/build_and_deploy_backend.sh:1).
+- Removed leader-election migration logic (migrations are not needed with PocketBase).
+- RBAC manifest for leader election (`k8s/backend-rbac.yaml`) removed.
+- initContainer-based SQL migrations removed from `k8s/backend.yaml`.
+- Migration Job (`k8s/migration-job.yaml`) updated to use PocketBase environment (if needed).
+- Updated build/deploy helper script [`scripts/build_and_deploy_backend.sh`](scripts/build_and_deploy_backend.sh:1).
 
 Quick: run the build script
 ```bash
@@ -16,25 +16,22 @@ chmod +x scripts/build_and_deploy_backend.sh
 What the script does
 - run go mod tidy and build a linux/static backend binary
 - docker build and push image ricardohdc/shisha-tracker-nextgen-backend:vX
-- apply RBAC (`k8s/backend-rbac.yaml`) so leader-election can use Lease objects
-- patch Deployment to use serviceAccountName=shisha-backend-sa
-- set MIGRATE_ON_START=true and remove temporary command overrides
-- wait for rollout and print example logs
+- update Deployment image and wait for rollout (no RBAC or leader-election required for PocketBase)
+- remove temporary command overrides and print example logs
 
 ## Recommended k8s YAML apply order
 
 Apply manifests in this order to avoid races and ensure the database and RBAC are available before the backend:
 
-1. [`k8s/cockroachdb.yaml`](k8s/cockroachdb.yaml:1) — provision the database (StatefulSet / Service / PVCs).
-2. [`k8s/backend-rbac.yaml`](k8s/backend-rbac.yaml:1) — ServiceAccount + Role + RoleBinding needed for leader-election leases.
-3. [`k8s/backend.yaml`](k8s/backend.yaml:1) — ConfigMap + initContainer + Deployment. You can keep the Deployment scaled to 0 or with a command override until the image and migrations are ready.
-4. (Optional) [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1) — one-shot Job that runs the backend with --migrate-only. Apply this after you have built and pushed/imported the backend image.
-5. [`k8s/frontend.yaml`](k8s/frontend.yaml:1) and any remaining frontend/service manifests.
+1. PocketBase (charts/pocketbase) — deploy PocketBase for local/dev storage (StatefulSet / Service / PVCs) or run PocketBase via docker/compose.
+2. [`k8s/backend.yaml`](k8s/backend.yaml:1) — Backend Deployment (no DB initContainer). Apply this after you have built and pushed/imported the backend image.
+3. (Optional) [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1) — usually not needed; updated to use PocketBase env if used.
+4. [`k8s/frontend.yaml`](k8s/frontend.yaml:1) and any remaining frontend/service manifests.
 
 Example sequence (generic kubectl + container runtime):
 ```bash
-kubectl apply -f k8s/cockroachdb.yaml
-kubectl apply -f k8s/backend-rbac.yaml
+# Deploy PocketBase (local/dev)
+# helm install shisha-pocketbase charts/pocketbase
 kubectl apply -f k8s/backend.yaml
 
 # after building/pushing/importing the backend image:
@@ -50,8 +47,7 @@ kubectl apply -f k8s/frontend.yaml
 ```
 
 Notes:
-- If you prefer the initContainer approach, step 4 is optional — the initContainer will create the schema before the app starts.
-- If you prefer leader-election AutoMigrate, ensure step 2 is applied before creating the Deployment and set MIGRATE_ON_START=true on the Deployment or run the one-shot Job.
+- For legacy SQL backends: run migrations as a CI step or one-shot Job before rolling the Deployment. For the default PocketBase setup, automatic in‑pod leader‑election migrations are not used.
 After the script finishes — manual verification steps
 1) Verify image is present
 ```bash
@@ -60,10 +56,9 @@ docker images | grep ricardohdc/shisha-tracker-nextgen-backend
 ctr images ls | grep ricardohdc/shisha-tracker-nextgen-backend || true
 ```
 
-2) Check migrations executed (choose Job or initContainer)
+2) Check logs and readiness
 ```bash
 kubectl logs -f job/shisha-migrate
-kubectl logs <pod-name> -c run-migrations --tail=200
 kubectl logs <pod-name> -c backend-mock --tail=200
 ```
 
@@ -91,6 +86,5 @@ Notes & recommendations
 Files to review
 - [`backend/main.go`](backend/main.go:1)
 - [`k8s/backend.yaml`](k8s/backend.yaml:1)
-- [`k8s/backend-rbac.yaml`](k8s/backend-rbac.yaml:1)
 - [`k8s/migration-job.yaml`](k8s/migration-job.yaml:1)
 - [`scripts/build_and_deploy_backend.sh`](scripts/build_and_deploy_backend.sh:1)
