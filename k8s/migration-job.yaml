@@ -11,20 +11,20 @@ spec:
       labels:
         job: shisha-migrate
     spec:
-      serviceAccountName: shisha-backend-sa
       restartPolicy: Never
       containers:
         - name: migrate
           image: ricardohdc/shisha-tracker-nextgen-backend:v1.0.0
-          args: ["--migrate-only"]
           env:
-            - name: DATABASE_URL
-              value: "postgresql://root@shisha-cockroachdb:26257/shisha?sslmode=disable"
-            # If you keep DB credentials in a Secret, replace the above with:
-            # - name: DATABASE_URL
+            - name: STORAGE
+              value: "pb"
+            - name: POCKETBASE_URL
+              value: "http://pocketbase:8090"
+            # If you keep credentials in a Secret, replace the above with:
+            # - name: POCKETBASE_URL
             #   valueFrom:
             #     secretKeyRef:
-            #       name: shisha-db-secret
-            #       key: DATABASE_URL
+            #       name: pocketbase-admin
+            #       key: POCKETBASE_URL
       # If your image does not set the binary as ENTRYPOINT, set command instead:
-      # command: ["/server", "--migrate-only"]
+      # command: ["/server"]
