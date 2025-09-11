@@ -40,12 +40,14 @@ metrics:
   enabled: true
   path: /api/metrics
 env:
-  database:
-    host: shisha-cockroachdb
-    port: 26257
-    name: shisha
-    user: root
-    passwordSecret: cockroachdb-root
+  # Storage selection for backend: "pb" (PocketBase) or "gorm" (legacy)
+  storage:
+    mode: pb
+    pocketbase:
+      # POCKETBASE URL used by backend when storage.mode == "pb"
+      url: http://pocketbase:8090
+      # optional admin credentials secret name (if backend needs to call admin endpoints)
+      adminSecretName: pocketbase-admin
 affinity:
   podAntiAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
