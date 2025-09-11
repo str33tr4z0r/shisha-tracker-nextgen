@@ -28,8 +28,9 @@ Hinweise
 - Relevante Chart‑Dateien: [`charts/pocketbase/Chart.yaml`](charts/pocketbase/Chart.yaml:1), [`charts/backend/Chart.yaml`](charts/backend/Chart.yaml:1), [`charts/frontend/Chart.yaml`](charts/frontend/Chart.yaml:1)
 - Bei Helm‑Deploys können Werte per `--set` oder `values.yaml` angepasst werden (z. B. Image‑Tag, Ressourcen).
 
-Deploy mit k8s‑YAMLs (kubectl)
-Reihenfolge (empfohlen):
+Deploy mit k8s‑YAMLs (kubectl) — vereinfachte Reihenfolge
+
+Wenn das Backend‑Image bereits in einer Registry verfügbar ist (z. B. ricardohdc/shisha-tracker-nextgen-backend:latest), kannst du die YAMLs direkt in dieser Reihenfolge anwenden:
 
 1. Namespace
 ```bash
@@ -41,20 +42,19 @@ kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/pocketbase.yaml
 ```
 
-3. Backend (Deployment, zunächst "disabled" — scale 0 oder Command‑Override)
+3. Backend (Deployment — enthält jetzt das feste Image in [`k8s/backend.yaml`](k8s/backend.yaml:1))
 ```bash
 kubectl apply -f k8s/backend.yaml
-kubectl scale deploy shisha-backend-mock --replicas=0
 ```
 
-4. (Optional) Migration Job — falls SQL‑Migrationen für ein legacy SQL‑Backend benötigt werden
+4. (Optional) Migration Job — nur falls SQL‑Migrationen für ein legacy SQL‑Backend nötig sind
 ```bash
 kubectl apply -f k8s/migration-job.yaml
 kubectl wait --for=condition=complete job/shisha-migrate --timeout=120s
 kubectl logs -f job/shisha-migrate
 ```
 
-5. HPA für PocketBase (falls verwendet)
+5. HPA für PocketBase (optional)
 ```bash
 kubectl apply -f k8s/hpa-pocketbase.yaml
 ```
@@ -65,13 +65,16 @@ kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml
 kubectl apply -f k8s/frontend.yaml
 ```
 
-7. Backend Rollout: Image setzen, override entfernen, hochskalieren
-```bash
-kubectl set image deploy/shisha-backend-mock backend-mock=ricardohdc/shisha-tracker-nextgen-backend:v1.0.0
-kubectl patch deploy shisha-backend-mock --type='json' -p '[{"op":"remove","path":"/spec/template/spec/containers/0/command"}]' || true
-kubectl scale deploy shisha-backend-mock --replicas=2
-kubectl rollout status deploy/shisha-backend-mock
-```
+Wichtige Hinweise
+- Warum vorher Scale‑0 empfohlen wurde: das Scale‑0‑/Image‑Override‑Pattern schützt, wenn das Image noch nicht im Registry verfügbar ist oder die DB noch nicht bereit ist. Wenn du das Image bereits gepusht oder in dein Cluster geladen hast (z. B. mit kind/minikube/k3d), ist das nicht nötig.
+- Image‑Verfügbarkeit:
+  - Push ins Registry:
+    ```bash
+    docker build -t ricardohdc/shisha-tracker-nextgen-backend:latest ./backend
+    docker push ricardohdc/shisha-tracker-nextgen-backend:latest
+    ```
+  - Alternativen für lokale Cluster: `kind load docker-image ...`, `minikube image load ...`, oder `ctr images import` (siehe [`README.md`](README.md:1) für Hinweise).
+- Helm vs. YAML: Helm bietet Parameterisierung (`--set image.tag=...`) und ist bequemer für wiederholbare Deploys, die YAML‑Reihenfolge bleibt aber gleich.
 
 Zusätzliche Hinweise
 - Das Backend verwendet standardmäßig PocketBase (STORAGE=pb). Prüfe und setze erforderliche Environment‑Variablen in [`k8s/backend.yaml`](k8s/backend.yaml:1).
