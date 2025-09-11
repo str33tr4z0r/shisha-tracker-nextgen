@@ -16,12 +16,12 @@ helm install shisha-pocketbase charts/pocketbase
 
 2. Backend (Image‑Tag setzen in [`charts/backend/values.yaml`](charts/backend/values.yaml:1) oder via --set)
 ```bash
-helm upgrade --install shisha-backend charts/backend --set image.tag=v1.0.0
+helm upgrade --install shisha-backend charts/backend --set image.tag=latest
 ```
 
 3. Frontend
 ```bash
-helm upgrade --install shisha-frontend charts/frontend --set image.tag=v1.0.0
+helm upgrade --install shisha-frontend charts/frontend --set image.tag=latest
 ```
 
 Hinweise
