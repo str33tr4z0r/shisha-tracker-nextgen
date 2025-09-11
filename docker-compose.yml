@@ -1,32 +1,38 @@
+version: "3.8"
+
 services:
-  backend-mock:
+  pocketbase:
+    image: pocketbase/pocketbase:0.17.2
+    command: ["serve", "--http=0.0.0.0:8090", "--dir", "/pb_data"]
+    volumes:
+      - pb_data:/pb_data
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+
+  backend:
     build:
-      context: ./backend/mock
+      context: ./backend
       dockerfile: Dockerfile
     environment:
       - STORAGE=pb
       - POCKETBASE_URL=http://pocketbase:8090
-      - DB_NAME=shisha
     ports:
-      - "8081:8080"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/healthz"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
+      - "8080:8080"
+    depends_on:
+      - pocketbase
+    restart: unless-stopped
+    # If the backend binary listens on a different port, adjust above.
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    environment:
-      - VITE_API_URL=http://backend-mock:8080
     ports:
       - "3000:80"
     depends_on:
-      backend-mock:
-        condition: service_healthy
+      - backend
+    restart: unless-stopped
 
-networks:
-  default:
-    driver: bridge
+volumes:
+  pb_data:
