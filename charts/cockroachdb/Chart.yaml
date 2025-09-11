@@ -1,9 +1,0 @@
-apiVersion: v2
-name: cockroachdb
-description: Helm chart for CockroachDB cluster (StatefulSet, TLS placeholders)
-type: application
-version: 0.1.0
-appVersion: "latest"
-keywords:
-  - cockroachdb
-  - database
