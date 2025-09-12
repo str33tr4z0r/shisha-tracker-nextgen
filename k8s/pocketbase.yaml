@@ -27,7 +27,8 @@ spec:
     spec:
       containers:
         - name: pocketbase
-          image: pocketbase/pocketbase:0.17.2
+          image: pocketbase/pocketbase:latest
+          imagePullPolicy: always
           args: ["serve", "--http=0.0.0.0:8090", "--dir", "/pb_data"]
           ports:
             - containerPort: 8090
