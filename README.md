@@ -8,11 +8,16 @@ Deploy — Übersicht
   - Helm‑Charts (empfohlen für wiederholbare Deployments)
   - Direkte k8s‑Manifeste im Ordner [`k8s/`](k8s/:1)
 
-Deploy mit Helm
+Deploy mit Helm (empfohlen)
 1. PocketBase installieren
 ```bash
 helm install shisha-pocketbase charts/pocketbase
 ```
+Hinweis zu Token‑Erzeugung:
+- Der PocketBase‑Chart kann automatisch einen Admin‑API‑Token anlegen. Standardmäßig ist ein Helm post‑install Hook (Job) aktiviert und erstellt ein Secret mit dem Token (Name: `{{ include "pocketbase.fullname" . }}-token`).
+- Alternativ kannst du beim Installieren ein Token per values vorgeben (nicht empfohlen für langlebige Secrets):
+  - Setze `token.createFromValues=true` und `token.value=<token>` in [`charts/pocketbase/values.yaml`](charts/pocketbase/values.yaml:1).
+- Wenn du nichts änderst, erzeugt Helm bei Installation das Admin‑Secret und der Hook erstellt das Token‑Secret automatisch (sofern der Cluster Jobs ausführen darf).
 
 2. Backend (Image‑Tag setzen in [`charts/backend/values.yaml`](charts/backend/values.yaml:1) oder via --set)
 ```bash
@@ -24,46 +29,79 @@ helm upgrade --install shisha-backend charts/backend --set image.tag=latest
 helm upgrade --install shisha-frontend charts/frontend --set image.tag=latest
 ```
 
-Hinweise
-- Relevante Chart‑Dateien: [`charts/pocketbase/Chart.yaml`](charts/pocketbase/Chart.yaml:1), [`charts/backend/Chart.yaml`](charts/backend/Chart.yaml:1), [`charts/frontend/Chart.yaml`](charts/frontend/Chart.yaml:1)
+Wichtige Chart‑Dateien
+- [`charts/pocketbase/Chart.yaml`](charts/pocketbase/Chart.yaml:1)
+- [`charts/pocketbase/templates/token-create-job.yaml`](charts/pocketbase/templates/token-create-job.yaml:1) (Helm Hook: erstellt Token‑Secret)
+- [`charts/pocketbase/templates/secret-admin.yaml`](charts/pocketbase/templates/secret-admin.yaml:1) (Admin‑Creds; wird vom Chart gerendert)
+- [`charts/pocketbase/templates/secret-token.yaml`](charts/pocketbase/templates/secret-token.yaml:1) (falls `token.createFromValues=true`)
+- [`charts/backend/Chart.yaml`](charts/backend/Chart.yaml:1)
+- [`charts/frontend/Chart.yaml`](charts/frontend/Chart.yaml:1)
 - Bei Helm‑Deploys können Werte per `--set` oder `values.yaml` angepasst werden (z. B. Image‑Tag, Ressourcen).
 
 Deploy mit k8s‑YAMLs (kubectl) — vereinfachte Reihenfolge
 
-Wenn das Backend‑Image bereits in einer Registry verfügbar ist (z. B. ricardohdc/shisha-tracker-nextgen-backend:latest), kannst du die YAMLs direkt in dieser Reihenfolge anwenden:
+Wenn das Backend‑Image bereits in einer Registry verfügbar ist (z. B. ricardohdc/shisha-tracker-nextgen-backend:latest), kannst du die YAMLs direkt in dieser Reihenfolge anwenden. Zusätzlich ist ein Token‑Erzeugungs‑Job verfügbar, wenn du nicht mit Helm arbeitest.
 
+Empfohlene Reihenfolge (plain kubectl)
 1. Namespace
 ```bash
 kubectl apply -f k8s/namespace.yaml
 ```
 
-2. PocketBase (Service / PVC / Deployment)
+2. (Optional aber empfohlen) Admin‑Secret für PocketBase erstellen
+- Ersetze <email> und <password> durch gewünschte Admin‑Zugangsdaten. Der Name muss `shisha-pocketbase-admin` lauten (used by plain Job).
+```bash
+kubectl create secret generic shisha-pocketbase-admin -n shisha \
+  --from-literal=email=admin@example.com \
+  --from-literal=password=changeme
+```
+
+3. PocketBase (Service / PVC / Deployment)
 ```bash
 kubectl apply -f k8s/pocketbase.yaml
 ```
 
-3. Backend (Deployment — enthält jetzt das feste Image in [`k8s/backend.yaml`](k8s/backend.yaml:1))
+4. (Plain‑K8s) Token‑Erzeugungs‑Job ausführen (wenn du ein Token‑Secret willst)
+- Dieser Job wartet auf PocketBase, authentifiziert sich mit dem Admin‑Secret und legt `shisha-pocketbase-token` an.
+```bash
+kubectl apply -f k8s/pocketbase-token-job.yaml
+kubectl wait --for=condition=complete job/shisha-pocketbase-token-create -n shisha --timeout=120s
+kubectl get secret shisha-pocketbase-token -n shisha -o yaml
+```
+- Alternativ kannst du das Token manuell erzeugen und als Secret anlegen:
+```bash
+# Beispiel: Token in $TOKEN speichern, dann
+kubectl create secret generic shisha-pocketbase-token -n shisha --from-literal=token="$TOKEN"
+```
+
+5. Backend (Deployment — enthält jetzt das Referenz auf Token‑Secret fallback zu Admin‑Creds)
 ```bash
 kubectl apply -f k8s/backend.yaml
 ```
 
-4. (Optional) Migration Job — nur falls SQL‑Migrationen für ein legacy SQL‑Backend nötig sind
+6. (Optional) Migration Job — nur falls SQL‑Migrationen für ein legacy SQL‑Backend nötig sind
 ```bash
 kubectl apply -f k8s/migration-job.yaml
 kubectl wait --for=condition=complete job/shisha-migrate --timeout=120s
 kubectl logs -f job/shisha-migrate
 ```
 
-5. HPA für PocketBase (optional)
+7. HPA / Frontend / PDBs: apply wie benötigt
 ```bash
-kubectl apply -f k8s/hpa-pocketbase.yaml
-```
-
-6. Frontend + ConfigMap
-```bash
+kubectl apply -f k8s/hpa-pocketbase.yaml        # optional
 kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml
 kubectl apply -f k8s/frontend.yaml
+kubectl apply -f k8s/hpa-backend.yaml
+kubectl apply -f k8s/hpa-frontend.yaml
+kubectl apply -f k8s/pdb-backend.yaml
+kubectl apply -f k8s/pdb-frontend.yaml
 ```
+
+Hinweise (plain kubectl)
+- Der plain Job manifest ist: [`k8s/pocketbase-token-job.yaml`](k8s/pocketbase-token-job.yaml:1)
+- Admin‑Secret Name (plain flow): `shisha-pocketbase-admin`
+- Token‑Secret Name (plain flow): `shisha-pocketbase-token`
+- Backend liest bevorzugt `POCKETBASE_TOKEN` aus dem Token‑Secret; falls nicht vorhanden, nutzt es `POCKETBASE_ADMIN_EMAIL` / `POCKETBASE_ADMIN_PASSWORD` (siehe Chart‑Deployment).
 
 Wichtige Hinweise
 - Warum vorher Scale‑0 empfohlen wurde: das Scale‑0‑/Image‑Override‑Pattern schützt, wenn das Image noch nicht im Registry verfügbar ist oder die DB noch nicht bereit ist. Wenn du das Image bereits gepusht oder in dein Cluster geladen hast (z. B. mit kind/minikube/k3d), ist das nicht nötig.

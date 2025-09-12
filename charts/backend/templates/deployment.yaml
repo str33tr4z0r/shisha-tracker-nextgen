@@ -60,14 +60,33 @@ spec:
               value: "{{ .Values.env.storage.mode | default "gorm" }}"
             - name: POCKETBASE_URL
               value: "{{ .Values.env.storage.pocketbase.url | default "http://pocketbase:8090" }}"
+
+            {{- if .Values.env.storage.pocketbase.tokenSecretName }}
+            - name: POCKETBASE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env.storage.pocketbase.tokenSecretName }}
+                  key: token
+            {{- else }}
+            - name: POCKETBASE_TOKEN
+              value: ""
+            {{- end }}
+
             {{- if .Values.env.storage.pocketbase.adminSecretName }}
-            - name: POCKETBASE_ADMIN_SECRET
+            - name: POCKETBASE_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env.storage.pocketbase.adminSecretName }}
+                  key: email
+            - name: POCKETBASE_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.env.storage.pocketbase.adminSecretName }}
                   key: password
             {{- else }}
-            - name: POCKETBASE_ADMIN_SECRET
+            - name: POCKETBASE_ADMIN_EMAIL
+              value: ""
+            - name: POCKETBASE_ADMIN_PASSWORD
               value: ""
             {{- end }}
       affinity:
