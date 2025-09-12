@@ -3,9 +3,9 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/pocketbase/pocketbase
+  repository: docker.io/pocketbase/pocketbase
   tag: "0.14.0"
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 service:
   type: ClusterIP

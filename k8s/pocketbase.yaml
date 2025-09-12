@@ -25,9 +25,11 @@ spec:
       labels:
         app: shisha-pocketbase
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: pocketbase
-          image: pocketbase/pocketbase:latest
+          image: ghcr.io/pocketbase/pocketbase:latest
           imagePullPolicy: Always
           args: ["serve", "--http=0.0.0.0:8090", "--dir", "/pb_data"]
           ports:

@@ -74,6 +74,34 @@ Wichtige Hinweise
     docker push ricardohdc/shisha-tracker-nextgen-backend:latest
     ```
   - Alternativen für lokale Cluster: `kind load docker-image ...`, `minikube image load ...`, oder `ctr images import` (siehe [`README.md`](README.md:1) für Hinweise).
+  - GHCR (GitHub Container Registry) Hinweis — Auth nötig:
+    Wenn du Images aus ghcr.io ziehen möchtest, musst du dich bei GitHub anmelden und einen Personal Access Token (PAT) mit dem Scope `read:packages` erstellen. Ablauf kurz:
+      1. Melde dich bei GitHub an und erstelle einen PAT: Settings → Developer settings → Personal access tokens → Generate new token (classic). Wähle mindestens `read:packages`.
+      2. Erstelle ein Kubernetes ImagePullSecret in deinem Cluster (microk8s-Beispiel). Ersetze `<GITHUB_USER>`, `<PERSONAL_ACCESS_TOKEN>`, `<EMAIL>`:
+      
+      ```bash
+      # Erstelle Secret für GHCR (normales Kubernetes)
+      kubectl create secret docker-registry ghcr-secret \
+        --docker-server=ghcr.io \
+        --docker-username=<GITHUB_USER> \
+        --docker-password=<PERSONAL_ACCESS_TOKEN> \
+        --docker-email=<EMAIL>
+      
+      # Patch default ServiceAccount, damit Pods das Secret nutzen
+      kubectl patch serviceaccount default -p '{"imagePullSecrets":[{"name":"ghcr-secret"}]}'
+      
+      # Anschließend Pods neu erzeugen, damit das Secret beim ImagePull verwendet wird
+      kubectl delete pod -l app=shisha-pocketbase
+      ```
+      
+      3. Prüfe den Pod‑Status und Events:
+      ```bash
+      kubectl get pods -l app=shisha-pocketbase -o wide
+      kubectl describe pod <pod-name>
+      kubectl get events --sort-by=.metadata.creationTimestamp | tail -n 50
+      ```
+      
+      Hinweis: In deiner lokalen microk8s‑Umgebung musst du die Befehle mit dem Prefix `microk8s.` ausführen (z. B. `microk8s.kubectl create secret ...`). Dateien mit Image/Secrets: siehe [`k8s/pocketbase.yaml`](k8s/pocketbase.yaml:27) (enthält jetzt `imagePullSecrets` falls aktiviert).
 - Helm vs. YAML: Helm bietet Parameterisierung (`--set image.tag=...`) und ist bequemer für wiederholbare Deploys, die YAML‑Reihenfolge bleibt aber gleich.
 
 Beschreibungen der wichtigsten k8s‑YAMLs (neu / aktualisiert)
