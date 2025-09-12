@@ -188,6 +188,7 @@ func containerIDHandler(c *gin.Context) {
 func listShishas(c *gin.Context) {
 	shishas, err := storageEngine.ListShishas()
 	if err != nil {
+		log.Printf("storage.ListShishas error: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -202,6 +203,7 @@ func getShisha(c *gin.Context) {
 	}
 	s, err := storageEngine.GetShisha(uint(id))
 	if err != nil {
+		log.Printf("storage.GetShisha id=%d error: %v", id, err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -218,9 +220,10 @@ func createShisha(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-
+ 
 	out, err := storageEngine.CreateShisha(&in)
 	if err != nil {
+		log.Printf("storage.CreateShisha input=%+v error: %v", in, err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -240,6 +243,7 @@ func updateShisha(c *gin.Context) {
 	}
 	out, err := storageEngine.UpdateShisha(uint(id), &in)
 	if err != nil {
+		log.Printf("storage.UpdateShisha id=%d input=%+v error: %v", id, in, err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -253,6 +257,7 @@ func deleteShisha(c *gin.Context) {
 		return
 	}
 	if err := storageEngine.DeleteShisha(uint(id)); err != nil {
+		log.Printf("storage.DeleteShisha id=%d error: %v", id, err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -274,6 +279,7 @@ func addRating(c *gin.Context) {
 		return
 	}
 	if err := storageEngine.AddRating(uint(id), req.User, req.Score); err != nil {
+		log.Printf("storage.AddRating id=%d user=%s score=%d error: %v", id, req.User, req.Score, err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -295,6 +301,7 @@ func addComment(c *gin.Context) {
 		return
 	}
 	if err := storageEngine.AddComment(uint(id), req.User, req.Message); err != nil {
+		log.Printf("storage.AddComment id=%d user=%s error: %v", id, req.User, err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
