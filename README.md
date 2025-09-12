@@ -168,6 +168,13 @@ Deploy‑Beispiel (empfohlene Reihenfolge)
 ```bash
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/pocketbase.yaml
+# Optional: create admin secret (plain-k8s flow) if you want to control initial admin credentials:
+# kubectl create secret generic shisha-pocketbase-admin -n shisha --from-literal=email=admin@example.com --from-literal=password=changeme
+# Seed PocketBase with sample Shisha records (plain kubectl):
+# kubectl apply -f k8s/pocketbase-token-job.yaml      # creates token secret (if not using Helm)
+# kubectl wait --for=condition=complete job/shisha-pocketbase-token-create -n shisha --timeout=120s
+# kubectl apply -f k8s/pocketbase-seed-job.yaml       # creates sample shisha records (idempotent)
+# kubectl wait --for=condition=complete job/shisha-pocketbase-seed -n shisha --timeout=120s
 kubectl apply -f k8s/backend.yaml
 kubectl apply -f k8s/frontend.yaml
 kubectl apply -f k8s/hpa-backend.yaml

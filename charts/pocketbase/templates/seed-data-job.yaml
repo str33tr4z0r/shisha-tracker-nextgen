@@ -1,0 +1,148 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "pocketbase.fullname" . }}-seed-data
+  labels:
+    app.kubernetes.io/name: pocketbase
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      serviceAccountName: {{ include "pocketbase.fullname" . }}-token-job-sa
+      restartPolicy: OnFailure
+      containers:
+        - name: seed-data
+          image: "{{ .Values.token.job.image | default "bitnami/kubectl:1.27.3" }}"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POCKETBASE_URL
+              value: "{{ printf "http://%s:%d" (include "pocketbase.fullname" .) .Values.service.port }}"
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: TOKEN_SECRET_NAME
+              value: "{{ if .Values.token.secretName }}{{ .Values.token.secretName }}{{ else }}{{ include "pocketbase.fullname" . }}-token{{ end }}"
+            - name: ADMIN_SECRET_NAME
+              value: "{{ include "pocketbase.fullname" . }}-admin"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -euo pipefail
+              # Wait for PocketBase to be ready
+              RETRIES={{ .Values.token.job.retries | default 30 }}
+              SLEEP={{ .Values.token.job.sleepSeconds | default 2 }}
+              i=0
+              echo "waiting for PocketBase at $POCKETBASE_URL ..."
+              until [ $i -ge $RETRIES ]
+              do
+                if curl -s -f "$POCKETBASE_URL/" >/dev/null 2>&1; then
+                  echo "pocketbase reachable"
+                  break
+                fi
+                i=$((i+1))
+                sleep $SLEEP
+              done
+              if [ $i -ge $RETRIES ]; then
+                echo "timeout waiting for PocketBase"
+                exit 1
+              fi
+
+              # obtain admin token: try token secret first, then fall back to admin creds
+              ADMIN_TOKEN=""
+              if kubectl get secret "$TOKEN_SECRET_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
+                echo "reading token from secret $TOKEN_SECRET_NAME"
+                ADMIN_TOKEN=$(kubectl get secret "$TOKEN_SECRET_NAME" -n "$NAMESPACE" -o jsonpath='{.data.token}' 2>/dev/null || true)
+                if [ -n "$ADMIN_TOKEN" ]; then
+                  ADMIN_TOKEN=$(echo "$ADMIN_TOKEN" | base64 -d)
+                else
+                  ADMIN_TOKEN=""
+                fi
+              fi
+
+              if [ -z "$ADMIN_TOKEN" ]; then
+                echo "token secret not found or empty, attempting admin auth via admin secret ($ADMIN_SECRET_NAME)"
+                if ! kubectl get secret "$ADMIN_SECRET_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
+                  echo "admin secret $ADMIN_SECRET_NAME not found; cannot obtain admin token"
+                  exit 1
+                fi
+                ADMIN_EMAIL=$(kubectl get secret "$ADMIN_SECRET_NAME" -n "$NAMESPACE" -o jsonpath='{.data.email}' | base64 -d)
+                ADMIN_PASSWORD=$(kubectl get secret "$ADMIN_SECRET_NAME" -n "$NAMESPACE" -o jsonpath='{.data.password}' | base64 -d)
+                resp=$(curl -s -X POST -H "Content-Type: application/json" -d "{\"identity\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}" "$POCKETBASE_URL/api/admins/auth-with-password")
+                token=$(echo "$resp" | tr -d '\n' | sed -E 's/.*"token":"([^"]+)".*/\1/;t; s/.*"data":\{.*"token":"([^"]+)".*/\1/;t; s/.*"accessToken":"([^"]+)".*/\1/;t; s/.*/null/')
+                if [ -z "$token" ] || [ "$token" = "null" ]; then
+                  echo "failed to obtain admin token; response: $resp"
+                  exit 1
+                fi
+                ADMIN_TOKEN="$token"
+              fi
+
+              echo "using admin token: ${ADMIN_TOKEN:+(set)}"
+
+              # seed records definition (idempotent by name)
+              # Note: adjust these records to match your PocketBase collection schema if different
+              records='
+              [
+                {"name":"Mint Breeze","flavor":"Minze","manufacturer":{"name":"Al Fakher"},"ratings":[{"user":"alice","score":4},{"user":"bob","score":1}],"comments":[{"user":"bob","message":"Leicht und frisch"}],"smokedCount":0},
+                {"name":"Double Apple Deluxe","flavor":"Double Apple","manufacturer":{"name":"Nakhla"},"ratings":[{"user":"carla","score":8},{"user":"dan","score":7}],"comments":[{"user":"carla","message":"Classic taste"}],"smokedCount":5}
+              ]
+              '
+
+              echo "seeding records..."
+              idx=0
+              echo "$records" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | awk 'BEGIN{RS="\\n";ORS="\\n"}{print}' | tr -d '\n' | sed 's/^\\[//' | sed 's/\\]$//' | awk -v RS=',{' 'NR==1{gsub(/^\\{/, "", $0); print "{"$0} NR>1{print "{"$0}'
+
+              # iterate over records using a simple loop by splitting on '},{' (avoid jq dependency)
+              IFS=$'\n'
+              # convert to one record per line
+              recs=$(echo "$records" | sed 's/},[[:space:]]*{/\n/g' | sed 's/^[[:space:]]*\\[//;s/\\][[:space:]]*$//')
+              for r in $(echo "$recs"); do
+                # normalize braces
+                rec=$(echo "$r" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                # ensure leading/trailing braces
+                case "$rec" in
+                  \{*) ;; 
+                  *) rec="{$rec" ;;
+                esac
+                case "$rec" in
+                  *\}) ;;
+                  *) rec="$rec}" ;;
+                esac
+
+                # extract name for idempotency check (crude parsing)
+                name=$(echo "$rec" | sed -n 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' || true)
+                if [ -z "$name" ]; then
+                  echo "cannot determine name for record: $rec"
+                  continue
+                fi
+
+                # check if a record with this name exists (simple grep on list)
+                if curl -s -H "X-Admin-Token: $ADMIN_TOKEN" "$POCKETBASE_URL/api/collections/shishas/records?perPage=200" | grep -q "\"name\":\"$name\""; then
+                  echo "record with name '$name' already exists; skipping"
+                  continue
+                fi
+
+                # create record (send as JSON body under 'data' to be compatible with API expectation)
+                payload=$(printf '{"data": %s}' "$rec")
+                echo "creating shisha: $name"
+                cret=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -H "X-Admin-Token: $ADMIN_TOKEN" -d "$payload" "$POCKETBASE_URL/api/collections/shishas/records")
+                if [ "$cret" -ge 200 ] && [ "$cret" -lt 300 ]; then
+                  echo "created $name"
+                else
+                  echo "failed to create $name (status $cret)"
+                  # print debug response
+                  curl -s -X POST -H "Content-Type: application/json" -H "X-Admin-Token: $ADMIN_TOKEN" -d "$payload" "$POCKETBASE_URL/api/collections/shishas/records" || true
+                fi
+              done
+
+              echo "seed job completed"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      tolerations:
+        - operator: "Exists"
