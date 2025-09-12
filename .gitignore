@@ -1,2 +1,4 @@
 # Ignore backend log
 backend.log
+# Ignore compiled backend binary
+backend/server
