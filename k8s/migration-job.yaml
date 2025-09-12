@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: shisha-migrate
-  namespace: default
+  namespace: shisha
 spec:
   backoffLimit: 4
   ttlSecondsAfterFinished: 100

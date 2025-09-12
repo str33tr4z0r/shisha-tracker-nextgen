@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: shisha-frontend
+  namespace: shisha
   labels:
     app: shisha-frontend
 spec:
@@ -64,6 +65,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: shisha-frontend
+  namespace: shisha
   labels:
     app: shisha-frontend
 spec:
