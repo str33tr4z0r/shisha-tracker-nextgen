@@ -128,3 +128,96 @@ Zusätzliche Hinweise
   - [`scripts/DEPLOY_COMMANDS.md`](scripts/DEPLOY_COMMANDS.md:1)
   
 Ende
+
+## Externer Zugriff auf das Frontend (ClusterIP → externe IP / LoadBalancer / lokale Workarounds)
+
+Nach der Standard‑Deployment‑Konfiguration wird das Frontend als ClusterIP‑Service angelegt (siehe [`k8s/frontend.yaml`](k8s/frontend.yaml:70) bzw. das Chart‑Template [`charts/frontend/templates/service.yaml`](charts/frontend/templates/service.yaml:8)). Für externen Zugriff außerhalb des Clusters gibt es drei sinnvolle Optionen:
+
+### Option A — ClusterIP + externalIPs (on‑prem, Router/Firewall konfigurierbar)
+Wenn dein Infrastruktur‑/Netzwerk‑Team eine externe IP auf einem Node routen kann, kannst du sie dem Service als externalIP hinzufügen.
+
+Beispiel (Patch, Namespace optional):
+```bash
+kubectl patch svc shisha-frontend -n <namespace> --type='merge' -p '{"spec":{"externalIPs":["203.0.113.10"]}}'
+```
+
+Alternativ den Service in YAML ändern (Beispielauszug):
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: shisha-frontend
+spec:
+  type: ClusterIP
+  externalIPs:
+    - 203.0.113.10
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+```
+Wichtig: Die IP muss auf Cluster‑Nodes routbar sein und die Nodes müssen den Traffic an den Service weiterleiten. Nutze diese Option nur, wenn du Kontrolle über das Layer‑3‑Routing hast.
+
+### Option B — LoadBalancer (empfohlen für produktive Setups mit externem IP‑Pool, z.B. MetalLB)
+Auf lokalen/on‑prem‑Clustern ohne Cloud‑LB kannst du MetalLB installieren und einen IP‑Pool bereitstellen. Danach den Service als LoadBalancer ausrollen (bei Helm: `--set service.type=LoadBalancer` wie im Chart‑Template).
+
+MetalLB installieren (Beispiel):
+```bash
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.10/config/manifests/metallb-native.yaml
+```
+
+Beispiel für MetalLB AddressPool (speichere als `metallb-config.yaml` und `kubectl apply -f metallb-config.yaml`):
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: shisha-ip-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.0.2.240-192.0.2.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: shisha-l2
+  namespace: metallb-system
+spec: {}
+```
+
+Dann das Frontend per Helm als LoadBalancer deployen:
+```bash
+helm upgrade --install shisha-frontend charts/frontend --set service.type=LoadBalancer --set image.tag=latest
+```
+
+Referenz für das Service‑Template: [`charts/frontend/templates/service.yaml`](charts/frontend/templates/service.yaml:8)
+
+### Option C — Lokale Workarounds (minikube, port‑forward, NodePort)
+Für Development oder wenn keine externe IP verfügbar ist:
+
+- minikube:
+```bash
+minikube service shisha-frontend -n <namespace> --url
+# oder
+minikube tunnel   # stellt LoadBalancer IPs zur Verfügung (benötigt sudo)
+```
+
+- kubectl port‑forward (schnell, nur lokal):
+```bash
+kubectl port-forward deployment/shisha-frontend 8080:80 -n <namespace>
+# dann im Browser: http://localhost:8080
+```
+
+- NodePort (exponiert Service an Node‑Port):
+```bash
+kubectl patch svc shisha-frontend -n <namespace> --type='merge' -p '{"spec":{"type":"NodePort"}}'
+kubectl get svc shisha-frontend -n <namespace>
+# öffne http://<node-ip>:<nodePort>
+```
+
+Kurzer Hinweis zu Namespace: Ersetze `<namespace>` mit dem Namespace, den du benutzt (oder lasse `-n <namespace>` weg für default). Prüfe nach Änderungen mit:
+```bash
+kubectl get svc shisha-frontend -n <namespace> -o wide
+```
+
+Ende der Ergänzung.
