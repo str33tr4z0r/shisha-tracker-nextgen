@@ -26,7 +26,7 @@ spec:
       containers:
         - name: backend-mock
           image: ricardohdc/shisha-tracker-nextgen-backend:latest
-          imagePullPolicy: always
+          imagePullPolicy: Always
           env:
             - name: STORAGE
               value: "pb"
