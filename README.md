@@ -156,18 +156,15 @@ kubectl get events -n shisha --sort-by=.metadata.creationTimestamp | tail -n 50
 
 Diese Reihenfolge ist idempotent — du kannst abgeschlossene Schritte erneut anwenden, aber achte auf persistenten Daten‑State (PV/hostPath) bei Datenbanken.
 
-4. (Plain‑K8s) Token‑Erzeugungs‑Job ausführen (wenn du ein Token‑Secret willst)
-- Dieser Job wartet auf PocketBase, authentifiziert sich mit dem Admin‑Secret und legt `shisha-pocketbase-token` an.
+4. (Plain‑K8s) Legacy PocketBase token job — archived
+- The token‑generation job that previously interacted with PocketBase is archived under `archive/pocketbase/`. For CouchDB‑based deployments use the CouchDB seed job (`k8s/couchdb-seed-job.yaml`) or create the required secrets manually.
 ```bash
-kubectl apply -f k8s/pocketbase-token-job.yaml
-kubectl wait --for=condition=complete job/shisha-pocketbase-token-create -n shisha --timeout=120s
-kubectl get secret shisha-pocketbase-token -n shisha -o yaml
+# To seed CouchDB (idempotent)
+kubectl apply -f k8s/couchdb-seed-job.yaml
+kubectl wait --for=condition=complete job/couchdb-seed -n shisha --timeout=120s
+kubectl logs job/couchdb-seed -n shisha
 ```
-- Alternativ kannst du das Token manuell erzeugen und als Secret anlegen:
-```bash
-# Beispiel: Token in $TOKEN speichern, dann
-kubectl create secret generic shisha-pocketbase-token -n shisha --from-literal=token="$TOKEN"
-```
+- If you need to inspect or run the legacy PocketBase token job, see `archive/pocketbase/templates/token-create-job.yaml`.
 
 5. Backend (Deployment — enthält jetzt das Referenz auf Token‑Secret fallback zu Admin‑Creds)
 ```bash
@@ -254,12 +251,12 @@ Wichtige Hinweise
       kubectl patch serviceaccount default -p '{"imagePullSecrets":[{"name":"ghcr-secret"}]}'
       
       # Anschließend Pods neu erzeugen, damit das Secret beim ImagePull verwendet wird
-      kubectl delete pod -l app=shisha-pocketbase
+      kubectl delete pod -l app=shisha-backend
       ```
       
       3. Prüfe den Pod‑Status und Events:
       ```bash
-      kubectl get pods -l app=shisha-pocketbase -o wide
+      kubectl get pods -l app=shisha-backend -o wide
       kubectl describe pod <pod-name>
       kubectl get events --sort-by=.metadata.creationTimestamp | tail -n 50
       ```
@@ -292,21 +289,19 @@ Empfehlungen für produktive Setups
 Deploy‑Beispiel (empfohlene Reihenfolge)
 ```bash
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/pocketbase.yaml
-# Optional: create admin secret (plain-k8s flow) if you want to control initial admin credentials:
-# kubectl create secret generic shisha-pocketbase-admin -n shisha --from-literal=email=admin@example.com --from-literal=password=changeme
-# Seed PocketBase with sample Shisha records (plain kubectl):
-# kubectl apply -f k8s/pocketbase-token-job.yaml      # creates token secret (if not using Helm)
-# kubectl wait --for=condition=complete job/shisha-pocketbase-token-create -n shisha --timeout=120s
-# kubectl apply -f k8s/pocketbase-seed-job.yaml       # creates sample shisha records (idempotent)
-# kubectl wait --for=condition=complete job/shisha-pocketbase-seed -n shisha --timeout=120s
+# CouchDB (PV/Deployment/Service)
+kubectl apply -f k8s/couchdb-pv.yaml
+kubectl apply -f k8s/couchdb.yaml
+# Optional: seed initial DB/docs
+kubectl apply -f k8s/couchdb-seed-job.yaml
+kubectl wait --for=condition=complete job/couchdb-seed -n shisha --timeout=120s
+# Backend and Frontend
 kubectl apply -f k8s/backend.yaml
 kubectl apply -f k8s/frontend.yaml
 kubectl apply -f k8s/hpa-backend.yaml
 kubectl apply -f k8s/hpa-frontend.yaml
 kubectl apply -f k8s/pdb-backend.yaml
 kubectl apply -f k8s/pdb-frontend.yaml
-kubectl apply -f k8s/hpa-pocketbase.yaml  # optional
 ```
 
 Zusätzliche Hinweise

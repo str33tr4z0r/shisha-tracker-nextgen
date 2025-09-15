@@ -62,7 +62,7 @@ kubectl rollout status deploy/shisha-backend-mock
 7) Apply HPA and frontend
 ```bash
 # Apply HPA for PocketBase (if needed) after Deployment exists
-kubectl apply -f k8s/hpa-pocketbase.yaml
+kubectl apply -f # (pocketbase removed) previously: k8s/hpa-pocketbase.yaml
 
 # Then apply frontend manifests
 kubectl apply -f k8s/frontend.yaml
