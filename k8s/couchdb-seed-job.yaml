@@ -1,39 +1,11 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: shisha-couchdb-seed
+  name: shisha-couchdb-seed-deprecated
   namespace: shisha
-spec:
-  ttlSecondsAfterFinished: 300
-  template:
-    spec:
-      restartPolicy: Never
-      containers:
-        - name: seed
-          image: curlimages/curl:8.2.1
-          env:
-            - name: COUCHDB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: shisha-couchdb-admin
-                  key: username
-            - name: COUCHDB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: shisha-couchdb-admin
-                  key: password
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -eu
-              # Wait for CouchDB to be available
-              until curl -sSf http://shisha-couchdb:5984/; do
-                echo "waiting for couchdb..."
-                sleep 2
-              done
-              # Create database if not exists using secret credentials
-              curl -X PUT http://shisha-couchdb:5984/shisha -u "$COUCHDB_USER:$COUCHDB_PASSWORD" || true
-              # Optionally seed initial documents (example)
-              curl -X POST http://shisha-couchdb:5984/shisha -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -H "Content-Type: application/json" -d '{"name":"Example Shisha","flavor":"Mint"}' || true
-      volumes: []
+data:
+  note: |
+    The original shisha-couchdb-seed Job has been deprecated.
+    Database creation and index setup are now handled by the initContainer in k8s/couchdb.yaml.
+    If you need to run a one-off seed, use the archived manifest in archive/ or create a manual job.
+    This ConfigMap retains the original Job contents for reference.

@@ -58,9 +58,10 @@ kubectl create secret generic shisha-couchdb-admin -n shisha \
 3. CouchDB (Service / PVC / Deployment)
 ```bash
 kubectl apply -f k8s/couchdb.yaml
-# Optional: seed initial DB/docs
-kubectl apply -f k8s/couchdb-seed-job.yaml
-kubectl wait --for=condition=complete job/shisha-couchdb-seed --timeout=120s
+# The CouchDB Deployment now performs DB + index setup via an initContainer.
+# The old seed job (k8s/couchdb-seed-job.yaml) has been deprecated in this repo.
+# If you need to run a one-off seed for example documents, use the archived job manifests in /archive
+# or create a manual Job. The initContainer ensures the 'shisha' database and necessary index are present.
 ```
 ## Detaillierte Reihenfolge für k8s‑Manifeste (empfohlen)
 
@@ -99,9 +100,13 @@ kubectl rollout status deployment/shisha-couchdb -n shisha --timeout=120s
 5. Seed Job — initiale DB + Beispiel‑Dokumente
 [`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
 ```bash
-kubectl apply -f k8s/couchdb-seed-job.yaml
-kubectl wait --for=condition=complete job/shisha-couchdb-seed -n shisha --timeout=120s
-kubectl logs job/shisha-couchdb-seed -n shisha
+# Deprecated: CouchDB seed Job
+# The repository now uses an initContainer in k8s/couchdb.yaml to create the 'shisha' database
+# and the required index for server-side queries. If you still want to run a separate seed job,
+# you can find the original job in k8s/couchdb-seed-job.yaml.old or use the archived manifests.
+# To run a manual seed job (not required for default flow):
+# kubectl apply -f archive/pocketbase/k8s-pocketbase.yaml  # example archive usage
+# kubectl logs job/shisha-couchdb-seed -n shisha
 ```
 Wichtig: Der Seed‑Job liest die `shisha-couchdb-admin` Secret‑Werte; stelle sicher, dass das Secret vorhanden ist und zu den auf dem Node vorhandenen CouchDB Daten passt (siehe Punkt 3).
 
