@@ -26,6 +26,11 @@ Empfohlene Apply‑Reihenfolge (plain kubectl)
    - `kubectl create secret generic shisha-couchdb-admin -n <ns> --from-literal=username=<user> --from-literal=password=<pass>`
 3. (Dev) PV für CouchDB (hostPath)
    - [`k8s/couchdb-pv.yaml`](k8s/couchdb-pv.yaml:1)
+   - Wichtig: Ein PersistentVolume (PV) muss vorhanden sein, bevor das PVC erstellt wird. Die vorhandenen CouchDB‑Manifeste setzen in der PVC kein storageClassName; ohne passenden PV bleibt das PVC im Pending‑Zustand und der Pod kann nicht scheduled werden. Erstelle das PV manuell (Dev, hostPath) mit:
+```bash
+kubectl apply -f k8s/couchdb-pv.yaml
+```
+   - Alternative: Nutze eine StorageClass (z. B. microk8s-hostpath) und passe das PVC an, damit die dynamische Provisionierung greift.
 4. CouchDB Deployment (Service / PVC / Deployment)
    - [`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
    - `kubectl rollout status deployment/shisha-couchdb -n <ns>`
