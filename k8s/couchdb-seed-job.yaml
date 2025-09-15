@@ -1,0 +1,48 @@
+# Seed job for CouchDB: waits for pod-0 then creates DB and index
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: shisha-couchdb-seed
+  namespace: shisha
+  labels:
+    app: shisha-couchdb
+spec:
+  backoffLimit: 4
+  template:
+    metadata:
+      name: shisha-couchdb-seed
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: seed
+          image: curlimages/curl:8.2.1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: username
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: password
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              COORD=shisha-couchdb-0.shisha-couchdb-headless
+              echo "waiting for coordinator ${COORD}:5984..."
+              until curl -sSf "http://${COORD}:5984/_up" >/dev/null 2>&1; do
+                echo "waiting..."
+                sleep 2
+              done
+              echo "coordinator ready, creating DB and indexes"
+              curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X PUT "http://${COORD}:5984/shisha" || true
+              curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://${COORD}:5984/shisha/_index" -H "Content-Type: application/json" -d '{"index":{"fields":["type","id"]},"name":"idx_type_id","type":"json"}' || true
+              echo "seed complete"
+      tolerations:
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
