@@ -1,29 +1,32 @@
 version: "3.8"
-
+ 
 services:
-  pocketbase:
-    image: pocketbase/pocketbase:0.17.2
-    command: ["serve", "--http=0.0.0.0:8090", "--dir", "/pb_data"]
+  couchdb:
+    image: couchdb:3.2.2
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=adminpassword
     volumes:
-      - pb_data:/pb_data
+      - couchdb_data:/opt/couchdb/data
     ports:
-      - "8090:8090"
+      - "5984:5984"
     restart: unless-stopped
-
+ 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      - STORAGE=pb
-      - POCKETBASE_URL=http://pocketbase:8090
+      - STORAGE=couchdb
+      - COUCHDB_URL=http://couchdb:5984
+      - COUCHDB_DATABASE=shisha
     ports:
       - "8080:8080"
     depends_on:
-      - pocketbase
+      - couchdb
     restart: unless-stopped
     # If the backend binary listens on a different port, adjust above.
-
+ 
   frontend:
     build:
       context: ./frontend
@@ -33,6 +36,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
-
+ 
 volumes:
-  pb_data:
+  couchdb_data:

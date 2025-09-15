@@ -1,9 +1,10 @@
 FROM golang:1.20-alpine AS builder
-WORKDIR /src
+WORKDIR /src/backend
 RUN apk add --no-cache git build-base
 # Copy go.mod first for caching, then copy sources so go can resolve module dependencies
-COPY go.mod ./
-COPY . .
+COPY backend/go.mod ./
+COPY backend/go.sum ./
+COPY backend ./
 # Generate go.sum and download dependencies now that sources are present
 RUN go mod tidy
 # Vendor dependencies inside the builder and force the build to use the vendor folder

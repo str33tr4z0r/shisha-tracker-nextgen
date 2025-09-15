@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shisha-pocketbase-ingress
+  namespace: shisha
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  rules:
+    - host: "192.168.131.130.nip.io"
+      http:
+        paths:
+          - path: /pocketbase/api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: shisha-pocketbase
+                port:
+                  number: 8090
+          - path: /pocketbase/_(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: shisha-pocketbase
+                port:
+                  number: 8090
+          - path: /pocketbase(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: shisha-pocketbase
+                port:
+                  number: 8090

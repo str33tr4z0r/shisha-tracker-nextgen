@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: couchdb-seed
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: seed
+          image: curlimages/curl:8.2.1
+          env:
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: couchdb-admin
+                  key: username
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: couchdb-admin
+                  key: password
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              # Wait for CouchDB to be available
+              until curl -sSf http://couchdb:5984/; do
+                echo "waiting for couchdb..."
+                sleep 2
+              done
+              # Create database if not exists using secret credentials
+              curl -X PUT http://couchdb:5984/shisha -u "$COUCHDB_USER:$COUCHDB_PASSWORD" || true
+              # Optionally seed initial documents (example)
+              curl -X POST http://couchdb:5984/shisha -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -H "Content-Type: application/json" -d '{"name":"Example Shisha","flavor":"Mint"}' || true
+      volumes: []

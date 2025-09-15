@@ -1,0 +1,23 @@
+replicaCount: 1
+image:
+  repository: couchdb
+  tag: "3.2.2"
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 5984
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+env:
+  adminSecretName: couchdb-admin
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+metrics:
+  enabled: false

@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/shisha-tracker/backend/pocketbase"
 	"github.com/shisha-tracker/backend/storage"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -36,17 +35,17 @@ type Shisha struct {
 }
 
 type Rating struct {
-	ID      uint   `gorm:"primaryKey" json:"id"`
-	ShishaID uint  `json:"shisha_id"`
-	User    string `json:"user"`
-	Score   int    `json:"score"`
+	ID       uint   `gorm:"primaryKey" json:"id"`
+	ShishaID uint   `json:"shisha_id"`
+	User     string `json:"user"`
+	Score    int    `json:"score"`
 }
 
 type Comment struct {
-	ID      uint   `gorm:"primaryKey" json:"id"`
-	ShishaID uint  `json:"shisha_id"`
-	User    string `json:"user"`
-	Message string `json:"message"`
+	ID       uint   `gorm:"primaryKey" json:"id"`
+	ShishaID uint   `json:"shisha_id"`
+	User     string `json:"user"`
+	Message  string `json:"message"`
 }
 
 var db *gorm.DB
@@ -82,18 +81,23 @@ func main() {
 		}
 	}
 	var err error
-	// choose storage backend: default PocketBase ("pb") or GORM (legacy)
+	// choose storage backend: default CouchDB ("couchdb") or GORM (legacy)
 	storageMode := os.Getenv("STORAGE")
 	if storageMode == "" {
-		storageMode = "pb"
+		storageMode = "couchdb"
 	}
-	if storageMode == "pb" {
-		pbURL := os.Getenv("POCKETBASE_URL")
-		if pbURL == "" {
-			pbURL = "http://pocketbase:8090"
+
+	if storageMode == "couchdb" {
+		couchURL := os.Getenv("COUCHDB_URL")
+		couchUser := os.Getenv("COUCHDB_USER")
+		couchPass := os.Getenv("COUCHDB_PASSWORD")
+		couchDB := os.Getenv("COUCHDB_DB")
+		adapter, err := storage.NewCouchAdapter(couchURL, couchUser, couchPass, couchDB)
+		if err != nil {
+			log.Fatalf("failed to initialize CouchDB adapter: %v", err)
 		}
-		storageEngine = pocketbase.NewClient(pbURL)
-		log.Printf("Using PocketBase storage backend (%s)", pbURL)
+		storageEngine = adapter
+		log.Printf("Using CouchDB storage backend (%s/%s)", couchURL, couchDB)
 	} else {
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
@@ -103,9 +107,8 @@ func main() {
 		log.Println("Using GORM storage backend")
 	}
 
-	// Automatic DB migrations removed (using PocketBase as storage).
-	log.Println("Automatic DB migrations disabled (PocketBase in use)")
-
+	// Automatic DB migrations removed (CouchDB as storage; manage migrations externally if needed).
+	log.Println("Automatic DB migrations disabled (CouchDB assumed)")
 
 	r := gin.Default()
 	api := r.Group("/api")
@@ -133,8 +136,7 @@ func main() {
 	addr := fmt.Sprintf(":%s", port)
 	r.Run(addr)
 }
-	
-	
+
 func healthHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
@@ -220,7 +222,7 @@ func createShisha(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
- 
+
 	out, err := storageEngine.CreateShisha(&in)
 	if err != nil {
 		log.Printf("storage.CreateShisha input=%+v error: %v", in, err)

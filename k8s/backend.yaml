@@ -30,19 +30,21 @@ spec:
           imagePullPolicy: Always
           env:
             - name: STORAGE
-              value: "pb"
-            - name: POCKETBASE_URL
-              value: "http://shisha-pocketbase:8090"
-            - name: POCKETBASE_ADMIN_EMAIL
+              value: "couchdb"
+            - name: COUCHDB_URL
+              value: "http://shisha-couchdb:5984"
+            - name: COUCHDB_USER
               valueFrom:
                 secretKeyRef:
-                  name: pocketbase-admin
-                  key: email
-            - name: POCKETBASE_ADMIN_PASSWORD
+                  name: shisha-couchdb-admin
+                  key: username
+            - name: COUCHDB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: pocketbase-admin
+                  name: shisha-couchdb-admin
                   key: password
+            - name: COUCHDB_DB
+              value: "shisha"
             - name: SKIP_MIGRATIONS
               value: "true"
           ports:

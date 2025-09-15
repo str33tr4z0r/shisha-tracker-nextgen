@@ -25,12 +25,12 @@ ctr images import /tmp/backend-${TAG}.tar
 rm /tmp/backend-${TAG}.tar
 ```
 
-3) Ensure storage is available (PocketBase)
+3) Ensure storage is available (CouchDB)
 ```bash
-# For local/dev use the provided PocketBase chart or run PocketBase as a container
+# For local/dev use the provided CouchDB chart or run CouchDB as a container
 # Example (Helm chart):
-# helm install shisha-pocketbase charts/pocketbase
-# or run PocketBase via docker-compose / your preferred method
+# helm install shisha-couchdb charts/couchdb
+# or run CouchDB via docker-compose (docker-compose.yml includes a couchdb service)
 ```
 
 4) Apply backend manifests (disabled until image is available)

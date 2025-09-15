@@ -5,6 +5,7 @@ metadata:
   namespace: shisha
 spec:
   backoffLimit: 1
+  ttlSecondsAfterFinished: 300
   template:
     spec:
       serviceAccountName: shisha-pocketbase-token-job-sa
@@ -21,12 +22,12 @@ spec:
             - name: TOKEN_SECRET_NAME
               value: "shisha-pocketbase-token"
             - name: ADMIN_SECRET_NAME
-              value: "shisha-pocketbase-admin"
+              value: "pocketbase-admin"
           command:
             - /bin/sh
             - -c
             - |
-              set -euo pipefail
+              set -eu
               RETRIES=30
               SLEEP=2
               i=0

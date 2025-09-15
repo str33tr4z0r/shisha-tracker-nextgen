@@ -1,0 +1,6 @@
+apiVersion: v2
+name: couchdb
+description: CouchDB chart for shisha-tracker-nextgen (staged replacement for PocketBase)
+type: application
+version: 0.1.0
+appVersion: "3.2.2"

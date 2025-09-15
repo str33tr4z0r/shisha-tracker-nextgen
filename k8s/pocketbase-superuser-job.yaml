@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: shisha-pocketbase-superuser
+  namespace: shisha
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: create-superuser
+          image: docker.io/elestio/pocketbase:v0.30.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-admin
+                  key: email
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-admin
+                  key: password
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # idempotent: upsert superuser into local pb_data; fall back to defaults
+              EMAIL="${ADMIN_EMAIL:-admin@example.com}"
+              PASS="${ADMIN_PASSWORD:-changeme}"
+              echo "creating/updating pocketbase superuser: $EMAIL"
+              pocketbase superuser upsert "$EMAIL" "$PASS" || true
+          volumeMounts:
+            - name: pb-data
+              mountPath: /pb_data
+      volumes:
+        - name: pb-data
+          persistentVolumeClaim:
+            claimName: shisha-pocketbase-pvc

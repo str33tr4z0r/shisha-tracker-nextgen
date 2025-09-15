@@ -40,14 +40,23 @@ metrics:
   enabled: true
   path: /api/metrics
 env:
-  # Storage selection for backend: "pb" (PocketBase) or "gorm" (legacy)
+  # Storage selection for backend: "couchdb" (default) or "gorm" (legacy)
   storage:
-    mode: pb
-    pocketbase:
-      # POCKETBASE URL used by backend when storage.mode == "pb"
-      url: http://pocketbase:8090
-      # optional admin credentials secret name (if backend needs to call admin endpoints)
-      adminSecretName: pocketbase-admin
+    mode: couchdb
+    couchdb:
+      # CouchDB URL used by backend when storage.mode == "couchdb"
+      url: http://couchdb:5984
+      # database name used by backend
+      database: shisha
+      # optional admin credentials secret name (backend will read username from COUCHDB_USER and password from secret)
+      adminSecretName: couchdb-admin
+  # SQL database settings (legacy GORM backend); keep defaults for deployments that still use SQL
+  database:
+    host: postgres
+    port: "5432"
+    name: shisha
+    user: postgres
+    passwordSecret: postgres-password
 affinity:
   podAntiAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:

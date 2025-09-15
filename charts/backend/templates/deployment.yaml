@@ -57,36 +57,27 @@ spec:
                   name: {{ .Values.env.database.passwordSecret }}
                   key: password
             - name: STORAGE
-              value: "{{ .Values.env.storage.mode | default "gorm" }}"
-            - name: POCKETBASE_URL
-              value: "{{ .Values.env.storage.pocketbase.url | default "http://pocketbase:8090" }}"
-
-            {{- if .Values.env.storage.pocketbase.tokenSecretName }}
-            - name: POCKETBASE_TOKEN
+              value: "{{ .Values.env.storage.mode | default "couchdb" }}"
+            - name: COUCHDB_URL
+              value: "{{ .Values.env.storage.couchdb.url | default "http://couchdb:5984" }}"
+            - name: COUCHDB_DATABASE
+              value: "{{ .Values.env.storage.couchdb.database | default "shisha" }}"
+ 
+            {{- if .Values.env.storage.couchdb.adminSecretName }}
+            - name: COUCHDB_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.env.storage.pocketbase.tokenSecretName }}
-                  key: token
-            {{- else }}
-            - name: POCKETBASE_TOKEN
-              value: ""
-            {{- end }}
-
-            {{- if .Values.env.storage.pocketbase.adminSecretName }}
-            - name: POCKETBASE_ADMIN_EMAIL
+                  name: {{ .Values.env.storage.couchdb.adminSecretName }}
+                  key: username
+            - name: COUCHDB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.env.storage.pocketbase.adminSecretName }}
-                  key: email
-            - name: POCKETBASE_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.env.storage.pocketbase.adminSecretName }}
+                  name: {{ .Values.env.storage.couchdb.adminSecretName }}
                   key: password
             {{- else }}
-            - name: POCKETBASE_ADMIN_EMAIL
+            - name: COUCHDB_USER
               value: ""
-            - name: POCKETBASE_ADMIN_PASSWORD
+            - name: COUCHDB_PASSWORD
               value: ""
             {{- end }}
       affinity:

@@ -1,0 +1,71 @@
+# CouchDB deployment manifest for staged migration
+# Single-replica Deployment with PVC and Service. For production, use StatefulSet and proper secrets.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: couchdb
+  labels:
+    app: couchdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: couchdb
+  template:
+    metadata:
+      labels:
+        app: couchdb
+    spec:
+      containers:
+        - name: couchdb
+          image: couchdb:3.2.2
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: couchdb-admin
+                  key: username
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: couchdb-admin
+                  key: password
+          ports:
+            - containerPort: 5984
+              name: http
+          volumeMounts:
+            - name: couchdb-data
+              mountPath: /opt/couchdb/data
+      volumes:
+        - name: couchdb-data
+          persistentVolumeClaim:
+            claimName: couchdb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: couchdb
+  labels:
+    app: couchdb
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5984
+      targetPort: 5984
+      protocol: TCP
+      name: http
+  selector:
+    app: couchdb
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: couchdb-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: ""
