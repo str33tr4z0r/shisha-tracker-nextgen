@@ -1,7 +1,7 @@
 # Shisha Tracker — Kurzanleitung
 
 Kurzbeschreibung
-- Shisha Tracker ist eine Webanwendung zum Erfassen, Verwalten und Bewerten von Shisha‑Sessions. Die App besteht aus Frontend, Backend und nutzt PocketBase als Standard‑Speicher für Entwicklung und lokale Setups.
+- Shisha Tracker ist eine Webanwendung zum Erfassen, Verwalten und Bewerten von Shisha‑Sessions. Die App besteht aus Frontend, Backend und verwendet CouchDB als Standard‑Speicher für Entwicklung und lokale Setups (staged Migration: PocketBase wurde entfernt).
 
 Deploy — Übersicht
 - Zwei Optionen zum Deployment:
@@ -9,15 +9,14 @@ Deploy — Übersicht
   - Direkte k8s‑Manifeste im Ordner [`k8s/`](k8s/:1)
 
 Deploy mit Helm (empfohlen)
-1. PocketBase installieren
+1. CouchDB installieren
 ```bash
-helm install shisha-pocketbase charts/pocketbase
+helm install shisha-couchdb charts/couchdb
 ```
-Hinweis zu Token‑Erzeugung:
-- Der PocketBase‑Chart kann automatisch einen Admin‑API‑Token anlegen. Standardmäßig ist ein Helm post‑install Hook (Job) aktiviert und erstellt ein Secret mit dem Token (Name: `{{ include "pocketbase.fullname" . }}-token`).
-- Alternativ kannst du beim Installieren ein Token per values vorgeben (nicht empfohlen für langlebige Secrets):
-  - Setze `token.createFromValues=true` und `token.value=<token>` in [`charts/pocketbase/values.yaml`](charts/pocketbase/values.yaml:1).
-- Wenn du nichts änderst, erzeugt Helm bei Installation das Admin‑Secret und der Hook erstellt das Token‑Secret automatisch (sofern der Cluster Jobs ausführen darf).
+Hinweis zu Admin‑Zugang:
+- Der CouchDB‑Chart legt standardmäßig kein Admin‑Secret an. Erstelle vorab ein Secret `couchdb-admin` mit `username`/`password` oder verwende ein externes Secret-Management.
+- Für lokale Setups gibt es ein k8s Manifest und ein Seed‑Job, das die Datenbank und Beispiel‑Dokumente anlegt (`k8s/couchdb.yaml`, `k8s/couchdb-seed-job.yaml`).
+- Verwende beim Helm‑Deploy `--set env.adminSecretName=<secret-name>` falls nötig.
 
 2. Backend (Image‑Tag setzen in [`charts/backend/values.yaml`](charts/backend/values.yaml:1) oder via --set)
 ```bash
@@ -48,18 +47,114 @@ Empfohlene Reihenfolge (plain kubectl)
 kubectl apply -f k8s/namespace.yaml
 ```
 
-2. (Optional aber empfohlen) Admin‑Secret für PocketBase erstellen
-- Ersetze <email> und <password> durch gewünschte Admin‑Zugangsdaten. Die Manifeste in diesem Repo erwarten das Secret mit Namen `pocketbase-admin`. Du kannst einen anderen Namen wählen, musst dann aber die Referenzen in den YAMLs anpassen (z. B. in Jobs/Deployments).
+2. (Optional aber empfohlen) Admin‑Secret für CouchDB erstellen
+- Ersetze <username> und <password> durch gewünschte Admin‑Zugangsdaten. Die Manifeste in diesem Repo erwarten das Secret mit Namen `couchdb-admin`. Du kannst einen anderen Namen wählen, musst dann aber die Referenzen in den YAMLs anpassen (z. B. in Jobs/Deployments).
 ```bash
-kubectl create secret generic pocketbase-admin -n shisha \
-  --from-literal=email=admin@example.com \
+kubectl create secret generic couchdb-admin -n shisha \
+  --from-literal=username=admin \
   --from-literal=password=changeme
 ```
 
-3. PocketBase (Service / PVC / Deployment)
+3. CouchDB (Service / PVC / Deployment)
 ```bash
-kubectl apply -f k8s/pocketbase.yaml
+kubectl apply -f k8s/couchdb.yaml
+# Optional: seed initial DB/docs
+kubectl apply -f k8s/couchdb-seed-job.yaml
+kubectl wait --for=condition=complete job/couchdb-seed --timeout=120s
 ```
+## Detaillierte Reihenfolge für k8s‑Manifeste (empfohlen)
+
+Für reproduzierbare Deployments (plain kubectl) befolge diese präzise Reihenfolge. Alle Dateinamen sind als Referenz angegeben — ersetze Namespace mit deinem Namespace falls nötig.
+
+1. Namespace
+[`k8s/namespace.yaml`](k8s/namespace.yaml:1)
+```bash
+# Erstelle Namespace einmalig
+kubectl apply -f k8s/namespace.yaml
+```
+
+2. (Optional / empfohlen) CouchDB‑Admin Secret (Name: `couchdb-admin`)
+```bash
+kubectl create secret generic couchdb-admin -n shisha \
+  --from-literal=username=<username> \
+  --from-literal=password=<password>
+```
+(Alternativ: verwende dein externes Secret‑Management und passe Referenzen in den Manifests an.)
+
+3. (Dev only) PersistentVolume (hostPath) — falls vorhanden
+[`k8s/couchdb-pv.yaml`](k8s/couchdb-pv.yaml:1)
+```bash
+kubectl apply -f k8s/couchdb-pv.yaml
+```
+Hinweis: Bei hostPath‑PV sicherstellen, dass der Node‑Pfad sauber ist (z. B. `/var/lib/shisha/couchdb`) bevor neue Admin‑Creds verwendet werden. Andernfalls kann CouchDB alte Admin‑Hashes aus dem Datenverzeichnis laden und neue Anmeldedaten ablehnen.
+
+4. CouchDB (Service / PVC / Deployment)
+[`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
+```bash
+kubectl apply -f k8s/couchdb.yaml
+# Warte bis Pod Ready
+kubectl rollout status deployment/couchdb -n shisha --timeout=120s
+```
+
+5. Seed Job — initiale DB + Beispiel‑Dokumente
+[`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
+```bash
+kubectl apply -f k8s/couchdb-seed-job.yaml
+kubectl wait --for=condition=complete job/couchdb-seed -n shisha --timeout=120s
+kubectl logs job/couchdb-seed -n shisha
+```
+Wichtig: Der Seed‑Job liest die `couchdb-admin` Secret‑Werte; stelle sicher, dass das Secret vorhanden ist und zu den auf dem Node vorhandenen CouchDB Daten passt (siehe Punkt 3).
+
+6. Backend (Deployment + Service)
+[`k8s/backend.yaml`](k8s/backend.yaml:1)
+```bash
+kubectl apply -f k8s/backend.yaml
+kubectl rollout status deployment/shisha-backend -n shisha --timeout=120s
+kubectl logs -l app=shisha-backend -n shisha --tail=100
+```
+Prüfe, dass das Backend die Umgebungsvariablen `COUCHDB_URL` / `COUCHDB_DATABASE` / `COUCHDB_USER` / `COUCHDB_PASSWORD` korrekt liest (Secrets/Config in Manifest geprüft).
+
+7. Frontend ConfigMap (Nginx) — muss vor Frontend angewendet werden
+[`k8s/shisha-frontend-nginx-configmap.yaml`](k8s/shisha-frontend-nginx-configmap.yaml:1)
+```bash
+kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml
+kubectl get configmap shisha-frontend-nginx -n shisha
+```
+
+8. Frontend (Deployment + Service)
+[`k8s/frontend.yaml`](k8s/frontend.yaml:1)
+```bash
+kubectl apply -f k8s/frontend.yaml
+kubectl rollout status deployment/shisha-frontend -n shisha --timeout=120s
+```
+
+9. HPA / PDBs / Optionales Monitoring
+[`k8s/hpa-backend.yaml`](k8s/hpa-backend.yaml:1) [`k8s/hpa-frontend.yaml`](k8s/hpa-frontend.yaml:1) [`k8s/pdb-backend.yaml`](k8s/pdb-backend.yaml:1) [`k8s/pdb-frontend.yaml`](k8s/pdb-frontend.yaml:1)
+```bash
+kubectl apply -f k8s/hpa-backend.yaml
+kubectl apply -f k8s/hpa-frontend.yaml
+kubectl apply -f k8s/pdb-backend.yaml
+kubectl apply -f k8s/pdb-frontend.yaml
+```
+
+10. (Optional) Migration / One‑off Jobs
+[`k8s/migration-job.yaml`](k8s/migration-job.yaml:1)
+```bash
+kubectl apply -f k8s/migration-job.yaml
+kubectl wait --for=condition=complete job/shisha-migrate -n shisha --timeout=300s
+kubectl logs job/shisha-migrate -n shisha
+```
+
+Troubleshooting‑Prüfungen (Kurz)
+- Pod Events / Describe:
+```bash
+kubectl describe pod <pod-name> -n shisha
+kubectl get events -n shisha --sort-by=.metadata.creationTimestamp | tail -n 50
+```
+- Wenn CouchDB "unauthorized" beim Seed ist → prüfe hostPath data (siehe Punkt 3) oder Secret‑Konsistenz.
+- Wenn ConfigMap fehlt → prüfe, dass `k8s/shisha-frontend-nginx-configmap.yaml` vor dem Frontend angewandt wurde.
+
+Diese Reihenfolge ist idempotent — du kannst abgeschlossene Schritte erneut anwenden, aber achte auf persistenten Daten‑State (PV/hostPath) bei Datenbanken.
 
 4. (Plain‑K8s) Token‑Erzeugungs‑Job ausführen (wenn du ein Token‑Secret willst)
 - Dieser Job wartet auf PocketBase, authentifiziert sich mit dem Admin‑Secret und legt `shisha-pocketbase-token` an.
@@ -129,10 +224,9 @@ kubectl apply -f k8s/pdb-frontend.yaml
 
 
 Hinweise (plain kubectl)
-- Der plain Job manifest ist: [`k8s/pocketbase-token-job.yaml`](k8s/pocketbase-token-job.yaml:1)
-- Admin‑Secret Name (plain flow): `pocketbase-admin` (standard in den YAMLs dieses Repos)
-- Token‑Secret Name (plain flow): `shisha-pocketbase-token`
-- Backend liest bevorzugt `POCKETBASE_TOKEN` aus dem Token‑Secret; falls nicht vorhanden, nutzt es `POCKETBASE_ADMIN_EMAIL` / `POCKETBASE_ADMIN_PASSWORD` (siehe Chart‑Deployment).
+- Seed/one‑shot Job (plain k8s) ist: [`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
+- Admin‑Secret Name (plain flow): `couchdb-admin` (standard in den YAMLs dieses Repo‑Änderungen)
+- Backend liest bevorzugt `COUCHDB_URL`, `COUCHDB_DATABASE` sowie `COUCHDB_USER`/`COUCHDB_PASSWORD` aus Environment/Secrets (siehe Chart‑Deployment).
 
 Wichtige Hinweise
 - Warum vorher Scale‑0 empfohlen wurde: das Scale‑0‑/Image‑Override‑Pattern schützt, wenn das Image noch nicht im Registry verfügbar ist oder die DB noch nicht bereit ist. Wenn du das Image bereits gepusht oder in dein Cluster geladen hast (z. B. mit kind/minikube/k3d), ist das nicht nötig.
@@ -174,10 +268,10 @@ Wichtige Hinweise
 - Helm vs. YAML: Helm bietet Parameterisierung (`--set image.tag=...`) und ist bequemer für wiederholbare Deploys, die YAML‑Reihenfolge bleibt aber gleich.
 
 Beschreibungen der wichtigsten k8s‑YAMLs (neu / aktualisiert)
-- [`k8s/pocketbase.yaml`](k8s/pocketbase.yaml:1)
-  - Stellt PocketBase als Service + Deployment mit PVC bereit. PocketBase ist der Standard‑Speicher (STORAGE=pb) für lokale/Dev‑Setups.
+- [`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
+  - Stellt CouchDB als Service + Deployment mit PVC bereit. CouchDB ist der Standard‑Speicher (STORAGE=couchdb) für lokale/Dev‑Setups.
 - [`k8s/hpa-pocketbase.yaml`](k8s/hpa-pocketbase.yaml:1)
-  - Optionaler HorizontalPodAutoscaler für PocketBase (min/max Replicas); nur anwenden, wenn dein Cluster Metrics API (metrics-server / custom metrics) bereitstellt.
+  - Optionaler HorizontalPodAutoscaler (bestehend; nur anwenden wenn relevant).
 - [`k8s/backend.yaml`](k8s/backend.yaml:1)
   - Backend‑Deployment und Service. Änderungen: replicas wurden auf den HPA‑Minimalwert gesetzt, Ressourcen (requests/limits) hinzugefügt und eine preferred podAntiAffinity, damit Pods über Nodes verteilt werden. Liveness/Readiness‑Probes sind vorhanden.
 - [`k8s/hpa-backend.yaml`](k8s/hpa-backend.yaml:1)
@@ -216,11 +310,11 @@ kubectl apply -f k8s/hpa-pocketbase.yaml  # optional
 ```
 
 Zusätzliche Hinweise
-- Das Backend verwendet standardmäßig PocketBase (STORAGE=pb). Prüfe und setze erforderliche Environment‑Variablen in [`k8s/backend.yaml`](k8s/backend.yaml:1).
+- Das Backend verwendet standardmäßig CouchDB (STORAGE=couchdb). Prüfe und setze erforderliche Environment‑Variablen in [`k8s/backend.yaml`](k8s/backend.yaml:1) bzw. in den Helm‑Werten (`charts/backend/values.yaml`).
 - Für CI/Produktiv‑Setups: Migrationen als CI‑Schritt oder dedizierten Job ausführen und feste Image‑Tags verwenden.
 - Nützliche Dateien:
-  - [`k8s/pocketbase.yaml`](k8s/pocketbase.yaml:1)
-  - [`k8s/hpa-pocketbase.yaml`](k8s/hpa-pocketbase.yaml:1)
+  - [`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
+  - [`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
   - [`k8s/backend.yaml`](k8s/backend.yaml:1)
   - [`k8s/hpa-backend.yaml`](k8s/hpa-backend.yaml:1)
   - [`k8s/frontend.yaml`](k8s/frontend.yaml:1)
