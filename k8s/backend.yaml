@@ -89,12 +89,9 @@ spec:
       port: 8080
       targetPort: 8080
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: pocketbase-admin
-  namespace: shisha
-type: Opaque
-stringData:
-  email: admin@example.com
-  password: changeme
+# Secret pocketbase-admin removed — erstelle dieses Secret manuell falls benötigt.
+# Beispiel:
+# kubectl create secret generic pocketbase-admin \
+#   --from-literal=email=admin@example.com \
+#   --from-literal=password=changeme \
+#   -n shisha
