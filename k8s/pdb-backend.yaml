@@ -4,7 +4,7 @@ metadata:
   name: shisha-backend-pdb
   namespace: shisha
 spec:
-  minAvailable: 1
+  minAvailable: 2
   selector:
     matchLabels:
       app: shisha-backend-mock

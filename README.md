@@ -60,6 +60,13 @@ kubectl rollout status deployment/shisha-frontend -n shisha --timeout=120s
 
 9. HPA / PDBs / Optionales Monitoring
 ```bash
+# Fuer richtige funktion bitte folgendes vorher ausfuehren
+# metrics-server installieren (MicroK8s)
+#microk8s enable metrics-server
+
+# Oder: apply upstream manifest (normales K8s)
+#kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
 kubectl apply -f k8s/hpa-backend.yaml
 kubectl apply -f k8s/hpa-frontend.yaml
 kubectl apply -f k8s/pdb-backend.yaml
