@@ -138,9 +138,9 @@ Für reproduzierbare Deployments (plain kubectl) befolge diese präzise Reihenfo
 kubectl apply -f k8s/namespace.yaml
 ```
 
-2. (Optional / empfohlen) CouchDB‑Admin Secret (Name: `couchdb-admin`)
+2. (Optional / empfohlen) CouchDB‑Admin Secret (Name: `shisha-couchdb-admin`)
 ```bash
-kubectl create secret generic couchdb-admin -n shisha \
+kubectl create secret generic shisha-couchdb-admin -n shisha \
   --from-literal=username=<username> \
   --from-literal=password=<password>
 ```
@@ -169,7 +169,6 @@ kubectl rollout status deployment/shisha-couchdb -n shisha --timeout=120s
 # and the required index for server-side queries. If you still want to run a separate seed job,
 # you can find the original job in k8s/couchdb-seed-job.yaml.old or use the archived manifests.
 # To run a manual seed job (not required for default flow):
-# kubectl apply -f archive/pocketbase/k8s-pocketbase.yaml  # example archive usage
 # kubectl logs job/shisha-couchdb-seed -n shisha
 ```
 Wichtig: Der Seed‑Job liest die `shisha-couchdb-admin` Secret‑Werte; stelle sicher, dass das Secret vorhanden ist und zu den auf dem Node vorhandenen CouchDB Daten passt (siehe Punkt 3).
