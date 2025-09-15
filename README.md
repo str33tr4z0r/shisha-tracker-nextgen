@@ -66,10 +66,43 @@ kubectl apply -f k8s/pdb-backend.yaml
 kubectl apply -f k8s/pdb-frontend.yaml
 ```
 
+10. Externe Erreichbarkeit
+```bash
+kubectl patch svc shisha-frontend -n shisha --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
+```
+
 Troubleshooting — Kurzbefehle
 ```bash
 kubectl describe pod <pod-name> -n shisha
 kubectl get events -n shisha --sort-by=.metadata.creationTimestamp | tail -n 50
+```
+
+## All-in-One Copy paste 
+
+```bash
+kubectl apply -f k8s/namespace.yaml
+kubectl create secret generic shisha-couchdb-admin -n shisha \
+  --from-literal=username=ichbineinadmin \
+  --from-literal=password=ichbin1AdminPasswort!
+kubectl apply -f k8s/couchdb-pv.yaml
+kubectl apply -f k8s/couchdb.yaml
+kubectl rollout status deployment/shisha-couchdb -n shisha --timeout=120s
+kubectl apply -f k8s/backend.yaml
+kubectl rollout status deployment/shisha-backend-mock -n shisha --timeout=120s
+kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml -n shisha
+kubectl apply -f k8s/frontend.yaml -n shisha
+kubectl rollout status deployment/shisha-frontend -n shisha --timeout=120s
+kubectl patch svc shisha-frontend -n shisha --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
+
+#HPA / PDBs / Optionales Monitoring
+kubectl apply -f k8s/hpa-backend.yaml
+kubectl apply -f k8s/hpa-frontend.yaml
+kubectl apply -f k8s/pdb-backend.yaml
+kubectl apply -f k8s/pdb-frontend.yaml
+
+#Sample Daten Optional 
+kubectl apply -f k8s/shisha-sample-data.yaml -n shisha
+kubectl logs -l job-name=shisha-sample-data -n shisha --tail=200
 ```
 
 Lokales Entwickeln & Debugging
