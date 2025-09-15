@@ -49,9 +49,9 @@ kubectl apply -f k8s/namespace.yaml
 ```
 
 2. (Optional aber empfohlen) Admin‑Secret für PocketBase erstellen
-- Ersetze <email> und <password> durch gewünschte Admin‑Zugangsdaten. Der Name muss `shisha-pocketbase-admin` lauten (used by plain Job).
+- Ersetze <email> und <password> durch gewünschte Admin‑Zugangsdaten. Die Manifeste in diesem Repo erwarten das Secret mit Namen `pocketbase-admin`. Du kannst einen anderen Namen wählen, musst dann aber die Referenzen in den YAMLs anpassen (z. B. in Jobs/Deployments).
 ```bash
-kubectl create secret generic shisha-pocketbase-admin -n shisha \
+kubectl create secret generic pocketbase-admin -n shisha \
   --from-literal=email=admin@example.com \
   --from-literal=password=changeme
 ```
@@ -99,7 +99,7 @@ kubectl apply -f k8s/pdb-frontend.yaml
 
 Hinweise (plain kubectl)
 - Der plain Job manifest ist: [`k8s/pocketbase-token-job.yaml`](k8s/pocketbase-token-job.yaml:1)
-- Admin‑Secret Name (plain flow): `shisha-pocketbase-admin`
+- Admin‑Secret Name (plain flow): `pocketbase-admin` (standard in den YAMLs dieses Repos)
 - Token‑Secret Name (plain flow): `shisha-pocketbase-token`
 - Backend liest bevorzugt `POCKETBASE_TOKEN` aus dem Token‑Secret; falls nicht vorhanden, nutzt es `POCKETBASE_ADMIN_EMAIL` / `POCKETBASE_ADMIN_PASSWORD` (siehe Chart‑Deployment).
 
