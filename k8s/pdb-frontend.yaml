@@ -2,6 +2,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: shisha-frontend-pdb
+  namespace: shisha
 spec:
   minAvailable: 2
   selector:

@@ -4,6 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: couchdb
+  namespace: shisha
   labels:
     app: couchdb
 spec:
@@ -46,6 +47,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: couchdb
+  namespace: shisha
   labels:
     app: couchdb
 spec:
@@ -62,6 +64,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: couchdb-pvc
+  namespace: shisha
 spec:
   accessModes:
     - ReadWriteOnce

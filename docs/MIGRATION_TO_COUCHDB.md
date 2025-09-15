@@ -43,6 +43,7 @@ Beobachtungen / Troubleshooting
 - CouchDB persistiert Admin‑Hashes im Datenverzeichnis. Bei hostPath PV: Vor dem Wechsel der Admin‑Credentials unbedingt das Node‑Verzeichnis bereinigen, sonst lehnt CouchDB neue Admin‑Secrets ab.
 - Logs können Notices enthalten, wenn `_users` fehlt. Das Anlegen der `_users` DB behebt die noisy notices.
 - Seed‑Jobs sind idempotent: `file_exists` auf DB ist normal, wenn DB bereits angelegt wurde.
+- Hinweis: Die aktuellen CouchDB‑Manifeste in `k8s/` enthalten kein `metadata.namespace`. Beim Anwenden entweder `kubectl apply -f <file> -n shisha` verwenden oder in den Manifests `metadata: namespace: shisha` hinzufügen, damit Ressourcen im Namespace `shisha` erstellt werden.
 
 Dateien / Bereiche mit PocketBase‑Resten (Archiv)
 - `archive/pocketbase/` enthält:

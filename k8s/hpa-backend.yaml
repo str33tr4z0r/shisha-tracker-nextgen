@@ -2,6 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: shisha-backend-hpa
+  namespace: shisha
   labels:
     app: shisha-backend-mock
 spec:
