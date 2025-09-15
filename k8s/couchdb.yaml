@@ -17,34 +17,7 @@ spec:
       labels:
         app: shisha-couchdb
     spec:
-      initContainers:
-        - name: init-couchdb-setup
-          image: curlimages/curl:8.2.1
-          imagePullPolicy: IfNotPresent
-          env:
-            - name: COUCHDB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: shisha-couchdb-admin
-                  key: username
-            - name: COUCHDB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: shisha-couchdb-admin
-                  key: password
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -eu
-              # wait for CouchDB service to appear
-              until curl -sSf http://shisha-couchdb:5984/; do
-                echo "waiting for couchdb..."
-                sleep 2
-              done
-              # create database if not exists and ensure index for nextID queries
-              curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X PUT http://shisha-couchdb:5984/shisha || true
-              curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST http://shisha-couchdb:5984/shisha/_index -H "Content-Type: application/json" -d '{"index":{"fields":["type","id"]},"name":"idx_type_id","type":"json"}' || true
+      # initContainer removed — seeding moved into container postStart hook
       containers:
         - name: couchdb
           image: couchdb:3.2.2
@@ -63,6 +36,23 @@ spec:
           ports:
             - containerPort: 5984
               name: http
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    # run seeding in background so main process can start
+                    (sleep 5
+                    set -eu
+                    until curl -sSf http://localhost:5984/; do
+                      echo "waiting for local couchdb..."
+                      sleep 2
+                    done
+                    curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X PUT http://localhost:5984/shisha || true
+                    curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST http://localhost:5984/shisha/_index -H "Content-Type: application/json" -d '{"index":{"fields":["type","id"]},"name":"idx_type_id","type":"json"}' || true
+                    ) &
           volumeMounts:
             - name: couchdb-data
               mountPath: /opt/couchdb/data
