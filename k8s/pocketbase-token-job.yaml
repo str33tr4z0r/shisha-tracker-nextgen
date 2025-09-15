@@ -49,12 +49,12 @@ spec:
             - name: ADMIN_EMAIL
               valueFrom:
                 secretKeyRef:
-                  name: shisha-pocketbase-admin
+                  name: pocketbase-admin
                   key: email
             - name: ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: shisha-pocketbase-admin
+                  name: pocketbase-admin
                   key: password
             - name: NAMESPACE
               value: shisha
@@ -62,7 +62,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              set -euo pipefail
+              set -eu
               SECRET_NAME="shisha-pocketbase-token"
               RETRIES=30
               SLEEP=2
