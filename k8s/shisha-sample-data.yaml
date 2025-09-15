@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: shisha-sample-data
+  namespace: shisha
+  labels:
+    app: shisha-sample-data
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 1
+  completions: 1
+  parallelism: 1
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: seed
+          image: curlimages/curl:8.2.1
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              # Embedded sample data (one JSON object per line)
+              cat <<'JSONS' > /tmp/shishas.jsonl
+              {"name":"Double Apple","flavor":"Double Apple","manufacturer":{"name":"Al Fakher"}}
+              {"name":"Mint","flavor":"Mint","manufacturer":{"name":"Al Fakher"}}
+              {"name":"Blueberry","flavor":"Blueberry","manufacturer":{"name":"Adalya"}}
+              {"name":"Love 66","flavor":"Love 66","manufacturer":{"name":"Adalya"}}
+              {"name":"White Gummi Bear","flavor":"White Gummi Bear","manufacturer":{"name":"Fumari"}}
+              {"name":"Blue Mist","flavor":"Blue Mist","manufacturer":{"name":"Starbuzz"}}
+              {"name":"Lemon Mint","flavor":"Lemon Mint","manufacturer":{"name":"Al Waha"}}
+              {"name":"Mango","flavor":"Mango","manufacturer":{"name":"Mazaya"}}
+              {"name":"Ice Lemon","flavor":"Ice Lemon","manufacturer":{"name":"187 Tobacco"}}
+              {"name":"Peach","flavor":"Peach","manufacturer":{"name":"Al Fakher"}}
+              JSONS
+              # Post each item to backend API (uses service shisha-backend-mock:8080)
+              while IFS= read -r line; do
+                [ -z "$line" ] && continue
+                echo "POST /api/shishas: $line"
+                curl -sS -X POST http://shisha-backend-mock:8080/api/shishas -H "Content-Type: application/json" -d "$line" || echo "post failed for $line"
+              done < /tmp/shishas.jsonl
+      serviceAccountName: default
