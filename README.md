@@ -29,10 +29,10 @@ helm upgrade --install shisha-frontend charts/frontend --set image.tag=latest
 ```
 
 Wichtige Chart‑Dateien
-- [`charts/pocketbase/Chart.yaml`](charts/pocketbase/Chart.yaml:1)
-- [`charts/pocketbase/templates/token-create-job.yaml`](charts/pocketbase/templates/token-create-job.yaml:1) (Helm Hook: erstellt Token‑Secret)
-- [`charts/pocketbase/templates/secret-admin.yaml`](charts/pocketbase/templates/secret-admin.yaml:1) (Admin‑Creds; wird vom Chart gerendert)
-- [`charts/pocketbase/templates/secret-token.yaml`](charts/pocketbase/templates/secret-token.yaml:1) (falls `token.createFromValues=true`)
+- [`archive/pocketbase/Chart.yaml`](archive/pocketbase/Chart.yaml:1)
+- [`archive/pocketbase/templates/token-create-job.yaml`](archive/pocketbase/templates/token-create-job.yaml:1) (Helm Hook: erstellt Token‑Secret)
+- [`archive/pocketbase/templates/secret-admin.yaml`](archive/pocketbase/templates/secret-admin.yaml:1) (Admin‑Creds; wird vom Chart gerendert)
+- [`archive/pocketbase/templates/secret-token.yaml`](archive/pocketbase/templates/secret-token.yaml:1) (falls `token.createFromValues=true`)
 - [`charts/backend/Chart.yaml`](charts/backend/Chart.yaml:1)
 - [`charts/frontend/Chart.yaml`](charts/frontend/Chart.yaml:1)
 - Bei Helm‑Deploys können Werte per `--set` oder `values.yaml` angepasst werden (z. B. Image‑Tag, Ressourcen).
