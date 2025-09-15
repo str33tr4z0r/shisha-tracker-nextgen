@@ -86,16 +86,47 @@ kubectl wait --for=condition=complete job/shisha-migrate --timeout=120s
 kubectl logs -f job/shisha-migrate
 ```
 
-7. HPA / Frontend / PDBs: apply wie benötigt
+7. HPA / Frontend / PDBs: apply wie benötigt (robust)
+- Wichtiger Hinweis: die Nginx‑ConfigMap muss vor dem Frontend‑Deployment vorhanden sein, sonst bleiben Pods im Status ContainerCreating (fehlende Volume/ConfigMap).
+- Reihenfolge (empfohlen, mit Prüfungen):
 ```bash
+# (optional) PocketBase/HPA vorher anwenden (falls genutzt)
 kubectl apply -f k8s/hpa-pocketbase.yaml        # optional
-kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml
-kubectl apply -f k8s/frontend.yaml
+
+# 1) ConfigMap für Nginx anwenden und prüfen
+kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml -n shisha
+kubectl get configmap shisha-frontend-nginx -n shisha
+
+# 2) Frontend anwenden und auf Rollout warten
+kubectl apply -f k8s/frontend.yaml -n shisha
+kubectl rollout status deployment/shisha-frontend -n shisha --timeout=120s
+# alternativ:
+kubectl wait --for=condition=available deployment/shisha-frontend -n shisha --timeout=120s
+
+# 3) HPA / PDBs erst anwenden, wenn Deployments verfügbar sind
 kubectl apply -f k8s/hpa-backend.yaml
 kubectl apply -f k8s/hpa-frontend.yaml
 kubectl apply -f k8s/pdb-backend.yaml
 kubectl apply -f k8s/pdb-frontend.yaml
 ```
+
+- Troubleshooting (wenn Pods in ContainerCreating hängen):
+  - Prüfe Events / Describe:
+  ```bash
+  kubectl describe pod <pod-name> -n shisha
+  kubectl get events -n shisha --sort-by=.metadata.creationTimestamp | tail -n 50
+  ```
+  - Häufige Ursachen:
+    - ConfigMap fehlt (Fehlermeldung: MountVolume.SetUp failed for volume "nginx-conf" : configmap "shisha-frontend-nginx" not found) → `kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml -n shisha`
+    - ImagePull / ImagePullSecret Probleme → prüfe `kubectl describe pod` und `kubectl get secret` (imagePullSecrets)
+    - Ressourcen Limits / NodeScheduling → prüfe `kubectl describe pod` für NodeAffinity/Taints
+
+- Tipps für bulletproof Deployments:
+  - Wende ConfigMaps und Secrets vor Deployments an (explicit order).
+  - Warte mit `kubectl rollout status` / `kubectl wait` auf Verfügbarkeit, bevor du abhängige Ressourcen anwendest (z. B. HPA / PDBs).
+  - In CI: baue kurze Health‑Checks / wait‑loops ein, oder setze Retries/backoff in Jobs (z. B. Token‑Job wartet auf PocketBase).
+  - Für temporäre Jobs: `ttlSecondsAfterFinished` verwenden, damit abgeschlossene Jobs automatisch aufgeräumt werden.
+
 
 Hinweise (plain kubectl)
 - Der plain Job manifest ist: [`k8s/pocketbase-token-job.yaml`](k8s/pocketbase-token-job.yaml:1)

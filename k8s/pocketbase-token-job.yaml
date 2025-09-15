@@ -35,6 +35,7 @@ metadata:
   namespace: shisha
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: 300
   template:
     spec:
       serviceAccountName: shisha-pocketbase-token-job-sa
