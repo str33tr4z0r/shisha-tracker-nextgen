@@ -197,7 +197,7 @@ kubectl rollout status deployment/shisha-frontend -n shisha --timeout=120s
 ```
 ### Fronted ueber IP erreichbar machen.
 ```bash
-kubectl patch svc shisha-frontend -n <namespace> --type='merge' -p '{"spec":{"externalIPs":["203.0.113.10"]}}'
+kubectl patch svc shisha-frontend -n shisha --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
 ```
 
 9. HPA / PDBs / Optionales Monitoring
