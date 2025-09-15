@@ -11,7 +11,7 @@ persistence:
   size: 1Gi
   storageClass: ""
 env:
-  adminSecretName: couchdb-admin
+  adminSecretName: shisha-couchdb-admin
 resources:
   requests:
     cpu: 100m

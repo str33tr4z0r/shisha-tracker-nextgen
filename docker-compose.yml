@@ -1,7 +1,7 @@
 version: "3.8"
  
 services:
-  couchdb:
+  shisha-couchdb:
     image: couchdb:3.2.2
     environment:
       - COUCHDB_USER=admin
@@ -18,12 +18,12 @@ services:
       dockerfile: Dockerfile
     environment:
       - STORAGE=couchdb
-      - COUCHDB_URL=http://couchdb:5984
+      - COUCHDB_URL=http://shisha-couchdb:5984
       - COUCHDB_DATABASE=shisha
     ports:
       - "8080:8080"
     depends_on:
-      - couchdb
+      - shisha-couchdb
     restart: unless-stopped
     # If the backend binary listens on a different port, adjust above.
  

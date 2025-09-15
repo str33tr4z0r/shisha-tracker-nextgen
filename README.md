@@ -50,7 +50,7 @@ kubectl apply -f k8s/namespace.yaml
 2. (Optional aber empfohlen) Admin‑Secret für CouchDB erstellen
 - Ersetze <username> und <password> durch gewünschte Admin‑Zugangsdaten. Die Manifeste in diesem Repo erwarten das Secret mit Namen `couchdb-admin`. Du kannst einen anderen Namen wählen, musst dann aber die Referenzen in den YAMLs anpassen (z. B. in Jobs/Deployments).
 ```bash
-kubectl create secret generic couchdb-admin -n shisha \
+kubectl create secret generic shisha-couchdb-admin -n shisha \
   --from-literal=username=admin \
   --from-literal=password=changeme
 ```
@@ -60,7 +60,7 @@ kubectl create secret generic couchdb-admin -n shisha \
 kubectl apply -f k8s/couchdb.yaml
 # Optional: seed initial DB/docs
 kubectl apply -f k8s/couchdb-seed-job.yaml
-kubectl wait --for=condition=complete job/couchdb-seed --timeout=120s
+kubectl wait --for=condition=complete job/shisha-couchdb-seed --timeout=120s
 ```
 ## Detaillierte Reihenfolge für k8s‑Manifeste (empfohlen)
 
@@ -93,17 +93,17 @@ Hinweis: Bei hostPath‑PV sicherstellen, dass der Node‑Pfad sauber ist (z. B.
 ```bash
 kubectl apply -f k8s/couchdb.yaml
 # Warte bis Pod Ready
-kubectl rollout status deployment/couchdb -n shisha --timeout=120s
+kubectl rollout status deployment/shisha-couchdb -n shisha --timeout=120s
 ```
 
 5. Seed Job — initiale DB + Beispiel‑Dokumente
 [`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
 ```bash
 kubectl apply -f k8s/couchdb-seed-job.yaml
-kubectl wait --for=condition=complete job/couchdb-seed -n shisha --timeout=120s
-kubectl logs job/couchdb-seed -n shisha
+kubectl wait --for=condition=complete job/shisha-couchdb-seed -n shisha --timeout=120s
+kubectl logs job/shisha-couchdb-seed -n shisha
 ```
-Wichtig: Der Seed‑Job liest die `couchdb-admin` Secret‑Werte; stelle sicher, dass das Secret vorhanden ist und zu den auf dem Node vorhandenen CouchDB Daten passt (siehe Punkt 3).
+Wichtig: Der Seed‑Job liest die `shisha-couchdb-admin` Secret‑Werte; stelle sicher, dass das Secret vorhanden ist und zu den auf dem Node vorhandenen CouchDB Daten passt (siehe Punkt 3).
 
 6. Backend (Deployment + Service)
 [`k8s/backend.yaml`](k8s/backend.yaml:1)
@@ -222,7 +222,7 @@ kubectl apply -f k8s/pdb-frontend.yaml
 
 Hinweise (plain kubectl)
 - Seed/one‑shot Job (plain k8s) ist: [`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
-- Admin‑Secret Name (plain flow): `couchdb-admin` (standard in den YAMLs dieses Repo‑Änderungen)
+- Admin‑Secret Name (plain flow): `shisha-couchdb-admin` (standard in den aktualisierten YAMLs in diesem Repo)
 - Backend liest bevorzugt `COUCHDB_URL`, `COUCHDB_DATABASE` sowie `COUCHDB_USER`/`COUCHDB_PASSWORD` aus Environment/Secrets (siehe Chart‑Deployment).
 
 Wichtige Hinweise
@@ -294,7 +294,7 @@ kubectl apply -f k8s/couchdb-pv.yaml
 kubectl apply -f k8s/couchdb.yaml
 # Optional: seed initial DB/docs
 kubectl apply -f k8s/couchdb-seed-job.yaml
-kubectl wait --for=condition=complete job/couchdb-seed -n shisha --timeout=120s
+kubectl wait --for=condition=complete job/shisha-couchdb-seed -n shisha --timeout=120s
 # Backend and Frontend
 kubectl apply -f k8s/backend.yaml
 kubectl apply -f k8s/frontend.yaml

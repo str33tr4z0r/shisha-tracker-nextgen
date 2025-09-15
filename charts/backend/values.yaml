@@ -45,11 +45,11 @@ env:
     mode: couchdb
     couchdb:
       # CouchDB URL used by backend when storage.mode == "couchdb"
-      url: http://couchdb:5984
+      url: http://shisha-couchdb:5984
       # database name used by backend
       database: shisha
       # optional admin credentials secret name (backend will read username from COUCHDB_USER and password from secret)
-      adminSecretName: couchdb-admin
+      adminSecretName: shisha-couchdb-admin
   # SQL database settings (legacy GORM backend); keep defaults for deployments that still use SQL
   database:
     host: postgres

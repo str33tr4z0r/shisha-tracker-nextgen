@@ -22,16 +22,16 @@ Wichtige Aktionen (bereits erledigt)
 Empfohlene Apply‑Reihenfolge (plain kubectl)
 1. Namespace
    - [`k8s/namespace.yaml`](k8s/namespace.yaml:1)
-2. CouchDB Admin Secret (Name: `couchdb-admin`)
-   - `kubectl create secret generic couchdb-admin -n <ns> --from-literal=username=<user> --from-literal=password=<pass>`
+2. CouchDB Admin Secret (Name: `shisha-couchdb-admin`)
+   - `kubectl create secret generic shisha-couchdb-admin -n <ns> --from-literal=username=<user> --from-literal=password=<pass>`
 3. (Dev) PV für CouchDB (hostPath)
    - [`k8s/couchdb-pv.yaml`](k8s/couchdb-pv.yaml:1)
 4. CouchDB Deployment (Service / PVC / Deployment)
    - [`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
-   - `kubectl rollout status deployment/couchdb -n <ns>`
+   - `kubectl rollout status deployment/shisha-couchdb -n <ns>`
 5. Seed Job (erst wenn CouchDB Ready)
    - [`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
-   - `kubectl wait --for=condition=complete job/couchdb-seed -n <ns> --timeout=120s`
+   - `kubectl wait --for=condition=complete job/shisha-couchdb-seed -n <ns> --timeout=120s`
 6. Backend
    - [`k8s/backend.yaml`](k8s/backend.yaml:1)
    - `kubectl rollout status deployment/shisha-backend -n <ns>`
