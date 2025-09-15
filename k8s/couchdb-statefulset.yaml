@@ -38,7 +38,52 @@ spec:
       labels:
         app: shisha-couchdb
     spec:
+      # Add initContainer to generate vm.args + local.ini with per-pod Erlang node name.
+      # This writes files into an emptyDir which is mounted into the CouchDB etc dir
+      # so Erlang has a proper node name (not nonode@nohost) and a shared cookie.
       terminationGracePeriodSeconds: 120
+      initContainers:
+        - name: gen-vmargs
+          image: busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              # create vm.args with nodename derived from POD_IP (valid for Erlang longnames)
+              cat > /work/vm.args <<EOF
+              -name couchdb@${POD_IP}
+              -setcookie couchdb-cluster-cookie
+              EOF
+              # ensure etc layout and create local.ini + local.d
+              mkdir -p /work/local.d
+              cat > /work/local.ini <<EOF
+              [chttpd]
+              bind_address = 0.0.0.0
+              [couchdb]
+              database_dir = /opt/couchdb/data
+              [admins]
+              # admin user taken from secret at runtime; leave empty here
+              EOF
+              # create an empty docker.ini to avoid touches failing in container startup
+              touch /work/local.d/docker.ini
+              chmod -R 0755 /work || true
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          volumeMounts:
+            - name: couchdb-config
+              mountPath: /work
+      # expose an emptyDir here so initContainer can write vm.args/local.ini into /opt/couchdb/etc
+      volumes:
+        - name: couchdb-config
+          emptyDir: {}
       containers:
         - name: couchdb
           image: couchdb:3.2.2
@@ -87,6 +132,8 @@ spec:
           volumeMounts:
             - name: couchdb-data
               mountPath: /opt/couchdb/data
+            - name: couchdb-config
+              mountPath: /opt/couchdb/etc
           lifecycle:
             postStart:
               exec:
@@ -94,58 +141,30 @@ spec:
                   - /bin/sh
                   - -c
                   - |
-                    set -eu
-                    retry() {
-                      n=0
-                      until [ $n -ge "${RETRIES:-30}" ]; do
-                        "$@" && return 0
-                        n=$((n+1))
-                        sleep "${RETRY_INTERVAL:-2}"
-                      done
-                      return 1
-                    }
-
-                    echo "waiting for local couchdb..."
-                    RETRIES=30; RETRY_INTERVAL=2
-                    retry curl -sSf "http://127.0.0.1:5984/" >/dev/null
-
+                    # minimal join script (waits until local node is up)
+                    sleep 5
+                    until curl -sSf "http://127.0.0.1:5984/" >/dev/null 2>&1; do
+                      sleep 2
+                    done
+                    # derive ordinal
                     if echo "$POD_NAME" | grep -qE "-[0-9]+$"; then
                       ORDINAL=$(echo "$POD_NAME" | sed -E 's/.*-([0-9]+)$/\1/')
                     else
                       ORDINAL=0
                     fi
-
                     if [ "$ORDINAL" -eq 0 ]; then
-                      echo "I am pod-0; initialize as coordinator"
+                      echo "I am pod-0; coordinator"
                       exit 0
                     fi
-
-                    COORDINATOR_HOST="shisha-couchdb-0.shisha-couchdb-headless"
-                    echo "waiting for coordinator $COORDINATOR_HOST..."
-                    RETRIES=60; RETRY_INTERVAL=2
-                    retry curl -sSf "http://$COORDINATOR_HOST:5984/_up" >/dev/null
-
+                    COORD="shisha-couchdb-0.shisha-couchdb-headless"
+                    until curl -sSf "http://$COORD:5984/_up" >/dev/null 2>&1; do
+                      sleep 2
+                    done
                     SELF_HOST="${POD_NAME}.shisha-couchdb-headless"
-                    echo "requesting coordinator to add node $SELF_HOST..."
-                    ADD_PAYLOAD=$(cat <<JSON
-{"action":"add_node","host":"$SELF_HOST","port":5984,"username":"$COUCHDB_USER","password":"$COUCHDB_PASSWORD"}
-JSON
-)
-                    if retry curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://$COORDINATOR_HOST:5984/_cluster_setup" -H "Content-Type: application/json" -d "$ADD_PAYLOAD"; then
-                      echo "add_node request sent"
-                    else
-                      echo "add_node request failed" >&2
-                      exit 1
-                    fi
-
-                    FINISH_PAYLOAD='{"action":"finish_cluster"}'
-                    echo "finishing cluster on coordinator..."
-                    if retry curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://$COORDINATOR_HOST:5984/_cluster_setup" -H "Content-Type: application/json" -d "$FINISH_PAYLOAD"; then
-                      echo "finish_cluster done"
-                    else
-                      echo "finish_cluster failed or unnecessary"
-                    fi
-
+                    # request add_node
+                    curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://$COORD:5984/_cluster_setup" -H "Content-Type: application/json" -d "{\"action\":\"add_node\",\"host\":\"$SELF_HOST\",\"port\":5984}" || true
+                    curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://$COORD:5984/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"finish_cluster"}' || true
+ 
   volumeClaimTemplates:
     - metadata:
         name: couchdb-data

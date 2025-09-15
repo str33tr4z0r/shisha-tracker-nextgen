@@ -1,13 +1,9 @@
-# PodDisruptionBudget für CouchDB StatefulSet
-# Ziel: Verhindern, dass zu viele CouchDB-Pods gleichzeitig evicted werden.
-# Empfehlung: minAvailable=1 erlaubt Wartungen, schützt aber vor kompletten Cluster-Ausfällen.
+# k8s/couchdb-pdb.yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: shisha-couchdb-pdb
   namespace: shisha
-  labels:
-    app: shisha-couchdb
 spec:
   minAvailable: 1
   selector:
