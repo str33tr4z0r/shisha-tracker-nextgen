@@ -88,7 +88,7 @@ curl -sS -u admin:adminpassword -X PUT http://localhost:5984/shisha || true
 ```
 
 4. Seed‑Daten einspielen
-- Entnehme die Beispiel‑Zeilen aus [`k8s/couchdb-seed-configmap.yaml`](k8s/couchdb-seed-configmap.yaml:1) und speichere sie lokal z.B. in `shishas.jsonl`.
+- Entnehme die Beispiel‑Zeilen aus [`k8s/couchdb-seed-configmap.yaml`] und speichere sie lokal z.B. in `shishas.jsonl`.
 - Poste dann jede Zeile mit folgendem Skript:
 ```bash
 # Beispiel: shishas.jsonl enthält eine JSON‑Dokumentzeile pro Zeile (JSONL)
@@ -104,12 +104,12 @@ Hinweis: Alternativ kannst du ein einzelnes Bulk‑Upload JSON ("_bulk_docs") ba
 ### Kubernetes (ConfigMap + Job)
 1. Apply ConfigMap (enthält die JSON‑Zeilen):
 ```bash
-kubectl apply -f [`k8s/couchdb-seed-configmap.yaml`](k8s/couchdb-seed-configmap.yaml:1) -n shisha
+kubectl apply -f `k8s/couchdb-seed-configmap.yaml` -n shisha
 ```
 
 2. Run the seed Job (Job liest die ConfigMap und postet die Dokumente):
 ```bash
-kubectl apply -f [`k8s/couchdb-seed-job-from-configmap.yaml`](k8s/couchdb-seed-job-from-configmap.yaml:1) -n shisha
+kubectl apply -f `k8s/couchdb-seed-job-from-configmap.yaml` -n shisha
 ```
 
 3. Warten & Logs prüfen:
