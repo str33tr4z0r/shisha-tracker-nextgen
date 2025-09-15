@@ -13,6 +13,23 @@ kubectl config current-context
 kubectl get namespaces
 ```
 
+Verwendung des bereitgestellten Skripts
+- Es gibt ein Skript, das viele Schritte automatisiert: [`scripts/cleanup_all.sh`](scripts/cleanup_all.sh:1)
+- Macht es ausführbar und teste es zuerst mit --dry-run:
+```bash
+chmod +x scripts/cleanup_all.sh
+./scripts/cleanup_all.sh --dry-run
+```
+- Beispiel echtes Löschen inkl. PV-Löschung:
+```bash
+./scripts/cleanup_all.sh --nuke-pv
+```
+- Alternativ Namespace angeben:
+```bash
+./scripts/cleanup_all.sh --namespace mynamespace --dry-run
+```
+
+Manuelle Schritte (falls kein Skript genutzt werden soll)
 1) Entferne optionale Seed-Job / ConfigMap
 ```bash
 kubectl delete -f k8s/couchdb-seed-job-from-configmap.yaml -n shisha || true
