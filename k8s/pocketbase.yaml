@@ -1,4 +1,0 @@
-# PocketBase manifests have been archived.
-# Active PocketBase Kubernetes manifest removed as part of staged migration to CouchDB.
-# See archive/pocketbase/ for the original manifests if needed.
-# Use k8s/couchdb.yaml and k8s/couchdb-seed-job.yaml for the CouchDB deployment and seeding jobs.
