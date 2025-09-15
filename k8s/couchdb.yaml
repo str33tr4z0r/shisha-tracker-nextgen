@@ -3,19 +3,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: couchdb
+  name: shisha-couchdb
   namespace: shisha
   labels:
-    app: couchdb
+    app: shisha-couchdb
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: couchdb
+      app: shisha-couchdb
   template:
     metadata:
       labels:
-        app: couchdb
+        app: shisha-couchdb
     spec:
       containers:
         - name: couchdb
@@ -25,12 +25,12 @@ spec:
             - name: COUCHDB_USER
               valueFrom:
                 secretKeyRef:
-                  name: couchdb-admin
+                  name: shisha-couchdb-admin
                   key: username
             - name: COUCHDB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: couchdb-admin
+                  name: shisha-couchdb-admin
                   key: password
           ports:
             - containerPort: 5984
@@ -41,15 +41,15 @@ spec:
       volumes:
         - name: couchdb-data
           persistentVolumeClaim:
-            claimName: couchdb-pvc
+            claimName: shisha-couchdb-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: couchdb
+  name: shisha-couchdb
   namespace: shisha
   labels:
-    app: couchdb
+    app: shisha-couchdb
 spec:
   type: ClusterIP
   ports:
@@ -58,12 +58,12 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: couchdb
+    app: shisha-couchdb
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: couchdb-pvc
+  name: shisha-couchdb-pvc
   namespace: shisha
 spec:
   accessModes:
