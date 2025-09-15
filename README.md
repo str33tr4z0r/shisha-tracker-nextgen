@@ -63,26 +63,70 @@ kubectl apply -f k8s/couchdb.yaml
 # If you need to run a one-off seed for example documents, use the archived job manifests in /archive
 # or create a manual Job. The initContainer ensures the 'shisha' database and necessary index are present.
 #
-# Optional: Import predefined Shisha entries (ConfigMap + Job)
-# ----------------------------------------------------------
-# This repository provides a reusable ConfigMap + Job that import example Shisha
-# documents into the 'shisha' database. Use these manifests to populate the DB:
-#
-# 1) Apply the ConfigMap (contains the JSON lines to import)
-#    kubectl apply -f k8s/couchdb-seed-configmap.yaml -n shisha
-#
-# 2) Run the seed Job which reads the ConfigMap and posts each JSON document
-#    kubectl apply -f k8s/couchdb-seed-job-from-configmap.yaml -n shisha
-#
-# 3) Wait for completion and inspect logs
-#    kubectl wait --for=condition=complete job/shisha-couchdb-seed-from-config -n shisha --timeout=120s
-#    kubectl logs job/shisha-couchdb-seed-from-config -n shisha
-#
-# Notes:
-# - Ensure the secret 'shisha-couchdb-admin' exists in namespace 'shisha' with username/password.
-# - The Job is idempotent but may create duplicate documents if re-run (no explicit _id handling).
-# - Edit k8s/couchdb-seed-configmap.yaml to change the seed data if needed.
+## DB mit Beispiel‑Seed‑Daten füttern
+
+Es gibt zwei einfache Wege, die Datenbank mit Beispiel‑Shisha‑Dokumenten zu füllen: lokal via [`docker-compose.yml`](docker-compose.yml:1) oder im Kubernetes‑Cluster via ConfigMap + Job.
+
+### Lokal (docker‑compose)
+1. Starte die Dienste:
+```bash
+docker compose up -d
 ```
+
+2. Prüfe CouchDB (Standard: `http://localhost:5984`, Credentials siehe [`docker-compose.yml`](docker-compose.yml:1)):
+```bash
+# warte bis CouchDB antwortet
+until curl -sSf http://localhost:5984/ >/dev/null 2>&1; do
+  echo "waiting for couchdb..."
+  sleep 2
+done
+```
+
+3. Erstelle die Datenbank (Standard‑Credentials im Compose: `admin:adminpassword`):
+```bash
+curl -sS -u admin:adminpassword -X PUT http://localhost:5984/shisha || true
+```
+
+4. Seed‑Daten einspielen
+- Entnehme die Beispiel‑Zeilen aus [`k8s/couchdb-seed-configmap.yaml`](k8s/couchdb-seed-configmap.yaml:1) und speichere sie lokal z.B. in `shishas.jsonl`.
+- Poste dann jede Zeile mit folgendem Skript:
+```bash
+# Beispiel: shishas.jsonl enthält eine JSON‑Dokumentzeile pro Zeile (JSONL)
+while IFS= read -r line; do
+  [ -z "$line" ] && continue
+  curl -sS -u admin:adminpassword -X POST http://localhost:5984/shisha \
+    -H "Content-Type: application/json" -d "$line" || true
+done < shishas.jsonl
+```
+
+Hinweis: Alternativ kannst du ein einzelnes Bulk‑Upload JSON ("_bulk_docs") bauen, wenn du viele Dokumente gleichzeitig einspielen willst.
+
+### Kubernetes (ConfigMap + Job)
+1. Apply ConfigMap (enthält die JSON‑Zeilen):
+```bash
+kubectl apply -f [`k8s/couchdb-seed-configmap.yaml`](k8s/couchdb-seed-configmap.yaml:1) -n shisha
+```
+
+2. Run the seed Job (Job liest die ConfigMap und postet die Dokumente):
+```bash
+kubectl apply -f [`k8s/couchdb-seed-job-from-configmap.yaml`](k8s/couchdb-seed-job-from-configmap.yaml:1) -n shisha
+```
+
+3. Warten & Logs prüfen:
+```bash
+kubectl wait --for=condition=complete job/shisha-couchdb-seed-from-config -n shisha --timeout=120s
+kubectl logs job/shisha-couchdb-seed-from-config -n shisha
+```
+
+Wichtige Hinweise:
+- Der K8s‑Job verwendet das Secret `shisha-couchdb-admin` für Benutzer/Passwort — stelle sicher, dass dieses Secret existiert (siehe `docs/MIGRATION_TO_COUCHDB.md`).
+- Die Job‑Routine ist idempotent, kann aber Duplikate erzeugen, wenn Dokumente ohne explizite `_id` mehrfach gepostet werden.
+- Seed‑Inhalt anpassen: editieren [`k8s/couchdb-seed-configmap.yaml`](k8s/couchdb-seed-configmap.yaml:1) oder nutze lokal gespeicherte `shishas.jsonl`.
+
+Beispiele für die wichtigsten Dateien:
+- Seed‑Daten (ConfigMap): [`k8s/couchdb-seed-configmap.yaml`](k8s/couchdb-seed-configmap.yaml:1)
+- Job (liest ConfigMap): [`k8s/couchdb-seed-job-from-configmap.yaml`](k8s/couchdb-seed-job-from-configmap.yaml:1)
+- Local compose: [`docker-compose.yml`](docker-compose.yml:1)
 ## Detaillierte Reihenfolge für k8s‑Manifeste (empfohlen)
 
 Für reproduzierbare Deployments (plain kubectl) befolge diese präzise Reihenfolge. Alle Dateinamen sind als Referenz angegeben — ersetze Namespace mit deinem Namespace falls nötig.
