@@ -1,0 +1,24 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: shisha-couchdb-hpa
+  namespace: shisha
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: shisha-couchdb
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+
+# Requirements / Notes:
+# - Kubernetes metrics-server or another metrics provider must be installed for HPA to work.
+# - HPA will call the scale subresource; ensure your cluster allows scaling StatefulSets via HPA (k8s 1.18+).
+# - Consider using a custom scaler (KEDA) for CouchDB-specific metrics in production.
