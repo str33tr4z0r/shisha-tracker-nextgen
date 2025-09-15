@@ -1,0 +1,22 @@
+# Install instructions for CouchDB Kubernetes Operator
+# This file provides the recommended install command (upstream manifest).
+# Use one of the following on a machine with kubectl configured for your cluster:
+#
+# Option A (recommended, single command):
+#   kubectl apply -f https://raw.githubusercontent.com/apache/couchdb-operator/main/deploy/all.yaml
+#
+# Option B (if you prefer to inspect before applying):
+#   curl -L https://raw.githubusercontent.com/apache/couchdb-operator/main/deploy/all.yaml -o deploy-all.yaml
+#   kubectl apply -f deploy-all.yaml
+#
+# Notes:
+# - The upstream manifest creates CRDs, RBAC, the operator Deployment and related resources.
+# - Apply in the 'shisha' namespace or change namespace as appropriate:
+#   kubectl create namespace shisha
+#   kubectl -n shisha apply -f https://raw.githubusercontent.com/apache/couchdb-operator/main/deploy/all.yaml
+#
+# If you need an in-repo manifest rather than referencing upstream, fetch the upstream YAML
+# and commit it under k8s/vendor/couchdb-operator/ for review and pinning to a specific operator version.
+#
+# This file intentionally does not re-declare the full operator YAML to avoid drift.
+# Applying the raw upstream manifest is the supported, minimal approach.

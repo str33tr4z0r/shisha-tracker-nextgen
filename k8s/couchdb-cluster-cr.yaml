@@ -1,0 +1,23 @@
+apiVersion: couchdb.apache.org/v1
+kind: CouchDBCluster
+metadata:
+  name: shisha-couchdb-cluster
+  namespace: shisha
+spec:
+  version: "3.2.2"
+  insecure: false
+  adminAuthSecretName: shisha-couchdb-admin
+  members: 1
+  podTemplate:
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "1Gi"
+  storage:
+    size: 1Gi
+    storageClassName: standard
+  service:
+    type: ClusterIP
