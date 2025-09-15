@@ -62,6 +62,26 @@ kubectl apply -f k8s/couchdb.yaml
 # The old seed job (k8s/couchdb-seed-job.yaml) has been deprecated in this repo.
 # If you need to run a one-off seed for example documents, use the archived job manifests in /archive
 # or create a manual Job. The initContainer ensures the 'shisha' database and necessary index are present.
+#
+# Optional: Import predefined Shisha entries (ConfigMap + Job)
+# ----------------------------------------------------------
+# This repository provides a reusable ConfigMap + Job that import example Shisha
+# documents into the 'shisha' database. Use these manifests to populate the DB:
+#
+# 1) Apply the ConfigMap (contains the JSON lines to import)
+#    kubectl apply -f k8s/couchdb-seed-configmap.yaml -n shisha
+#
+# 2) Run the seed Job which reads the ConfigMap and posts each JSON document
+#    kubectl apply -f k8s/couchdb-seed-job-from-configmap.yaml -n shisha
+#
+# 3) Wait for completion and inspect logs
+#    kubectl wait --for=condition=complete job/shisha-couchdb-seed-from-config -n shisha --timeout=120s
+#    kubectl logs job/shisha-couchdb-seed-from-config -n shisha
+#
+# Notes:
+# - Ensure the secret 'shisha-couchdb-admin' exists in namespace 'shisha' with username/password.
+# - The Job is idempotent but may create duplicate documents if re-run (no explicit _id handling).
+# - Edit k8s/couchdb-seed-configmap.yaml to change the seed data if needed.
 ```
 ## Detaillierte Reihenfolge für k8s‑Manifeste (empfohlen)
 

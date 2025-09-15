@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: shisha-couchdb-seed-from-config
+  namespace: shisha
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: seed
+          image: curlimages/curl:8.2.1
+          env:
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: username
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: password
+          volumeMounts:
+            - name: seed-data
+              mountPath: /seed
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              # wait for CouchDB to be available
+              until curl -sSf http://shisha-couchdb:5984/; do
+                echo "waiting for couchdb..."
+                sleep 2
+              done
+              # ensure database exists
+              curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X PUT http://shisha-couchdb:5984/shisha || true
+              # post each JSON line from the ConfigMap
+              while IFS= read -r line; do
+                [ -z "$line" ] && continue
+                curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST http://shisha-couchdb:5984/shisha -H "Content-Type: application/json" -d "$line" || true
+              done < /seed/shishas
+      volumes:
+        - name: seed-data
+          configMap:
+            name: shisha-couchdb-seed-config
