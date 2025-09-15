@@ -1,207 +1,64 @@
 # Shisha Tracker — Kurzanleitung
 
 Kurzbeschreibung
-- Shisha Tracker ist eine Webanwendung zum Erfassen, Verwalten und Bewerten von Shisha‑Sessions. Die App besteht aus Frontend, Backend und verwendet CouchDB als Standard‑Speicher für Entwicklung und lokale Setups (staged Migration: PocketBase wurde entfernt).
+- Shisha Tracker ist eine Webanwendung zum Erfassen, Verwalten und Bewerten von Shisha‑Sessions. Die App besteht aus Frontend und Backend und verwendet CouchDB als Standard‑Speicher für Entwicklung und lokale Setups.
 
-Deploy — Übersicht
-- Zwei Optionen zum Deployment:
-  - Helm‑Charts (empfohlen für wiederholbare Deployments)
-  - Direkte k8s‑Manifeste im Ordner [`k8s/`](k8s/:1)
+Wichtige Hinweise
+- Helm‑spezifische Anweisungen wurden in [`docs/HELM.md`](docs/HELM.md:1) ausgelagert. Verwende Helm nur wenn du Charts/Parameter brauchst.
 
-Deploy mit Helm (empfohlen)
-1. CouchDB installieren
-```bash
-helm install shisha-couchdb charts/couchdb
-```
-Hinweis zu Admin‑Zugang:
-- Der CouchDB‑Chart legt standardmäßig kein Admin‑Secret an. Erstelle vorab ein Secret `couchdb-admin` mit `username`/`password` oder verwende ein externes Secret-Management.
-- Für lokale Setups gibt es ein k8s Manifest und ein Seed‑Job, das die Datenbank und Beispiel‑Dokumente anlegt (`k8s/couchdb.yaml`, `k8s/couchdb-seed-job.yaml`).
-- Verwende beim Helm‑Deploy `--set env.adminSecretName=<secret-name>` falls nötig.
+Detaillierte Reihenfolge für plain‑kubectl k8s‑Manifeste (empfohlen)
+- Alle Befehle sollten im Repository‑Root ausgeführt werden; ersetze <namespace> falls nötig.
 
-2. Backend (Image‑Tag setzen in [`charts/backend/values.yaml`](charts/backend/values.yaml:1) oder via --set)
-```bash
-helm upgrade --install shisha-backend charts/backend --set image.tag=latest
-```
-
-3. Frontend
-```bash
-helm upgrade --install shisha-frontend charts/frontend --set image.tag=latest
-```
-
-Wichtige Chart‑Dateien
-- [`archive/pocketbase/Chart.yaml`](archive/pocketbase/Chart.yaml:1)
-- [`archive/pocketbase/templates/token-create-job.yaml`](archive/pocketbase/templates/token-create-job.yaml:1) (Helm Hook: erstellt Token‑Secret)
-- [`archive/pocketbase/templates/secret-admin.yaml`](archive/pocketbase/templates/secret-admin.yaml:1) (Admin‑Creds; wird vom Chart gerendert)
-- [`archive/pocketbase/templates/secret-token.yaml`](archive/pocketbase/templates/secret-token.yaml:1) (falls `token.createFromValues=true`)
-- [`charts/backend/Chart.yaml`](charts/backend/Chart.yaml:1)
-- [`charts/frontend/Chart.yaml`](charts/frontend/Chart.yaml:1)
-- Bei Helm‑Deploys können Werte per `--set` oder `values.yaml` angepasst werden (z. B. Image‑Tag, Ressourcen).
-
-Deploy mit k8s‑YAMLs (kubectl) — vereinfachte Reihenfolge
-
-Wenn das Backend‑Image bereits in einer Registry verfügbar ist (z. B. ricardohdc/shisha-tracker-nextgen-backend:latest), kannst du die YAMLs direkt in dieser Reihenfolge anwenden. Zusätzlich ist ein Token‑Erzeugungs‑Job verfügbar, wenn du nicht mit Helm arbeitest.
-
-Empfohlene Reihenfolge (plain kubectl)
 1. Namespace
 ```bash
 kubectl apply -f k8s/namespace.yaml
 ```
 
-2. (Optional aber empfohlen) Admin‑Secret für CouchDB erstellen
-- Ersetze <username> und <password> durch gewünschte Admin‑Zugangsdaten. Die Manifeste in diesem Repo erwarten das Secret mit Namen `couchdb-admin`. Du kannst einen anderen Namen wählen, musst dann aber die Referenzen in den YAMLs anpassen (z. B. in Jobs/Deployments).
-```bash
-kubectl create secret generic shisha-couchdb-admin -n shisha \
-  --from-literal=username=admin \
-  --from-literal=password=changeme
-```
-
-3. CouchDB (Service / PVC / Deployment)
-```bash
-kubectl apply -f k8s/couchdb.yaml
-# The CouchDB Deployment now performs DB + index setup via an initContainer.
-# The old seed job (k8s/couchdb-seed-job.yaml) has been deprecated in this repo.
-# If you need to run a one-off seed for example documents, use the archived job manifests in /archive
-# or create a manual Job. The initContainer ensures the 'shisha' database and necessary index are present.
-#
-## DB mit Beispiel‑Seed‑Daten füttern
-
-Es gibt zwei einfache Wege, die Datenbank mit Beispiel‑Shisha‑Dokumenten zu füllen: lokal via [`docker-compose.yml`](docker-compose.yml:1) oder im Kubernetes‑Cluster via ConfigMap + Job.
-
-### Lokal (docker‑compose)
-1. Starte die Dienste:
-```bash
-docker compose up -d
-```
-
-2. Prüfe CouchDB (Standard: `http://localhost:5984`, Credentials siehe [`docker-compose.yml`](docker-compose.yml:1)):
-```bash
-# warte bis CouchDB antwortet
-until curl -sSf http://localhost:5984/ >/dev/null 2>&1; do
-  echo "waiting for couchdb..."
-  sleep 2
-done
-```
-
-3. Erstelle die Datenbank (Standard‑Credentials im Compose: `admin:adminpassword`):
-```bash
-curl -sS -u admin:adminpassword -X PUT http://localhost:5984/shisha || true
-```
-
-4. Seed‑Daten einspielen
-- Entnehme die Beispiel‑Zeilen aus [`k8s/couchdb-seed-configmap.yaml`] und speichere sie lokal z.B. in `shishas.jsonl`.
-- Poste dann jede Zeile mit folgendem Skript:
-```bash
-# Beispiel: shishas.jsonl enthält eine JSON‑Dokumentzeile pro Zeile (JSONL)
-while IFS= read -r line; do
-  [ -z "$line" ] && continue
-  curl -sS -u admin:adminpassword -X POST http://localhost:5984/shisha \
-    -H "Content-Type: application/json" -d "$line" || true
-done < shishas.jsonl
-```
-
-Hinweis: Alternativ kannst du ein einzelnes Bulk‑Upload JSON ("_bulk_docs") bauen, wenn du viele Dokumente gleichzeitig einspielen willst.
-
-### Kubernetes (ConfigMap + Job)
-1. Apply ConfigMap (enthält die JSON‑Zeilen):
-```bash
-kubectl apply -f `k8s/couchdb-seed-configmap.yaml` -n shisha
-```
-
-2. Run the seed Job (Job liest die ConfigMap und postet die Dokumente):
-```bash
-kubectl apply -f `k8s/couchdb-seed-job-from-configmap.yaml` -n shisha
-```
-
-3. Warten & Logs prüfen:
-```bash
-kubectl wait --for=condition=complete job/shisha-couchdb-seed-from-config -n shisha --timeout=120s
-kubectl logs job/shisha-couchdb-seed-from-config -n shisha
-```
-
-Wichtige Hinweise:
-- Der K8s‑Job verwendet das Secret `shisha-couchdb-admin` für Benutzer/Passwort — stelle sicher, dass dieses Secret existiert (siehe `docs/MIGRATION_TO_COUCHDB.md`).
-- Die Job‑Routine ist idempotent, kann aber Duplikate erzeugen, wenn Dokumente ohne explizite `_id` mehrfach gepostet werden.
-- Seed‑Inhalt anpassen: editieren [`k8s/couchdb-seed-configmap.yaml`](k8s/couchdb-seed-configmap.yaml:1) oder nutze lokal gespeicherte `shishas.jsonl`.
-
-Beispiele für die wichtigsten Dateien:
-- Seed‑Daten (ConfigMap): [`k8s/couchdb-seed-configmap.yaml`](k8s/couchdb-seed-configmap.yaml:1)
-- Job (liest ConfigMap): [`k8s/couchdb-seed-job-from-configmap.yaml`](k8s/couchdb-seed-job-from-configmap.yaml:1)
-- Local compose: [`docker-compose.yml`](docker-compose.yml:1)
-## Detaillierte Reihenfolge für k8s‑Manifeste (empfohlen)
-
-Für reproduzierbare Deployments (plain kubectl) befolge diese präzise Reihenfolge. Alle Dateinamen sind als Referenz angegeben — ersetze Namespace mit deinem Namespace falls nötig.
-
-1. Namespace
-[`k8s/namespace.yaml`](k8s/namespace.yaml:1)
-```bash
-# Erstelle Namespace einmalig
-kubectl apply -f k8s/namespace.yaml
-```
-
-2. (Optional / empfohlen) CouchDB‑Admin Secret (Name: `shisha-couchdb-admin`)
+2. (Optional, empfohlen) CouchDB‑Admin Secret
 ```bash
 kubectl create secret generic shisha-couchdb-admin -n shisha \
   --from-literal=username=<username> \
   --from-literal=password=<password>
 ```
-(Alternativ: verwende dein externes Secret‑Management und passe Referenzen in den Manifests an.)
 
-3. (Dev only) PersistentVolume (hostPath) — falls vorhanden
-[`k8s/couchdb-pv.yaml`](k8s/couchdb-pv.yaml:1)
+3. PersistentVolume (Dev only, hostPath)
 ```bash
 kubectl apply -f k8s/couchdb-pv.yaml
 ```
-Hinweis: Bei hostPath‑PV sicherstellen, dass der Node‑Pfad sauber ist (z. B. `/var/lib/shisha/couchdb`) bevor neue Admin‑Creds verwendet werden. Andernfalls kann CouchDB alte Admin‑Hashes aus dem Datenverzeichnis laden und neue Anmeldedaten ablehnen.
+Hinweis: bei hostPath sicherstellen Pfad auf Node sauber ist.
 
 4. CouchDB (Service / PVC / Deployment)
-[`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
 ```bash
 kubectl apply -f k8s/couchdb.yaml
-# Warte bis Pod Ready
 kubectl rollout status deployment/shisha-couchdb -n shisha --timeout=120s
 ```
 
-5. Seed Job — initiale DB + Beispiel‑Dokumente
-[`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
+5. (Optional) Initial seed via API (empfohlen): shisha-sample-data
+- Das Repo enthält einen einmaligen Job [`k8s/shisha-sample-data.yaml`](k8s/shisha-sample-data.yaml:1), der die Beispiel‑Geschmäcker über das Backend‑API einfügt.
 ```bash
-# Deprecated: CouchDB seed Job
-# The repository now uses an initContainer in k8s/couchdb.yaml to create the 'shisha' database
-# and the required index for server-side queries. If you still want to run a separate seed job,
-# you can find the original job in k8s/couchdb-seed-job.yaml.old or use the archived manifests.
-# To run a manual seed job (not required for default flow):
-# kubectl logs job/shisha-couchdb-seed -n shisha
+kubectl apply -f k8s/shisha-sample-data.yaml -n shisha
+kubectl logs -l job-name=shisha-sample-data -n shisha --tail=200
 ```
-Wichtig: Der Seed‑Job liest die `shisha-couchdb-admin` Secret‑Werte; stelle sicher, dass das Secret vorhanden ist und zu den auf dem Node vorhandenen CouchDB Daten passt (siehe Punkt 3).
+Hinweis: Dieses Job nutzt das Backend‑Service [`k8s/backend.yaml`](k8s/backend.yaml:1) als Ziel; stelle sicher, dass das Backend‑Service erreichbar ist (Cluster‑DNS: shisha-backend-mock:8080 bzw. dein Backend Service).
 
 6. Backend (Deployment + Service)
-[`k8s/backend.yaml`](k8s/backend.yaml:1)
 ```bash
 kubectl apply -f k8s/backend.yaml
-kubectl rollout status deployment/shisha-backend -n shisha --timeout=120s
-kubectl logs -l app=shisha-backend -n shisha --tail=100
+kubectl rollout status deployment/shisha-backend-mock -n shisha --timeout=120s
 ```
-Prüfe, dass das Backend die Umgebungsvariablen `COUCHDB_URL` / `COUCHDB_DATABASE` / `COUCHDB_USER` / `COUCHDB_PASSWORD` korrekt liest (Secrets/Config in Manifest geprüft).
 
 7. Frontend ConfigMap (Nginx) — muss vor Frontend angewendet werden
-[`k8s/shisha-frontend-nginx-configmap.yaml`](k8s/shisha-frontend-nginx-configmap.yaml:1)
 ```bash
-kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml
-kubectl get configmap shisha-frontend-nginx -n shisha
+kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml -n shisha
 ```
 
 8. Frontend (Deployment + Service)
-[`k8s/frontend.yaml`](k8s/frontend.yaml:1)
 ```bash
-kubectl apply -f k8s/frontend.yaml
+kubectl apply -f k8s/frontend.yaml -n shisha
 kubectl rollout status deployment/shisha-frontend -n shisha --timeout=120s
-```
-### Fronted ueber IP erreichbar machen.
-```bash
-kubectl patch svc shisha-frontend -n shisha --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
 ```
 
 9. HPA / PDBs / Optionales Monitoring
-[`k8s/hpa-backend.yaml`](k8s/hpa-backend.yaml:1) [`k8s/hpa-frontend.yaml`](k8s/hpa-frontend.yaml:1) [`k8s/pdb-backend.yaml`](k8s/pdb-backend.yaml:1) [`k8s/pdb-frontend.yaml`](k8s/pdb-frontend.yaml:1)
 ```bash
 kubectl apply -f k8s/hpa-backend.yaml
 kubectl apply -f k8s/hpa-frontend.yaml
@@ -209,280 +66,26 @@ kubectl apply -f k8s/pdb-backend.yaml
 kubectl apply -f k8s/pdb-frontend.yaml
 ```
 
-10. (Optional) Migration / One‑off Jobs
-[`k8s/migration-job.yaml`](k8s/migration-job.yaml:1)
-```bash
-kubectl apply -f k8s/migration-job.yaml
-kubectl wait --for=condition=complete job/shisha-migrate -n shisha --timeout=300s
-kubectl logs job/shisha-migrate -n shisha
-```
-
-Troubleshooting‑Prüfungen (Kurz)
-- Pod Events / Describe:
+Troubleshooting — Kurzbefehle
 ```bash
 kubectl describe pod <pod-name> -n shisha
 kubectl get events -n shisha --sort-by=.metadata.creationTimestamp | tail -n 50
 ```
-- Wenn CouchDB "unauthorized" beim Seed ist → prüfe hostPath data (siehe Punkt 3) oder Secret‑Konsistenz.
-- Wenn ConfigMap fehlt → prüfe, dass `k8s/shisha-frontend-nginx-configmap.yaml` vor dem Frontend angewandt wurde.
 
-Diese Reihenfolge ist idempotent — du kannst abgeschlossene Schritte erneut anwenden, aber achte auf persistenten Daten‑State (PV/hostPath) bei Datenbanken.
+Lokales Entwickeln & Debugging
+- Mock‑Backend läuft lokal im Compose‑Setup als `backend-mock` auf Port 8081 (siehe [`docker-compose.yml`](docker-compose.yml:1)).
+- Frontend dev‑server verwendet einen Proxy, der `/api` an das Mock‑Backend weiterleitet (siehe [`frontend/vite.config.ts`](frontend/vite.config.ts:12)).
 
-4. (Plain‑K8s) Legacy PocketBase token job — archived
-- The token‑generation job that previously interacted with PocketBase is archived under `archive/pocketbase/`. For CouchDB‑based deployments use the CouchDB seed job (`k8s/couchdb-seed-job.yaml`) or create the required secrets manually.
-```bash
-# To seed CouchDB (idempotent)
-kubectl apply -f k8s/couchdb-seed-job.yaml
-kubectl wait --for=condition=complete job/couchdb-seed -n shisha --timeout=120s
-kubectl logs job/couchdb-seed -n shisha
-```
-- If you need to inspect or run the legacy PocketBase token job, see `archive/pocketbase/templates/token-create-job.yaml`.
-
-5. Backend (Deployment — enthält jetzt das Referenz auf Token‑Secret fallback zu Admin‑Creds)
-```bash
-kubectl apply -f k8s/backend.yaml
-```
-
-6. (Optional) Migration Job — nur falls SQL‑Migrationen für ein legacy SQL‑Backend nötig sind
-```bash
-kubectl apply -f k8s/migration-job.yaml
-kubectl wait --for=condition=complete job/shisha-migrate --timeout=120s
-kubectl logs -f job/shisha-migrate
-```
-
-7. HPA / Frontend / PDBs: apply wie benötigt (robust)
-- Wichtiger Hinweis: die Nginx‑ConfigMap muss vor dem Frontend‑Deployment vorhanden sein, sonst bleiben Pods im Status ContainerCreating (fehlende Volume/ConfigMap).
-- Reihenfolge (empfohlen, mit Prüfungen):
-```bash
-# (optional) PocketBase/HPA vorher anwenden (falls genutzt)
-kubectl apply -f k8s/hpa-pocketbase.yaml        # optional
-
-# 1) ConfigMap für Nginx anwenden und prüfen
-kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml -n shisha
-kubectl get configmap shisha-frontend-nginx -n shisha
-
-# 2) Frontend anwenden und auf Rollout warten
-kubectl apply -f k8s/frontend.yaml -n shisha
-kubectl rollout status deployment/shisha-frontend -n shisha --timeout=120s
-# alternativ:
-kubectl wait --for=condition=available deployment/shisha-frontend -n shisha --timeout=120s
-
-# 3) HPA / PDBs erst anwenden, wenn Deployments verfügbar sind
-kubectl apply -f k8s/hpa-backend.yaml
-kubectl apply -f k8s/hpa-frontend.yaml
-kubectl apply -f k8s/pdb-backend.yaml
-kubectl apply -f k8s/pdb-frontend.yaml
-```
-
-- Troubleshooting (wenn Pods in ContainerCreating hängen):
-  - Prüfe Events / Describe:
-  ```bash
-  kubectl describe pod <pod-name> -n shisha
-  kubectl get events -n shisha --sort-by=.metadata.creationTimestamp | tail -n 50
-  ```
-  - Häufige Ursachen:
-    - ConfigMap fehlt (Fehlermeldung: MountVolume.SetUp failed for volume "nginx-conf" : configmap "shisha-frontend-nginx" not found) → `kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml -n shisha`
-    - ImagePull / ImagePullSecret Probleme → prüfe `kubectl describe pod` und `kubectl get secret` (imagePullSecrets)
-    - Ressourcen Limits / NodeScheduling → prüfe `kubectl describe pod` für NodeAffinity/Taints
-
-- Tipps für bulletproof Deployments:
-  - Wende ConfigMaps und Secrets vor Deployments an (explicit order).
-  - Warte mit `kubectl rollout status` / `kubectl wait` auf Verfügbarkeit, bevor du abhängige Ressourcen anwendest (z. B. HPA / PDBs).
-  - In CI: baue kurze Health‑Checks / wait‑loops ein, oder setze Retries/backoff in Jobs (z. B. Token‑Job wartet auf PocketBase).
-  - Für temporäre Jobs: `ttlSecondsAfterFinished` verwenden, damit abgeschlossene Jobs automatisch aufgeräumt werden.
-
-
-Hinweise (plain kubectl)
-- Seed/one‑shot Job (plain k8s) ist: [`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
+Hinweise
 - Admin‑Secret Name (plain flow): `shisha-couchdb-admin` (standard in den aktualisierten YAMLs in diesem Repo)
-- Backend liest bevorzugt `COUCHDB_URL`, `COUCHDB_DATABASE` sowie `COUCHDB_USER`/`COUCHDB_PASSWORD` aus Environment/Secrets (siehe Chart‑Deployment).
-
-Wichtige Hinweise
-- Warum vorher Scale‑0 empfohlen wurde: das Scale‑0‑/Image‑Override‑Pattern schützt, wenn das Image noch nicht im Registry verfügbar ist oder die DB noch nicht bereit ist. Wenn du das Image bereits gepusht oder in dein Cluster geladen hast (z. B. mit kind/minikube/k3d), ist das nicht nötig.
-- Image‑Verfügbarkeit:
-  - Push ins Registry:
-    ```bash
-    docker build -t ricardohdc/shisha-tracker-nextgen-backend:latest ./backend
-    docker push ricardohdc/shisha-tracker-nextgen-backend:latest
-    ```
-  - Alternativen für lokale Cluster: `kind load docker-image ...`, `minikube image load ...`, oder `ctr images import` (siehe [`README.md`](README.md:1) für Hinweise).
-  - GHCR (GitHub Container Registry) Hinweis — Auth nötig:
-    Wenn du Images aus ghcr.io ziehen möchtest, musst du dich bei GitHub anmelden und einen Personal Access Token (PAT) mit dem Scope `read:packages` erstellen. Ablauf kurz:
-      1. Melde dich bei GitHub an und erstelle einen PAT: Settings → Developer settings → Personal access tokens → Generate new token (classic). Wähle mindestens `read:packages`.
-      2. Erstelle ein Kubernetes ImagePullSecret in deinem Cluster (microk8s-Beispiel). Ersetze `<GITHUB_USER>`, `<PERSONAL_ACCESS_TOKEN>`, `<EMAIL>`:
-      
-      ```bash
-      # Erstelle Secret für GHCR (normales Kubernetes)
-      kubectl create secret docker-registry ghcr-secret \
-        --docker-server=ghcr.io \
-        --docker-username=<GITHUB_USER> \
-        --docker-password=<PERSONAL_ACCESS_TOKEN> \
-        --docker-email=<EMAIL>
-      
-      # Patch default ServiceAccount, damit Pods das Secret nutzen
-      kubectl patch serviceaccount default -p '{"imagePullSecrets":[{"name":"ghcr-secret"}]}'
-      
-      # Anschließend Pods neu erzeugen, damit das Secret beim ImagePull verwendet wird
-      kubectl delete pod -l app=shisha-backend
-      ```
-      
-      3. Prüfe den Pod‑Status und Events:
-      ```bash
-      kubectl get pods -l app=shisha-backend -o wide
-      kubectl describe pod <pod-name>
-      kubectl get events --sort-by=.metadata.creationTimestamp | tail -n 50
-      ```
-      
-      Hinweis: In deiner lokalen microk8s‑Umgebung musst du die Befehle mit dem Prefix `microk8s.` ausführen (z. B. `microk8s.kubectl create secret ...`). Dateien mit Image/Secrets: siehe [`k8s/pocketbase.yaml`](k8s/pocketbase.yaml:27) (enthält jetzt `imagePullSecrets` falls aktiviert).
-- Helm vs. YAML: Helm bietet Parameterisierung (`--set image.tag=...`) und ist bequemer für wiederholbare Deploys, die YAML‑Reihenfolge bleibt aber gleich.
-
-Beschreibungen der wichtigsten k8s‑YAMLs (neu / aktualisiert)
-- [`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
-  - Stellt CouchDB als Service + Deployment mit PVC bereit. CouchDB ist der Standard‑Speicher (STORAGE=couchdb) für lokale/Dev‑Setups.
-- [`k8s/hpa-pocketbase.yaml`](k8s/hpa-pocketbase.yaml:1)
-  - Optionaler HorizontalPodAutoscaler (bestehend; nur anwenden wenn relevant).
-- [`k8s/backend.yaml`](k8s/backend.yaml:1)
-  - Backend‑Deployment und Service. Änderungen: replicas wurden auf den HPA‑Minimalwert gesetzt, Ressourcen (requests/limits) hinzugefügt und eine preferred podAntiAffinity, damit Pods über Nodes verteilt werden. Liveness/Readiness‑Probes sind vorhanden.
-- [`k8s/hpa-backend.yaml`](k8s/hpa-backend.yaml:1)
-  - HPA für das Backend (z. B. minReplicas: 2, maxReplicas: 6). Skaliert anhand CPU‑Utilization; benötigt korrekte Ressourcen‑Requests in der Deployment‑Spec.
-- [`k8s/frontend.yaml`](k8s/frontend.yaml:1)
-  - Frontend‑Deployment + Service. Änderungen: replicas auf HPA‑min gesetzt, Ressourcen ergänzt und podAntiAffinity. Nginx‑Config kommt aus der ConfigMap [`k8s/shisha-frontend-nginx-configmap.yaml`](k8s/shisha-frontend-nginx-configmap.yaml:1).
-- [`k8s/hpa-frontend.yaml`](k8s/hpa-frontend.yaml:1)
-  - HPA für das Frontend (z. B. minReplicas: 3, maxReplicas: 5).
-- [`k8s/pdb-backend.yaml`](k8s/pdb-backend.yaml:1) und [`k8s/pdb-frontend.yaml`](k8s/pdb-frontend.yaml:1)
-  - PodDisruptionBudgets, die während geplanten Wartungen/Upgrades Mindestanzahl an Pods sicherstellen (minAvailable). Werte sind konservativ gewählt; passe sie an die Anzahl deiner Nodes / SLA an.
-
-Empfehlungen für produktive Setups
-- Setze Ressourcen (requests/limits) realistisch basierend auf Load‑Tests — HPA funktioniert nur zuverlässig mit Requests.
-- Verwende feste Image‑Tags in CI/CD (keine :latest) und pushe Images vor dem Apply.
-- Passe PDBs und minReplicas an Clustergröße/SLAs an.
-- Stelle sicher, dass ein metrics‑server (oder ein entsprechender Adapter) im Cluster läuft, damit HPA Metriken nutzen kann.
-
-Deploy‑Beispiel (empfohlene Reihenfolge)
-```bash
-kubectl apply -f k8s/namespace.yaml
-# CouchDB (PV/Deployment/Service)
-kubectl apply -f k8s/couchdb-pv.yaml
-kubectl apply -f k8s/couchdb.yaml
-# Optional: seed initial DB/docs
-kubectl apply -f k8s/couchdb-seed-job.yaml
-kubectl wait --for=condition=complete job/shisha-couchdb-seed -n shisha --timeout=120s
-# Backend and Frontend
-kubectl apply -f k8s/backend.yaml
-kubectl apply -f k8s/frontend.yaml
-kubectl apply -f k8s/hpa-backend.yaml
-kubectl apply -f k8s/hpa-frontend.yaml
-kubectl apply -f k8s/pdb-backend.yaml
-kubectl apply -f k8s/pdb-frontend.yaml
-```
-
-Zusätzliche Hinweise
-- Das Backend verwendet standardmäßig CouchDB (STORAGE=couchdb). Prüfe und setze erforderliche Environment‑Variablen in [`k8s/backend.yaml`](k8s/backend.yaml:1) bzw. in den Helm‑Werten (`charts/backend/values.yaml`).
+- Backend liest `COUCHDB_URL`, `COUCHDB_DATABASE`, `COUCHDB_USER`, `COUCHDB_PASSWORD` aus Environment/Secrets (siehe [`k8s/backend.yaml`](k8s/backend.yaml:1)).
 - Für CI/Produktiv‑Setups: Migrationen als CI‑Schritt oder dedizierten Job ausführen und feste Image‑Tags verwenden.
-- Nützliche Dateien:
-  - [`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
-  - [`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
-  - [`k8s/backend.yaml`](k8s/backend.yaml:1)
-  - [`k8s/hpa-backend.yaml`](k8s/hpa-backend.yaml:1)
-  - [`k8s/frontend.yaml`](k8s/frontend.yaml:1)
-  - [`k8s/hpa-frontend.yaml`](k8s/hpa-frontend.yaml:1)
-  - [`k8s/pdb-backend.yaml`](k8s/pdb-backend.yaml:1)
-  - [`k8s/pdb-frontend.yaml`](k8s/pdb-frontend.yaml:1)
-  - [`k8s/shisha-frontend-nginx-configmap.yaml`](k8s/shisha-frontend-nginx-configmap.yaml:1)
-  - [`charts/backend/values.yaml`](charts/backend/values.yaml:1)
-  - [`scripts/DEPLOY_COMMANDS.md`](scripts/DEPLOY_COMMANDS.md:1)
-  
+
+Dateien (wichtige)
+- [`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
+- [`k8s/couchdb-pv.yaml`](k8s/couchdb-pv.yaml:1)
+- [`k8s/backend.yaml`](k8s/backend.yaml:1)
+- [`k8s/frontend.yaml`](k8s/frontend.yaml:1)
+- [`k8s/shisha-sample-data.yaml`](k8s/shisha-sample-data.yaml:1) (optional seed via API)
+
 Ende
-
-## Externer Zugriff auf das Frontend (ClusterIP → externe IP / LoadBalancer / lokale Workarounds)
-
-Nach der Standard‑Deployment‑Konfiguration wird das Frontend als ClusterIP‑Service angelegt (siehe [`k8s/frontend.yaml`](k8s/frontend.yaml:70) bzw. das Chart‑Template [`charts/frontend/templates/service.yaml`](charts/frontend/templates/service.yaml:8)). Für externen Zugriff außerhalb des Clusters gibt es drei sinnvolle Optionen:
-
-### Option A — ClusterIP + externalIPs (on‑prem, Router/Firewall konfigurierbar)
-Wenn dein Infrastruktur‑/Netzwerk‑Team eine externe IP auf einem Node routen kann, kannst du sie dem Service als externalIP hinzufügen.
-
-Beispiel (Patch, Namespace optional):
-```bash
-kubectl patch svc shisha-frontend -n <namespace> --type='merge' -p '{"spec":{"externalIPs":["203.0.113.10"]}}'
-```
-
-Alternativ den Service in YAML ändern (Beispielauszug):
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: shisha-frontend
-spec:
-  type: ClusterIP
-  externalIPs:
-    - 203.0.113.10
-  ports:
-    - name: http
-      port: 80
-      targetPort: 80
-```
-Wichtig: Die IP muss auf Cluster‑Nodes routbar sein und die Nodes müssen den Traffic an den Service weiterleiten. Nutze diese Option nur, wenn du Kontrolle über das Layer‑3‑Routing hast.
-
-### Option B — LoadBalancer (empfohlen für produktive Setups mit externem IP‑Pool, z.B. MetalLB)
-Auf lokalen/on‑prem‑Clustern ohne Cloud‑LB kannst du MetalLB installieren und einen IP‑Pool bereitstellen. Danach den Service als LoadBalancer ausrollen (bei Helm: `--set service.type=LoadBalancer` wie im Chart‑Template).
-
-MetalLB installieren (Beispiel):
-```bash
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.10/config/manifests/metallb-native.yaml
-```
-
-Beispiel für MetalLB AddressPool (speichere als `metallb-config.yaml` und `kubectl apply -f metallb-config.yaml`):
-```yaml
-apiVersion: metallb.io/v1beta1
-kind: IPAddressPool
-metadata:
-  name: shisha-ip-pool
-  namespace: metallb-system
-spec:
-  addresses:
-    - 192.0.2.240-192.0.2.250
----
-apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
-metadata:
-  name: shisha-l2
-  namespace: metallb-system
-spec: {}
-```
-
-Dann das Frontend per Helm als LoadBalancer deployen:
-```bash
-helm upgrade --install shisha-frontend charts/frontend --set service.type=LoadBalancer --set image.tag=latest
-```
-
-Referenz für das Service‑Template: [`charts/frontend/templates/service.yaml`](charts/frontend/templates/service.yaml:8)
-
-### Option C — Lokale Workarounds (minikube, port‑forward, NodePort)
-Für Development oder wenn keine externe IP verfügbar ist:
-
-- minikube:
-```bash
-minikube service shisha-frontend -n <namespace> --url
-# oder
-minikube tunnel   # stellt LoadBalancer IPs zur Verfügung (benötigt sudo)
-```
-
-- kubectl port‑forward (schnell, nur lokal):
-```bash
-kubectl port-forward deployment/shisha-frontend 8080:80 -n <namespace>
-# dann im Browser: http://localhost:8080
-```
-
-- NodePort (exponiert Service an Node‑Port):
-```bash
-kubectl patch svc shisha-frontend -n <namespace> --type='merge' -p '{"spec":{"type":"NodePort"}}'
-kubectl get svc shisha-frontend -n <namespace>
-# öffne http://<node-ip>:<nodePort>
-```
-
-Kurzer Hinweis zu Namespace: Ersetze `<namespace>` mit dem Namespace, den du benutzt (oder lasse `-n <namespace>` weg für default). Prüfe nach Änderungen mit:
-```bash
-kubectl get svc shisha-frontend -n <namespace> -o wide
-```
-
-Ende der Ergänzung.
