@@ -103,6 +103,10 @@ kubectl apply -f k8s/pdb-frontend.yaml
 #Sample Daten Optional 
 kubectl apply -f k8s/shisha-sample-data.yaml -n shisha
 kubectl logs -l job-name=shisha-sample-data -n shisha --tail=200
+
+kubectl -n shisha get pods -o wide
+kubectl -n shisha get ns,pv,pvc,svc -o wide
+
 ```
 
 Lokales Entwickeln & Debugging
