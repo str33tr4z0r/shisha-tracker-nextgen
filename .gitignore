@@ -2,3 +2,5 @@
 backend.log
 # Ignore compiled backend binary
 backend/server
+
+scripts/deploy_all_microk8s.sh
