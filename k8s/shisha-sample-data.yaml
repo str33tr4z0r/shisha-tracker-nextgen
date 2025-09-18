@@ -24,16 +24,231 @@ spec:
               set -eu
               # Embedded sample data (one JSON object per line)
               cat <<'JSONS' > /tmp/shishas.jsonl
-              {"name":"Double Apple","flavor":"Double Apple","manufacturer":{"name":"Al Fakher"}}
-              {"name":"Mint","flavor":"Mint","manufacturer":{"name":"Al Fakher"}}
-              {"name":"Blueberry","flavor":"Blueberry","manufacturer":{"name":"Adalya"}}
-              {"name":"Love 66","flavor":"Love 66","manufacturer":{"name":"Adalya"}}
-              {"name":"White Gummi Bear","flavor":"White Gummi Bear","manufacturer":{"name":"Fumari"}}
-              {"name":"Blue Mist","flavor":"Blue Mist","manufacturer":{"name":"Starbuzz"}}
-              {"name":"Lemon Mint","flavor":"Lemon Mint","manufacturer":{"name":"Al Waha"}}
-              {"name":"Mango","flavor":"Mango","manufacturer":{"name":"Mazaya"}}
-              {"name":"Ice Lemon","flavor":"Ice Lemon","manufacturer":{"name":"187 Tobacco"}}
-              {"name":"Peach","flavor":"Peach","manufacturer":{"name":"Al Fakher"}}
+              {"name": "187 Strassenbande Tabak 040 HAMBURG", "flavor": "Blaubeere,Brombeere,Erdbeere,Himbeere,Johannisbeere", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak BEACH VIBEZ", "flavor": "Himbeere,Zitrone", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak GLACIER", "flavor": "Eisbonbon,Menthol (TPD2)", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak I Love Hamburg", "flavor": "Blaubeere,Brombeere,Erdbeere,Himbeere,Honigmelone,Johannisbeere,Wassermelone", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak juicy PUZZY", "flavor": "Blaubeere,Honig,Minze (TPD2),Zitrone", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak NEW FLASH", "flavor": "Cola,Drachenfrucht,Limette", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak Sparkling Ice T", "flavor": "Menthol (TPD2),Minze (TPD2),Zitrone", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak Sparkling Peaz", "flavor": "Eistee,Pfirsich", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak Wild Beast", "flavor": "Beerenmix", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "7Days Tabak Classic C.Peah", "flavor": "Menthol (TPD2),Pfirsich", "manufacturer": {"name": "7Days"}}
+              {"name": "Adalya Tabak Love 66", "flavor": "Honigmelone,Maracuja,Wassermelone", "manufacturer": {"name": "Adalya"}}
+              {"name": "Al Fakher Tabak Crystal Double Crunch", "flavor": "Doppelapfel,Menthol (TPD2)", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Al Fakher Tabak Crystal Grapio", "flavor": "Minze (TPD2),Traube", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Holster Tabak Ice Kaktuz", "flavor": "Kaktusfeige", "manufacturer": {"name": "Holster"}}
+              {"name": "Holster Tabak Watermill Punch", "flavor": "Wassermelone", "manufacturer": {"name": "Holster"}}
+              {"name": "Hookain Tabak Laoz", "flavor": "Blaubeere,Kirsche", "manufacturer": {"name": "Hookain"}}
+              {"name": "Maridan Tabak Tingle Tangle Breeze", "flavor": "Limette,Maracuja", "manufacturer": {"name": "Maridan"}}
+              {"name": "Maridan Tabak Tingle Tangle", "flavor": "Grapefruit,Limette,Maracuja", "manufacturer": {"name": "Maridan"}}
+              {"name": "Nameless Tabak #105 BIG RED", "flavor": "Kaugummi,Zimt", "manufacturer": {"name": "Nameless"}}
+              {"name": "OS Tabak African King", "flavor": "Litschi,Mango,Maracuja,Rose", "manufacturer": {"name": "OS"}}
+              {"name": "187 Strassenbande Tabak Ma Panty", "flavor": "Guave,Mango,Pfirsich,Sternfrucht (Carambola)", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak Mrs. Green", "flavor": "Limette,Minze (TPD2)", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak Pille", "flavor": "Früchtemix,Honigmelone", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak PINK MELLOW", "flavor": "Grapefruit,Limette,Wassermelone", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak Quelle", "flavor": "Minze (TPD2),Traube", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak Schwarze Taube", "flavor": "Minze (TPD2),Traube", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak SIWLEZ", "flavor": "Fruchtig", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak Voodoo King", "flavor": "Fruchtig", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "Al Fakher Tabak Crystal Yellow", "flavor": "Minze (TPD2),Zitrone", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Al Fakher Tabak Fuchsia", "flavor": "Himbeere", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Al Fakher Tabak Magic Love", "flavor": "Honigmelone,Passionsfrucht", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Al Fakher Tabak The Double Crunch", "flavor": "Der The Double Crunch bietet einen intensiven Doppelapfel-Geschmack mit einer würzigen Note von Anis. Hohe Qualität : Der Tabak wird unter strengen Qualitätskontrollen produziert,verpackt. Optimale Feuchtigkeit : Der Tabak hat die optimale Feuchtigkeit,um ein perfektes Raucherlebnis zu bieten. Passende Aromen : Die Aromen sind perfekt abgestimmt,um ein harmonisches Geschmackserlebnis zu bieten. Topseller : Der The Double Crunch ist ein Topseller auf dem Markt,sehr beliebt bei Shisha-Rauchern. Kaufentscheidung Wenn Sie nach einem hochwertigen Shisha-Tabak suchen,der einen intensiven Doppelapfel-Geschmack mit einer würzigen Note von Anis bietet,dann ist der Al Fakher The Double Crunch die perfekte Wahl. Der Tabak ist von hoher Qualität,hat die optimale Feuchtigkeit,passende Aromen. Der The Double Crunch ist ein Topseller auf dem Markt,sehr beliebt bei Shisha-Rauchern. Fazit zur Doppelapfel Geschmacksexplosion Der Al Fakher The Double Crunch ist ein hochwertiger Shisha-Tabak,der einen intensiven Doppelapfel-Geschmack mit einer würzigen Note von Anis bietet. Der Tabak ist von hoher Qualität,sehr beliebt bei Shisha-Rauchern. Wenn Sie nach einem perfekten Shisha-Tabak suchen,dann ist der Al Fakher The Double Crunch die perfekte Wahl. Technische Daten", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Aqua Mentha Tabak Black Box", "flavor": "Acai,Guarana,Holunder,Menthol (TPD2),Zitrone", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Golden Anna", "flavor": "Ananas,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Babos Tabak FFM", "flavor": "Beerenmix,Erdbeere", "manufacturer": {"name": "Babos"}}
+              {"name": "Adalya Tabak Berlin Nights", "flavor": "Pfirsich", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Ice Kaktü", "flavor": "Kaktusfeige", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Lady Killer", "flavor": "Honigmelone,Mango", "manufacturer": {"name": "Adalya"}}
+              {"name": "Banger Tabak Regionalliga After Game", "flavor": "Blaubeere,Kiwi", "manufacturer": {"name": "Banger"}}
+              {"name": "Banger Tabak Triple Air Sign", "flavor": "Honigmelone,Wassermelone", "manufacturer": {"name": "Banger"}}
+              {"name": "Dschinni Tabak Lmn Fresh", "flavor": "Minze (TPD2),Zitrone", "manufacturer": {"name": "Dschinni"}}
+              {"name": "Electro Smog Tabak Blue Magic", "flavor": "Blaubeere,Traube", "manufacturer": {"name": "Electro Smog"}}
+              {"name": "Electro Smog Tabak Booty Call", "flavor": "Pfirsich", "manufacturer": {"name": "Electro Smog"}}
+              {"name": "Electro Smog Tabak Nasty Girl", "flavor": "Erdbeere,Wassermelone", "manufacturer": {"name": "Electro Smog"}}
+              {"name": "Holster Tabak Ice Bomb", "flavor": "Eisbonbon,Menthol (TPD2)", "manufacturer": {"name": "Holster"}}
+              {"name": "Holster Tabak Miss Joosy", "flavor": "Erdbeere,Himbeere", "manufacturer": {"name": "Holster"}}
+              {"name": "Holster Tabak Quwi Punch", "flavor": "Kiwi", "manufacturer": {"name": "Holster"}}
+              {"name": "Holster Tabak Wild Punch", "flavor": "Blaubeere,Brombeere,Himbeere,Menthol (TPD2)", "manufacturer": {"name": "Holster"}}
+              {"name": "Hookain Tabak Punani", "flavor": "Ananas,Mango,Minze (TPD2),Orange,Passionsfrucht", "manufacturer": {"name": "Hookain"}}
+              {"name": "Maridan Tabak Tingle Tangle Tropical", "flavor": "Fruchtmix,Grapefruit,Limette,Maracuja", "manufacturer": {"name": "Maridan"}}
+              {"name": "OS Tabak Casanova", "flavor": "Beerenmix,Honigmelone,Wassermelone", "manufacturer": {"name": "OS"}}
+              {"name": "OS Tabak Studio 54", "flavor": "Minze (TPD2),Wassermelone", "manufacturer": {"name": "OS"}}
+              {"name": "OS Tabak TNT", "flavor": "Blaubeere,Himbeere,Waldbeeren", "manufacturer": {"name": "OS"}}
+              {"name": "OS Tabak Unknown", "flavor": "Citrus,Kaktusfeige", "manufacturer": {"name": "OS"}}
+              {"name": "Start Now Tabak Green Mind Fresh", "flavor": "Kühl,Erfrischend Aroma: Minze (TPD2)", "manufacturer": {"name": "Start Now"}}
+              {"name": "187 Strassenbande Tabak i Scream Pistacio", "flavor": "Pistazie", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "187 Strassenbande Tabak Oldschool Bang", "flavor": "Anis,Doppelapfel", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "7Days Tabak Classic C.Brry", "flavor": "Brombeere,Himbeere,Johannisbeere,Menthol (TPD2)", "manufacturer": {"name": "7Days"}}
+              {"name": "7Days Tabak Classic C.Cherr", "flavor": "Kirsche,Menthol (TPD2)", "manufacturer": {"name": "7Days"}}
+              {"name": "7Days Tabak Classic CCLB", "flavor": "Blaubeere,Brombeere,Himbeere,Kirsche,Limette,Minze (TPD2)", "manufacturer": {"name": "7Days"}}
+              {"name": "7Days Tabak Classic Green Slip", "flavor": "Kühl,Erfrischend Aroma: Minze (TPD2)", "manufacturer": {"name": "7Days"}}
+              {"name": "7Days Tabak Classic Passion On I.", "flavor": "Maracuja,Menthol (TPD2)", "manufacturer": {"name": "7Days"}}
+              {"name": "Al Fakher Tabak Big Blue", "flavor": "Blaubeere", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Al Waha Tabak Nr. 1", "flavor": "Minze (TPD2),Traube", "manufacturer": {"name": "Al Waha"}}
+              {"name": "Aqua Mentha Tabak Cactus Splash", "flavor": "Kaktusfeige,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Argileh Tabak LAM & M", "flavor": "Minze (TPD2),Zitrone", "manufacturer": {"name": "Argileh"}}
+              {"name": "Adalya Tabak Blue Dragon", "flavor": "Blaubeere,Drachenfrucht", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Ice Boni", "flavor": "Eisbonbon", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Mn Tango Ice", "flavor": "Ice,Mango,Maracuja", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Punk Man", "flavor": "Blaubeere,Erdbeere,Himbeere", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak The TWO APP", "flavor": "Doppelapfel", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Tynky Wynky", "flavor": "Grapefruit,Limette,Maracuja", "manufacturer": {"name": "Adalya"}}
+              {"name": "Banger Tabak 3 mal im Leben", "flavor": "Ananas,Mango,Maracuja", "manufacturer": {"name": "Banger"}}
+              {"name": "Banger Tabak X", "flavor": "Fruchtig,Kühl,Erfrischend,Süßlich Aroma: Passionsfrucht", "manufacturer": {"name": "Banger"}}
+              {"name": "Banger Tabak Zwei Optionen", "flavor": "Birne,Honigmelone", "manufacturer": {"name": "Banger"}}
+              {"name": "Chaos Tabak Falim", "flavor": "Falim,Kaugummi", "manufacturer": {"name": "Chaos"}}
+              {"name": "Dschinni Tabak Blue", "flavor": "Blaubeere", "manufacturer": {"name": "Dschinni"}}
+              {"name": "Dschinni Tabak Cndy Brz", "flavor": "Eisbonbon,Ice", "manufacturer": {"name": "Dschinni"}}
+              {"name": "Dschinni Tabak Da Bomb", "flavor": "Amaretto,Zitronenkuchen", "manufacturer": {"name": "Dschinni"}}
+              {"name": "Dschinni Tabak Kaktus Frsh", "flavor": "Ice,Kaktusfeige", "manufacturer": {"name": "Dschinni"}}
+              {"name": "Dschinni Tabak Pear Fresh", "flavor": "Birne,Minze (TPD2)", "manufacturer": {"name": "Dschinni"}}
+              {"name": "Dschinni Tabak Water Frsh", "flavor": "Minze (TPD2),Wassermelone", "manufacturer": {"name": "Dschinni"}}
+              {"name": "Hookain Tabak Bubblenciaga", "flavor": "Kaugummi", "manufacturer": {"name": "Hookain"}}
+              {"name": "Hookain Tabak Fellatio", "flavor": "Honigmelone,Passionsfrucht,Wassermelone", "manufacturer": {"name": "Hookain"}}
+              {"name": "Hookain Tabak Green Lean", "flavor": "Limette,Zitrone", "manufacturer": {"name": "Hookain"}}
+              {"name": "Hookain Tabak Kaffa Yayo", "flavor": "Kokosnuss", "manufacturer": {"name": "Hookain"}}
+              {"name": "Hookain Tabak White Caek", "flavor": "Karamell,Käsekuchen", "manufacturer": {"name": "Hookain"}}
+              {"name": "Hookain Tabak Zenta Schox", "flavor": "Limette,Zitrone", "manufacturer": {"name": "Hookain"}}
+              {"name": "Maridan Tabak Kola", "flavor": "Cola", "manufacturer": {"name": "Maridan"}}
+              {"name": "Nameless Tabak #007 Gold Finger", "flavor": "Fruchtig,Kühl,Erfrischend,Süßlich Aroma: Ice,Kaktus,Menthol (TPD2)", "manufacturer": {"name": "Nameless"}}
+              {"name": "OS Tabak Lucifero", "flavor": "Apfel,Erdbeere", "manufacturer": {"name": "OS"}}
+              {"name": "OS Tabak Queen of the Desert", "flavor": "Fruchtig", "manufacturer": {"name": "OS"}}
+              {"name": "Savu Tabak Green Bear", "flavor": "Birne Geschmack: Fruchtig", "manufacturer": {"name": "Savu"}}
+              {"name": "Savu Tabak Raspbelly", "flavor": "Himbeere Geschmack: Fruchtig", "manufacturer": {"name": "Savu"}}
+              {"name": "7Days Tabak Classic C.Blue", "flavor": "Blaubeere,Menthol (TPD2)", "manufacturer": {"name": "7Days"}}
+              {"name": "7Days Tabak Classic Vanilla Cream", "flavor": "Cremig,Süßlich Aroma: Vanillecreme", "manufacturer": {"name": "7Days"}}
+              {"name": "Al Fakher Tabak Double Kick - The Double Crunch", "flavor": "Doppelapfel", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Al Fakher Tabak Grapio Night", "flavor": "Menthol (TPD2),Traube", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Al Fakher Tabak Red Smash", "flavor": "Wassermelone", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Al Fakher Tabak Yellow", "flavor": "Zitrone", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Aqua Mentha Tabak African Crush", "flavor": "Blaubeere,Fruchtmix,Traube", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Green Leo", "flavor": "Limette,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Kmsutra", "flavor": "Beerenmix,Erdbeere,Kirsche,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Rasby", "flavor": "Himbeere,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Adalya Tabak Double Yellow", "flavor": "Honigmelone,Wassermelone", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Green Leon Cool", "flavor": "Limette,Minze (TPD2)", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Hawaii", "flavor": "Ananas,Mango", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Ice PYC", "flavor": "Minze (TPD2),Pfirsich", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Mn Tango", "flavor": "Mango,Maracuja", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Straw Bana Ice", "flavor": "Banane,Erdbeere", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Waterlon Cool", "flavor": "Menthol (TPD2),Wassermelone", "manufacturer": {"name": "Adalya"}}
+              {"name": "Adalya Tabak Waterlon", "flavor": "Wassermelone", "manufacturer": {"name": "Adalya"}}
+              {"name": "Banger Tabak Happy Birthday", "flavor": "Fruchtmix,Zitrone", "manufacturer": {"name": "Banger"}}
+              {"name": "Banger Tabak Maghreb Gang", "flavor": "Apfel,Erdbeere", "manufacturer": {"name": "Banger"}}
+              {"name": "Cataleya by Samra Shisha Tabak - #07 WIEDER LILA", "flavor": "Kirsche,Traube", "manufacturer": {"name": "Cataleya by Samra Shisha"}}
+              {"name": "Dschinni Tabak Blck Frsh", "flavor": "Minze (TPD2),Traube", "manufacturer": {"name": "Dschinni"}}
+              {"name": "Dschinni Tabak Pstachio", "flavor": "Pistazie,Safran,Vanille", "manufacturer": {"name": "Dschinni"}}
+              {"name": "Electro Smog Tabak Red Magic", "flavor": "Beerenmix", "manufacturer": {"name": "Electro Smog"}}
+              {"name": "Holster Tabak Peery Punch", "flavor": "Birne", "manufacturer": {"name": "Holster"}}
+              {"name": "Hookain Tabak Purple Lean", "flavor": "Minze (TPD2),Traube", "manufacturer": {"name": "Hookain"}}
+              {"name": "Maridan Tabak Taube Mieze", "flavor": "Minze (TPD2),Traube", "manufacturer": {"name": "Maridan"}}
+              {"name": "Savu Tabak Kaktoss", "flavor": "Fruchtig Aroma: Kaktus", "manufacturer": {"name": "Savu"}}
+              {"name": "7Days Tabak Classic C.Death", "flavor": "Kühl,Erfrischend Aroma: Menthol (TPD2)", "manufacturer": {"name": "7Days"}}
+              {"name": "7Days Tabak Classic C.Lim", "flavor": "Limette,Menthol (TPD2)", "manufacturer": {"name": "7Days"}}
+              {"name": "7Days Tabak Classic C.Pine Cdy", "flavor": "Ananas,Bonbon,Menthol (TPD2)", "manufacturer": {"name": "7Days"}}
+              {"name": "Al Fakher Tabak White Pods", "flavor": "Vanille", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Al Waha Tabak Blue Net", "flavor": "Blaubeere,Minze (TPD2)", "manufacturer": {"name": "Al Waha"}}
+              {"name": "Almassiva Tabak Blue Beast", "flavor": "Ananas,Blaubeere,Brombeere", "manufacturer": {"name": "Almassiva"}}
+              {"name": "Almassiva Tabak Pink King", "flavor": "Himbeere", "manufacturer": {"name": "Almassiva"}}
+              {"name": "Almassiva Tabak Skylines", "flavor": "Blutorange,Grapefruit,Limette,Zitrone", "manufacturer": {"name": "Almassiva"}}
+              {"name": "Aqua Mentha Tabak Apache", "flavor": "Erdbeere,Jackfrucht,Wassermelone", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Black Ninja", "flavor": "Menthol (TPD2),Traube", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Fanex", "flavor": "Beerenmix,Maracuja,Menthol (TPD2),Orange,Pfirsich,Zitrone", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Green Pery", "flavor": "Birne,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Green Snake", "flavor": "Gurke,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Mystery", "flavor": "Drachenfrucht,Himbeere,Kaktusfeige,Menthol (TPD2),Traube", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Purple Teeny", "flavor": "Fruchtig,Kühl,Erfrischend Aroma: Mangosteen,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Red Balls", "flavor": "Kirsche,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Red & Blue", "flavor": "Beerenmix,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Red Nebula", "flavor": "Erdbeere,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Wild Mo", "flavor": "Mango", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Argileh Tabak Chapo Chill", "flavor": "Himbeere,Ice", "manufacturer": {"name": "Argileh"}}
+              {"name": "Argileh Tabak Chapo Lay", "flavor": "Ice,Zitrone", "manufacturer": {"name": "Argileh"}}
+              {"name": "Argileh Tabak OG & M", "flavor": "Fruchtig,Kühl,Erfrischend Aroma: Minze (TPD2),Orange", "manufacturer": {"name": "Argileh"}}
+              {"name": "Adalya Tabak Ice Lie On The Rocks", "flavor": "Limette", "manufacturer": {"name": "Adalya"}}
+              {"name": "Banger Tabak Kuckuck", "flavor": "Fruchtig,Kühl,Erfrischend,Süßlich", "manufacturer": {"name": "Banger"}}
+              {"name": "Cataleya by Samra Shisha Tabak - #06 PHOENIX", "flavor": "Fruchtig Aroma: Orange", "manufacturer": {"name": "Cataleya by Samra Shisha"}}
+              {"name": "Hookain Tabak Angry Red Dragon", "flavor": "Erdbeere", "manufacturer": {"name": "Hookain"}}
+              {"name": "Hookain Tabak Spiced Lean", "flavor": "Limette,Schwarzer Tee,Zitrone", "manufacturer": {"name": "Hookain"}}
+              {"name": "Hookain Tabak Wiwi", "flavor": "Kiwi", "manufacturer": {"name": "Hookain"}}
+              {"name": "Jookah Tabak Frosty Kakty", "flavor": "Ice,Kaktusfeige", "manufacturer": {"name": "Jookah"}}
+              {"name": "Jookah Tabak Sakiss Red", "flavor": "Erdbeere,Kaugummi", "manufacturer": {"name": "Jookah"}}
+              {"name": "Maridan Tabak Joozy", "flavor": "Blutorange", "manufacturer": {"name": "Maridan"}}
+              {"name": "187 Strassenbande Tabak Happy Cactuz", "flavor": "Fruchtig,Süßlich Aroma: Kaktus", "manufacturer": {"name": "187 Strassenbande"}}
+              {"name": "7Days Tabak Classic C.Melo", "flavor": "Menthol (TPD2),Wassermelone", "manufacturer": {"name": "7Days"}}
+              {"name": "Al Fakher Tabak Grapio", "flavor": "Traube", "manufacturer": {"name": "Al Fakher"}}
+              {"name": "Aqua Mentha Tabak Blue Eyes", "flavor": "Blaubeere,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Colours", "flavor": "Erdbeere,Grapefruit,Grenadille,Kirsche,Maracuja,Menthol (TPD2),Traube", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Golden Leo", "flavor": "Menthol (TPD2),Zitrone", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Red Fall", "flavor": "Menthol (TPD2),Wassermelone", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Aqua Mentha Tabak Typ Java", "flavor": "Energy Drink,Guave,Menthol (TPD2)", "manufacturer": {"name": "Aqua Mentha"}}
+              {"name": "Banger Tabak Niemals Antäuschen", "flavor": "Beerenmix", "manufacturer": {"name": "Banger"}}
+              {"name": "Cataleya by Samra Shisha Tabak - #01 TILIDIN", "flavor": "Blaubeere,Erdbeere,Kiwi", "manufacturer": {"name": "Cataleya by Samra Shisha"}}
+              {"name": "Cataleya by Samra Shisha Tabak - #08 GODFATHER", "flavor": "Doppelapfel", "manufacturer": {"name": "Cataleya by Samra Shisha"}}
+              {"name": "Chaos Tabak Falim Red", "flavor": "Falim,Kaugummi,Waldbeere", "manufacturer": {"name": "Chaos"}}
+              {"name": "Holster Tabak Pitacho", "flavor": "Pistazie", "manufacturer": {"name": "Holster"}}
+              {"name": "Hookain Tabak Angry Blue Dragon", "flavor": "Fruchtig", "manufacturer": {"name": "Hookain"}}
+              {"name": "Hookain Tabak Dubai Stachio", "flavor": "Cremig,Süßlich Aroma: Dubai Schokolade", "manufacturer": {"name": "Hookain"}}
+              {"name": "Jookah Tabak Green LMN", "flavor": "Limette,Menthol (TPD2)", "manufacturer": {"name": "Jookah"}}
+              {"name": "Maridan Tabak Kauzi", "flavor": "Kaugummi,Zimt", "manufacturer": {"name": "Maridan"}}
+              {"name": "Maridan Tabak Tingle Tangle Purple", "flavor": "Beerenmix,Granatapfel,Limette,Maracuja", "manufacturer": {"name": "Maridan"}}
+              {"name": "MUSTH Tabak PINKMAN", "flavor": "Erdbeere,Grapefruit,Himbeere", "manufacturer": {"name": "MUSTH"}}
+              {"name": "Smoke Island Tabak Cuba", "flavor": "Heidelbeere,Honig,Limette,Wassermelone,Zitrone", "manufacturer": {"name": "Smoke Island"}}
+              {"name": "Smoke Island Tabak Ibiza", "flavor": "Feige,Kaktus,Zitronengras", "manufacturer": {"name": "Smoke Island"}}
+              {"name": "Smoke Island Tabak Maldives", "flavor": "Blutorange,Drachenfrucht,Orange", "manufacturer": {"name": "Smoke Island"}}
+              {"name": "Smoke Island Tabak Mykonos", "flavor": "Drachenfrucht,Fruchtmix,Himbeere,Kiwi,Limette,Limonade,Zitrone", "manufacturer": {"name": "Smoke Island"}}
+              {"name": "Smoke Island Tabak Santorini", "flavor": "Birne,Limette,Mango,Maracuja,Orange,Zitrone", "manufacturer": {"name": "Smoke Island"}}
+              {"name": "Al Waha Tabak G.M.M", "flavor": "Kaugummi,Minze (TPD2)", "manufacturer": {"name": "Al Waha"}}
+              {"name": "Al Waha Tabak L.M.M", "flavor": "Minze (TPD2),Zitrone", "manufacturer": {"name": "Al Waha"}}
+              {"name": "Almassiva Tabak Blut gegen Blut", "flavor": "Drachenfrucht,Zitrone", "manufacturer": {"name": "Almassiva"}}
+              {"name": "Argileh Tabak 2App Babylon", "flavor": "Fruchtig", "manufacturer": {"name": "Argileh"}}
+              {"name": "Argileh Tabak Chapo Mal", "flavor": "Fruchtig,Kühl,Erfrischend Aroma: Ice,Melone", "manufacturer": {"name": "Argileh"}}
+              {"name": "Argileh Tabak Chapo Piks", "flavor": "Aloe,Ice,Kaktus", "manufacturer": {"name": "Argileh"}}
+              {"name": "Cataleya by Samra Shisha Tabak - #02 HURACAN", "flavor": "Ananas,Früchtemix", "manufacturer": {"name": "Cataleya by Samra Shisha"}}
+              {"name": "Cloud Smoke Tabak Big Green", "flavor": "Kokosnuss,Vanille", "manufacturer": {"name": "Cloud Smoke"}}
+              {"name": "Hookain Tabak Brazilian Gyatt", "flavor": "Guave,Menthol (TPD2)", "manufacturer": {"name": "Hookain"}}
+              {"name": "Hookain Tabak Gray Mind", "flavor": "Minze (TPD2),Traube", "manufacturer": {"name": "Hookain"}}
+              {"name": "Hookain Tabak Soleiro Spliff", "flavor": "Candy,Maracuja,Orange,Vanille", "manufacturer": {"name": "Hookain"}}
+              {"name": "Maridan Tabak Alpine Rush", "flavor": "Gurke,Honig,Ice", "manufacturer": {"name": "Maridan"}}
+              {"name": "Maridan Tabak Rosy Cheeks", "flavor": "", "manufacturer": {"name": "Maridan"}}
+              {"name": "MUSTH Tabak JUNGLE JUS", "flavor": "Fruchtig Aroma: Passionsfrucht", "manufacturer": {"name": "MUSTH"}}
+              {"name": "MUSTH Tabak KWI SMOOTH", "flavor": "Kiwi", "manufacturer": {"name": "MUSTH"}}
+              {"name": "MUSTH Tabak Lemn-Lim", "flavor": "Limette,Zitrone", "manufacturer": {"name": "MUSTH"}}
+              {"name": "MUSTH Tabak Maggo Sling", "flavor": "Mango", "manufacturer": {"name": "MUSTH"}}
+              {"name": "NASH Tabak GREEN FRUT", "flavor": "Kiwi", "manufacturer": {"name": "NASH"}}
+              {"name": "NASH Tabak JAPAN WHITE", "flavor": "Erdbeere", "manufacturer": {"name": "NASH"}}
+              {"name": "NASH Tabak SWIT E", "flavor": "Traube", "manufacturer": {"name": "NASH"}}
+              {"name": "Smoke Island Tabak Bali", "flavor": "Drachenfrucht,Erdbeere,Zitrone", "manufacturer": {"name": "Smoke Island"}}
+              {"name": "Smoke Island Tabak Bora Bora", "flavor": "Erdbeere,Himbeere,Holunder,Kiwi", "manufacturer": {"name": "Smoke Island"}}
+              {"name": "Start Now Tabak Big Cat", "flavor": "Kaugummi,Zimt", "manufacturer": {"name": "Start Now"}}
+              {"name": "Start Now Tabak Cactz & Lim", "flavor": "Kaktus,Limette", "manufacturer": {"name": "Start Now"}}
+              {"name": "Start Now Tabak Extra", "flavor": "Kaugummi,Minze (TPD2)", "manufacturer": {"name": "Start Now"}}
+              {"name": "Start Now Tabak Joker", "flavor": "Vanille,Zitronenkuchen", "manufacturer": {"name": "Start Now"}}
+              {"name": "Start Now Tabak Pink o Nade", "flavor": "Grapefruit,Limette,Orange,Zitrone", "manufacturer": {"name": "Start Now"}}
+              {"name": "Stral Tabak Basil Barry", "flavor": "Basilikum,Brombeere", "manufacturer": {"name": "Stral"}}
+              {"name": "Stral Tabak Black Mln", "flavor": "Blaubeere,Honigmelone", "manufacturer": {"name": "Stral"}}
+              {"name": "Stral Tabak Grayp Kiwi", "flavor": "Kiwi,Traube", "manufacturer": {"name": "Stral"}}
+              {"name": "Stral Tabak Litch Ice", "flavor": "Ice,Litschi", "manufacturer": {"name": "Stral"}}
+              {"name": "Stral Tabak Orang Tik Tak", "flavor": "Fruchtig,Süßlich Aroma: Orange", "manufacturer": {"name": "Stral"}}
+              {"name": "Stral Tabak Red Cherri", "flavor": "Kirsche", "manufacturer": {"name": "Stral"}}
+              {"name": "Argileh Tabak Mosaic", "flavor": "Fruchtig Aroma: Früchtemix", "manufacturer": {"name": "Argileh"}}
+              {"name": "Cloud Smoke Tabak Feeling", "flavor": "Limette", "manufacturer": {"name": "Cloud Smoke"}}
+              {"name": "Maridan Tingle Tangle", "flavor": "Grapefruit,Limette,Maracuja", "manufacturer": {"name": "Maridan"}}
+              {"name": "MUSTH Tabak BLACK BRRS", "flavor": "Brombeere", "manufacturer": {"name": "MUSTH"}}
+              {"name": "MUSTH Tabak Black Crrt", "flavor": "Johannisbeere", "manufacturer": {"name": "MUSTH"}}
+              {"name": "MUSTH Tabak CU cund", "flavor": "Gurke,Limette,Zitrone", "manufacturer": {"name": "MUSTH"}}
+              {"name": "MUSTH Tabak Early Gre", "flavor": "Bergamotte,Schwarzer Tee", "manufacturer": {"name": "MUSTH"}}
+              {"name": "MUSTH Tabak Grap Frut", "flavor": "Grapefruit", "manufacturer": {"name": "MUSTH"}}
+              {"name": "MUSTH Tabak Proscco", "flavor": "Fruchtig,Getränke,Herb,Kühl,Erfrischend,Sauer,Süßlich", "manufacturer": {"name": "MUSTH"}}
+              {"name": "MUSTH Tabak Roketman", "flavor": "Erdbeere,Grapefruit,Kiwi", "manufacturer": {"name": "MUSTH"}}
+              {"name": "MUSTH Tabak SPACE FLVR", "flavor": "Litschi,Mango,Passionsfrucht", "manufacturer": {"name": "MUSTH"}}
+              {"name": "NASH Tabak CRAZY GREEN", "flavor": "Kiwi,Rhabarber", "manufacturer": {"name": "NASH"}}
+              {"name": "NASH Tabak DUBAI NIGHT", "flavor": "Minze (TPD2),Traube", "manufacturer": {"name": "NASH"}}
+              {"name": "NASH Tabak PINA", "flavor": "Ananas", "manufacturer": {"name": "NASH"}}
+              {"name": "Serum Tabak Black 2 Black", "flavor": "Johannisbeere,Minze (TPD2),Traube", "manufacturer": {"name": "Serum"}}
               JSONS
               # Post each item to backend API (uses service shisha-backend-mock:8080)
               while IFS= read -r line; do

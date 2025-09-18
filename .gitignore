@@ -4,3 +4,5 @@ backend.log
 backend/server
 
 scripts/deploy_all_microk8s.sh
+
+venv/*
