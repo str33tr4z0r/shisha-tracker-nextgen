@@ -10,8 +10,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: shisha-backend-mock
-  minReplicas: 2
-  maxReplicas: 6
+  minReplicas: 8
+  maxReplicas: 12
   metrics:
     - type: Resource
       resource:

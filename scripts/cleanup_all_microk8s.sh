@@ -68,18 +68,23 @@ if [ "$NUKE_PV" = true ]; then
   echo "  sudo rm -rf /var/lib/shisha/couchdb"
 fi
 
-# 7) Optional: delete namespace
-echo "Deleting namespace '$NAMESPACE' (this removes any remaining resources)"
-run microk8s.kubectl delete namespace "$NAMESPACE" --ignore-not-found
 
-# 8) Delte HPA and PDB
+
+# 7) Delte HPA and PDB
 run microk8s.kubectl delete -f k8s/hpa-frontend.yaml -n "$NAMESPACE"  --ignore-not-found
 run microk8s.kubectl delete -f k8s/hpa-backend.yaml -n "$NAMESPACE"  --ignore-not-found
 
 run microk8s.kubectl delete -f k8s/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
 run microk8s.kubectl delete -f k8s/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
 
-# 9) Final checks
+# 8) Optional: delete namespace
+run microk8s.kubectl delete -f k8s/ingress.yaml "$NAMESPACE" --ignore-not-found
+
+# 9) Optional: delete namespace
+echo "Deleting namespace '$NAMESPACE' (this removes any remaining resources)"
+run microk8s.kubectl delete namespace "$NAMESPACE" --ignore-not-found
+
+# 10) Final checks
 echo "Final resource check (filtered by name 'shisha')"
 run microk8s.kubectl get all -A | grep shisha || true
 run microk8s.kubectl get pvc -A | grep shisha || true

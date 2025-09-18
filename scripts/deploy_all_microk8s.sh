@@ -37,7 +37,8 @@ run microk8s.kubectl rollout status deployment/shisha-backend-mock -n "$NAMESPAC
 run microk8s.kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/frontend.yaml -n "$NAMESPACE"
 run microk8s.kubectl rollout status deployment/shisha-frontend -n "$NAMESPACE" --timeout=120s
-run microk8s.kubectl patch svc shisha-frontend -n "$NAMESPACE" --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
+run microk8s.kubectl apply -f k8s/ingress.yaml -n "$NAMESPACE"
+#run microk8s.kubectl patch svc shisha-frontend -n "$NAMESPACE" --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
 
 #HPA / PDBs / Optionales Monitoring
 run microk8s.kubectl apply -f k8s/hpa-backend.yaml -n "$NAMESPACE"
