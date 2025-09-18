@@ -74,8 +74,33 @@ kubectl apply -f k8s/pdb-frontend.yaml
 ```
 
 10. Externe Erreichbarkeit
+
+Option A — Ingress (empfohlen, MicroK8s)
+```bash
+# Ingress manifest anwenden (verwaltet Routen für / und /api/*)
+kubectl apply -f k8s/ingress.yaml -n shisha
+
+# MicroK8s nginx-ingress bindet häufig an 127.0.0.1 — für lokalen Zugriff nutze einen Host‑Eintrag:
+echo "127.0.0.1 shisha.local" | sudo tee -a /etc/hosts
+
+# Prüfen (vom Host)
+curl http://shisha.local/api/healthz
+# oder (ohne /etc/hosts)
+curl -H "Host: shisha.local" http://127.0.0.1/api/healthz
+```
+
+Option B — Service ExternalIP (ältere Methode)
 ```bash
 kubectl patch svc shisha-frontend -n shisha --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
+```
+
+Option C — Ingress im LAN (MicroK8s + MetalLB)
+```bash
+# MetalLB aktivieren und einen freien IP‑Range im LAN wählen, z.B.:
+microk8s enable metallb:10.0.10.200-10.0.10.210
+
+# Danach erhält der Ingress ggf. eine EXTERNAL‑IP und ist aus dem LAN erreichbar.
+kubectl -n shisha get ingress shisha-ingress -o wide
 ```
 
 Troubleshooting — Kurzbefehle
