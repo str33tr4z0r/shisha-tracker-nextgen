@@ -112,10 +112,14 @@ kubectl get events -n shisha --sort-by=.metadata.creationTimestamp | tail -n 50
 ## All-in-One Copy paste 
 
 ```bash
+
+NAMESPACE=shisha
+
 kubectl apply -f k8s/namespace.yaml
 kubectl create secret generic shisha-couchdb-admin -n shisha \
   --from-literal=username=ichbineinadmin \
   --from-literal=password=ichbin1AdminPasswort!
+kubectl apply -f k8s/couchdb-storage-class.yaml
 kubectl apply -f k8s/couchdb-pv.yaml
 kubectl apply -f k8s/couchdb.yaml
 kubectl rollout status deployment/shisha-couchdb -n shisha --timeout=120s
@@ -124,17 +128,26 @@ kubectl rollout status deployment/shisha-backend-mock -n shisha --timeout=120s
 kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml -n shisha
 kubectl apply -f k8s/frontend.yaml -n shisha
 kubectl rollout status deployment/shisha-frontend -n shisha --timeout=120s
-kubectl patch svc shisha-frontend -n shisha --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
+kubectl apply -f k8s/ingress.yaml -n shisha
+#kubectl patch svc shisha-frontend -n shisha --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
+
+#Daten Bank Scalieren Optional
+kubectl scale statefulset shisha-couchdb --replicas=3 -n shisha
+kubectl rollout status statefulset/shisha-couchdb -n shisha --timeout=300s
 
 #HPA / PDBs / Optionales Monitoring
-kubectl apply -f k8s/hpa-backend.yaml
-kubectl apply -f k8s/hpa-frontend.yaml
-kubectl apply -f k8s/pdb-backend.yaml
-kubectl apply -f k8s/pdb-frontend.yaml
+kubectl apply -f k8s/hpa-backend.yaml -n shisha
+kubectl apply -f k8s/hpa-frontend.yaml -n shisha
+kubectl apply -f k8s/hpa-couchdb.yaml -n shisha
+kubectl apply -f k8s/pdb-backend.yaml -n shisha
+kubectl apply -f k8s/pdb-frontend.yaml -n shisha
+kubectl apply -f k8s/pdb-couchdb.yaml -n shisha
 
 #Sample Daten Optional 
 kubectl apply -f k8s/shisha-sample-data.yaml -n shisha
 kubectl logs -l job-name=shisha-sample-data -n shisha --tail=200
+
+
 
 kubectl get statefulset,service,pods,pvc,hpa,pdb,jobs -n shisha -o wide
 

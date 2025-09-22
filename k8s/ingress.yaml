@@ -37,7 +37,7 @@ spec:
               service:
                 name: shisha-frontend
                 port:
-                  number: 80           
+                  number: 80         
           - path: /api/healthz
             pathType: Prefix
             backend:

@@ -1,0 +1,74 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: shisha-couchdb-init
+  namespace: shisha
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 100
+  template:
+    metadata:
+      labels:
+        job: shisha-couchdb-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init
+          image: curlimages/curl:8.1.2
+          env:
+            - name: COUCHDB_URL
+              value: "http://shisha-couchdb:5984"
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: username
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: password
+            - name: COUCHDB_DB
+              value: "shisha"
+            - name: DESIRED_REPLICAS
+              value: "3"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              echo "waiting for couchdb..."
+              until curl -sSf "$COUCHDB_URL/"; do
+                sleep 2
+              done
+
+              echo "ensure _users exists"
+              curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X PUT "$COUCHDB_URL/_users" || true
+
+              echo "creating database $COUCHDB_DB (if not exists)"
+              curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X PUT "$COUCHDB_URL/$COUCHDB_DB" || true
+
+              echo "creating index idx_type_id"
+              curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "$COUCHDB_URL/$COUCHDB_DB/_index" -H "Content-Type: application/json" -d '{"index":{"fields":["type","id"]},"name":"idx_type_id","type":"json"}' || true
+
+              MEMBERSHIP=$(curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" "$COUCHDB_URL/_membership" || echo "")
+              echo "membership: $MEMBERSHIP"
+
+              if echo "$MEMBERSHIP" | grep -q '"cluster_nodes":\s*\["nonode@nohost"\]'; then
+                echo "single-node membership detected — attempting cluster setup"
+                curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://shisha-couchdb-0.shisha-couchdb-headless:5984/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"enable_cluster","bind_address":"0.0.0.0","username":"'"$COUCHDB_USER"'","password":"'"$COUCHDB_PASSWORD"'","port":5984,"node_count":'"$DESIRED_REPLICAS"'}' || true
+
+                i=1
+                while [ $i -lt "$DESIRED_REPLICAS" ]; do
+                  TARGET="shisha-couchdb-$i.shisha-couchdb-headless"
+                  echo "adding node $TARGET"
+                  curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://shisha-couchdb-0.shisha-couchdb-headless:5984/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"add_node","host":"'"$TARGET"'","port":5984,"username":"'"$COUCHDB_USER"'","password":"'"$COUCHDB_PASSWORD"'"}' || true
+                  i=$((i+1))
+                done
+
+                echo "finishing cluster"
+                curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://shisha-couchdb-0.shisha-couchdb-headless:5984/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"finish_cluster"}' || true
+              else
+                echo "cluster already configured"
+              fi
+      restartPolicy: Never

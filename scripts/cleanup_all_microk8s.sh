@@ -42,14 +42,25 @@ echo "Nuke PV: $NUKE_PV"
 #run kubectl delete configmap shisha-couchdb-seed-config -n "$NAMESPACE" --ignore-not-found
 #run kubectl delete job shisha-couchdb-seed -n "$NAMESPACE" --ignore-not-found
 
+run microk8s.kubectl delete -f k8s/ingress.yaml -n "$NAMESPACE" --ignore-not-found
+
 # 2) Delete frontend and backend
+run microk8s.kubectl delete -f k8s/shisha-frontend-nginx-configmap.yaml -n "$NAMESPACE" --ignore-not-found
 run microk8s.kubectl delete -f k8s/frontend.yaml -n "$NAMESPACE" --ignore-not-found
 run microk8s.kubectl delete -f k8s/backend.yaml -n "$NAMESPACE" --ignore-not-found
 
 # 3) Delete CouchDB deployment & service
 run microk8s.kubectl delete -f k8s/couchdb.yaml -n "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete statefulset shisha-couchdb -n "$NAMESPACE" --ignore-not-found
+
+# Löscht alle PVCs, die zum StatefulSet gehören (Label-Selector nutzen)
+run microk8s.kubectl delete pvc -l app=shisha-couchdb -n "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/couchdb-pv.yaml -n "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/couchdb-storage-class.yaml -n "$NAMESPACE" --ignore-not-found
 #Delete Sample, if applied
 run microk8s.kubectl delete -f k8s/shisha-sample-data.yaml -n "$NAMESPACE" --ignore-not-found
+
+run microk8s.kubectl delete -f k8s/couchdb-init-job.yaml  -n "$NAMESPACE" --ignore-not-found
 
 # 4) Delete secrets and configmaps
 run microk8s.kubectl delete secret shisha-couchdb-admin -n "$NAMESPACE" --ignore-not-found
@@ -73,12 +84,12 @@ fi
 # 7) Delte HPA and PDB
 run microk8s.kubectl delete -f k8s/hpa-frontend.yaml -n "$NAMESPACE"  --ignore-not-found
 run microk8s.kubectl delete -f k8s/hpa-backend.yaml -n "$NAMESPACE"  --ignore-not-found
+run microk8s.kubectl delete -f k8s/hpa-couchdb.yaml -n "$NAMESPACE"  --ignore-not-found
 
+run microk8s.kubectl delete -f k8s/pdb-frontend.yaml -n "$NAMESPACE"  --ignore-not-found
 run microk8s.kubectl delete -f k8s/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
-run microk8s.kubectl delete -f k8s/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
+run microk8s.kubectl delete -f k8s/pdb-couchdb.yaml -n "$NAMESPACE"  --ignore-not-found
 
-# 8) Optional: delete namespace
-run microk8s.kubectl delete -f k8s/ingress.yaml "$NAMESPACE" --ignore-not-found
 
 # 9) Optional: delete namespace
 echo "Deleting namespace '$NAMESPACE' (this removes any remaining resources)"
