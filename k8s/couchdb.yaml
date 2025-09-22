@@ -1,13 +1,13 @@
-# CouchDB deployment manifest for staged migration
-# Single-replica Deployment with PVC and Service. For production, use StatefulSet and proper secrets.
+# CouchDB StatefulSet for clustered/stage usage (keeps compatibility with existing PVC for single-replica)
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: shisha-couchdb
   namespace: shisha
   labels:
     app: shisha-couchdb
 spec:
+  serviceName: shisha-couchdb-headless
   replicas: 1
   selector:
     matchLabels:
@@ -17,7 +17,6 @@ spec:
       labels:
         app: shisha-couchdb
     spec:
-      # initContainer removed — seeding moved into container postStart hook
       containers:
         - name: couchdb
           image: couchdb:3.2.2
@@ -56,11 +55,36 @@ spec:
           volumeMounts:
             - name: couchdb-data
               mountPath: /opt/couchdb/data
-      volumes:
-        - name: couchdb-data
-          persistentVolumeClaim:
-            claimName: shisha-couchdb-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: couchdb-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: "couchdb-storage-class"
 ---
+# Headless service for peer discovery (StatefulSet)
+apiVersion: v1
+kind: Service
+metadata:
+  name: shisha-couchdb-headless
+  namespace: shisha
+  labels:
+    app: shisha-couchdb
+spec:
+  clusterIP: None
+  ports:
+    - port: 5984
+      targetPort: 5984
+      protocol: TCP
+      name: http
+  selector:
+    app: shisha-couchdb
+---
+# ClusterIP service for backend connections (DNS: shisha-couchdb:5984)
 apiVersion: v1
 kind: Service
 metadata:
@@ -77,16 +101,3 @@ spec:
       name: http
   selector:
     app: shisha-couchdb
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: shisha-couchdb-pvc
-  namespace: shisha
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: ""

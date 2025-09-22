@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: shisha-couchdb-pdb
+  namespace: shisha
+  labels:
+    app: shisha-couchdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: shisha-couchdb

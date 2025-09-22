@@ -13,7 +13,7 @@ service:
 persistence:
   enabled: true
   size: 1Gi
-  storageClass: ""
+  storageClass: "couchdb-storage-class"
 
 env:
   adminSecretName: shisha-couchdb-admin
