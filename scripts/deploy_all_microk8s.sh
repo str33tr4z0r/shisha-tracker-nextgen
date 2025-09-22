@@ -33,7 +33,7 @@ run microk8s.kubectl apply -f k8s/couchdb-storage-class.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/couchdb-pv.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/couchdb.yaml -n "$NAMESPACE"
 run microk8s.kubectl rollout status statefulset/shisha-couchdb -n "$NAMESPACE" --timeout=120s
-run microk8s.kubectl apply -f k8s/couchdb-init-job.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/couchdb-init-job.yaml -n "$NAMESPACE"
 # Wait for init job to complete before deploying backend
 run microk8s.kubectl wait --for=condition=complete job/shisha-couchdb-init -n "$NAMESPACE" --timeout=120s
 run microk8s.kubectl logs -l job-name=shisha-couchdb-init -n "$NAMESPACE" --tail=200 || true
