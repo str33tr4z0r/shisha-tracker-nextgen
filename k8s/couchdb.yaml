@@ -17,6 +17,52 @@ spec:
       labels:
         app: shisha-couchdb
     spec:
+      initContainers:
+        - name: join-cluster
+          image: curlimages/curl:8.1.2
+          env:
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: username
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: password
+            - name: DESIRED_REPLICAS
+              value: "3"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              POD_ORDINAL=${POD_NAME##*-}
+              COUCHDB_LOCAL_URL="http://localhost:5984"
+              HEADLESS0="http://shisha-couchdb-0.shisha-couchdb-headless:5984"
+              # wait for local couchdb to be ready
+              until curl -sSf "$COUCHDB_LOCAL_URL/"; do sleep 2; done
+              MEMBERSHIP=$(curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" "$COUCHDB_LOCAL_URL/_membership" || echo "")
+              echo "membership: $MEMBERSHIP"
+              if echo "$MEMBERSHIP" | grep -q '"cluster_nodes":\s*\["nonode@nohost"\]'; then
+                if [ "$POD_ORDINAL" -eq 0 ]; then
+                  echo "pod0: enabling cluster"
+                  curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "$HEADLESS0/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"enable_cluster","bind_address":"0.0.0.0","username":"'"$COUCHDB_USER"'","password":"'"$COUCHDB_PASSWORD"'","port":5984,"node_count":'"$DESIRED_REPLICAS"'}' || true
+                  echo "pod0: finishing cluster"
+                  curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "$HEADLESS0/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"finish_cluster"}' || true
+                else
+                  TARGET_HOST="${POD_NAME}.shisha-couchdb-headless"
+                  echo "adding node $TARGET_HOST"
+                  curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "$HEADLESS0/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"add_node","host":"'"$TARGET_HOST"'","port":5984,"username":"'"$COUCHDB_USER"'","password":"'"$COUCHDB_PASSWORD"'"}' || true
+                fi
+              else
+                echo "cluster already configured"
+              fi
       containers:
         - name: couchdb
           image: couchdb:3.2.2
@@ -35,6 +81,18 @@ spec:
           ports:
             - containerPort: 5984
               name: http
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  MEMBERSHIP=$(curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://localhost:5984/_membership || echo "")
+                  HOST=$(hostname -s)
+                  echo "$MEMBERSHIP" | grep -q "\"$HOST\"" || exit 1
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 6
           lifecycle:
             postStart:
               exec:
@@ -52,6 +110,16 @@ spec:
                     curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X PUT http://localhost:5984/shisha || true
                     curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST http://localhost:5984/shisha/_index -H "Content-Type: application/json" -d '{"index":{"fields":["type","id"]},"name":"idx_type_id","type":"json"}' || true
                     ) &
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    set -eu
+                    POD_HOST=$(hostname -s)
+                    echo "Attempting to remove $POD_HOST from cluster (best-effort)"
+                    curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://shisha-couchdb-0.shisha-couchdb-headless:5984/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"remove_node","host":"'"$POD_HOST"'","port":5984}' || true
           volumeMounts:
             - name: couchdb-data
               mountPath: /opt/couchdb/data
