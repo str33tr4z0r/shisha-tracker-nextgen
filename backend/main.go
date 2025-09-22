@@ -127,6 +127,7 @@ func main() {
 
 		api.POST("/shishas/:id/ratings", addRating)
 		api.POST("/shishas/:id/comments", addComment)
+		api.GET("/couchdb/cluster", couchClusterHandler)
 	}
 
 	port := os.Getenv("PORT")
@@ -308,4 +309,56 @@ func addComment(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"user": req.User, "message": req.Message})
+}
+
+// couchClusterHandler returns whether CouchDB is clustered and the node names.
+// Response JSON:
+//
+//	{
+//	  "cluster": bool,
+//	  "cluster_nodes": [...],
+//	  "all_nodes": [...],
+//	  "expected_replicas": int
+//	}
+func couchClusterHandler(c *gin.Context) {
+	// only available when using CouchDB storage backend
+	adapter, ok := storageEngine.(*storage.CouchAdapter)
+	if !ok {
+		c.JSON(http.StatusNotImplemented, gin.H{"error": "cluster status only available with CouchDB storage"})
+		return
+	}
+
+	clustered, clusterNodes, allNodes, err := adapter.ClusterStatus()
+	if err != nil {
+		log.Printf("ClusterStatus error: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	// read expected replicas from environment (DESIRED_REPLICAS or COUCHDB_EXPECTED_REPLICAS)
+	expectedStr := os.Getenv("DESIRED_REPLICAS")
+	if expectedStr == "" {
+		expectedStr = os.Getenv("COUCHDB_EXPECTED_REPLICAS")
+	}
+	expected := 0
+	if expectedStr != "" {
+		if v, err := strconv.Atoi(expectedStr); err == nil {
+			expected = v
+		}
+	}
+
+	// determine cleanliness: must be clustered and cluster_nodes must not be ["nonode@nohost"]
+	clean := clustered && !(len(clusterNodes) == 1 && clusterNodes[0] == "nonode@nohost")
+	if expected > 0 {
+		if len(clusterNodes) != expected {
+			clean = false
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"cluster":           clean,
+		"cluster_nodes":     clusterNodes,
+		"all_nodes":         allNodes,
+		"expected_replicas": expected,
+	})
 }

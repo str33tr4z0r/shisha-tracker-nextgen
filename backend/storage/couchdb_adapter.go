@@ -369,3 +369,30 @@ func (c *CouchAdapter) AddComment(id uint, user, message string) error {
 	}
 	return nil
 }
+
+// ClusterStatus queries CouchDB _membership and returns whether the node is
+// part of a configured cluster and which nodes are members. When CouchDB is
+// not clustered, the cluster_nodes field usually contains ["nonode@nohost"].
+func (c *CouchAdapter) ClusterStatus() (clustered bool, clusterNodes []string, allNodes []string, err error) {
+	resp, err := c.doRequest("GET", "_membership", nil)
+	if err != nil {
+		return false, nil, nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return false, nil, nil, fmt.Errorf("_membership request failed: %s: %s", resp.Status, string(b))
+	}
+	var out struct {
+		AllNodes     []string `json:"all_nodes"`
+		ClusterNodes []string `json:"cluster_nodes"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return false, nil, nil, err
+	}
+	// Detect uninitialized cluster
+	if len(out.ClusterNodes) == 1 && out.ClusterNodes[0] == "nonode@nohost" {
+		return false, nil, out.AllNodes, nil
+	}
+	return true, out.ClusterNodes, out.AllNodes, nil
+}

@@ -10,34 +10,13 @@ spec:
   rules:
     - http:
         paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: shisha-frontend
-                port:
-                  number: 80
           - path: /api
             pathType: Prefix
             backend:
               service:
-                name: shisha-frontend
+                name: shisha-backend-mock
                 port:
-                  number: 80
-          - path: /api/shishas
-            pathType: Prefix
-            backend:
-              service:
-                name: shisha-frontend
-                port:
-                  number: 80 
-          - path: /api/info
-            pathType: Prefix
-            backend:
-              service:
-                name: shisha-frontend
-                port:
-                  number: 80         
+                  number: 8080
           - path: /api/healthz
             pathType: Prefix
             backend:
@@ -45,4 +24,11 @@ spec:
                 name: shisha-backend-mock
                 port:
                   number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: shisha-frontend
+                port:
+                  number: 80
 
