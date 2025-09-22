@@ -26,9 +26,9 @@ func NewCouchAdapter(baseURL, user, pass, dbName string) (*CouchAdapter, error) 
 	if baseURL == "" {
 		baseURL = os.Getenv("COUCHDB_URL")
 	}
-	// sensible local default when env not set
+	// default to cluster Service DNS (shisha-couchdb) when env not set
 	if baseURL == "" {
-		baseURL = "http://localhost:5984"
+		baseURL = "http://shisha-couchdb:5984"
 	}
 	if user == "" {
 		user = os.Getenv("COUCHDB_USER")
