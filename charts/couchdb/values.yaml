@@ -17,6 +17,7 @@ persistence:
 
 env:
   adminSecretName: shisha-couchdb-admin
+  desiredReplicas: 3
 
 resources:
   requests:
