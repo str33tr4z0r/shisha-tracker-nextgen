@@ -1,17 +1,23 @@
 replicaCount: 1
+minReplicas: 1
+
 image:
   repository: couchdb
   tag: "3.2.2"
   pullPolicy: IfNotPresent
+
 service:
   type: ClusterIP
   port: 5984
+
 persistence:
   enabled: true
   size: 1Gi
   storageClass: ""
+
 env:
   adminSecretName: shisha-couchdb-admin
+
 resources:
   requests:
     cpu: 100m
@@ -19,5 +25,12 @@ resources:
   limits:
     cpu: 500m
     memory: 1Gi
+
 metrics:
   enabled: false
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80

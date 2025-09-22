@@ -1,0 +1,11 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "couchdb.fullname" . }}-pdb
+  labels:
+    {{- include "couchdb.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.minReplicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ include "couchdb.name" . }}
