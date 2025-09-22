@@ -132,7 +132,7 @@ kubectl apply -f k8s/ingress.yaml -n shisha
 #kubectl patch svc shisha-frontend -n shisha --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
 
 #Daten Bank Scalieren Optional
-kubectl scale statefulset shisha-couchdb --replicas=3 -n shisha
+kubectl scale statefulset shisha-couchdb --replicas=5 -n shisha
 kubectl rollout status statefulset/shisha-couchdb -n shisha --timeout=300s
 
 #HPA / PDBs / Optionales Monitoring
@@ -164,7 +164,7 @@ Hinweise
 
 CouchDB — Initial Deploy & korrektes Skalieren (Empfohlene Reihenfolge)
 
-Ziel: frisches Deploy startet mit genau 1 CouchDB‑Replica; Kubernetes verwaltet Skalierung (HPA / manueller Scale). Die Backend‑App verbindet sich immer an den ClusterIP Service `http://shisha-couchdb:5984`.
+Ziel: frisches Deploy nutzt die Chart‑Standard‑Replikazahl (standard: 5); Kubernetes verwaltet Skalierung (HPA / manueller Scale). Die Backend‑App verbindet sich immer an den ClusterIP Service `http://shisha-couchdb:5984`.
 
 A) Initialer Deploy (einmalig / erstes Setup)
 1. Namespace anlegen
@@ -207,7 +207,7 @@ kubectl run --rm -n shisha smoke-curl --image=curlimages/curl --restart=Never --
 B) Skalieren (Scale‑Up)
 1. Skalieren über Kubernetes
 ```bash
-kubectl scale statefulset shisha-couchdb --replicas=3 -n shisha
+kubectl scale statefulset shisha-couchdb --replicas=5 -n shisha
 kubectl rollout status statefulset/shisha-couchdb -n shisha --timeout=300s
 ```
 
