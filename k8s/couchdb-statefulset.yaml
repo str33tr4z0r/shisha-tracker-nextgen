@@ -61,11 +61,12 @@ spec:
               bind_address = 0.0.0.0
               [couchdb]
               database_dir = /opt/couchdb/data
-              [admins]
-              # admin user taken from secret at runtime; leave empty here
               EOF
-              # ensure docker.ini exists to satisfy CouchDB startup checks
-              touch /opt/couchdb/etc/local.d/docker.ini
+              # write admin credentials from secret into local.d/docker.ini (plaintext for dev)
+              cat > /opt/couchdb/etc/local.d/docker.ini <<EOF
+              [admins]
+              ${COUCHDB_USER} = ${COUCHDB_PASSWORD}
+              EOF
               chmod -R 0755 /opt/couchdb/etc || true
           env:
             - name: POD_NAME
@@ -76,6 +77,16 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: username
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: password
           volumeMounts:
             - name: couchdb-config
               mountPath: /opt/couchdb/etc
@@ -140,69 +151,70 @@ spec:
                   - /bin/sh
                   - -c
                   - |
-                    # improved join script: wait until local CouchDB up, then ensure node joins cluster with membership checks and backoff
-                    sleep 5
-                    until curl -sSf "http://127.0.0.1:5984/" >/dev/null 2>&1; do
-                      sleep 2
-                    done
-                    # derive ordinal
-                    if echo "$POD_NAME" | grep -qE "-[0-9]+$"; then
-                      ORDINAL=$(echo "$POD_NAME" | sed -E 's/.*-([0-9]+)$/\1/')
-                    else
-                      ORDINAL=0
-                    fi
-                    if [ "$ORDINAL" -eq 0 ]; then
-                      echo "I am pod-0; coordinator"
-                      exit 0
-                    fi
-                    COORD="shisha-couchdb-0.shisha-couchdb-headless"
-                    until curl -sSf "http://$COORD:5984/_up" >/dev/null 2>&1; do
-                      sleep 2
-                    done
-                    SELF_HOST="${POD_NAME}.shisha-couchdb-headless"
-                    # improved join: wait for coordinator _membership and try to add self if not present, with retries/backoff and extra verification
-                    TRY=0
-                    MAX_TRIES=12
-                    BACKOFF=2
-                    while [ $TRY -lt $MAX_TRIES ]; do
-                      echo "join attempt $((TRY+1))/$MAX_TRIES: checking coordinator membership..." >&2
-                      if curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" "http://$COORD:5984/_membership" >/tmp/membership.json 2>/dev/null; then
-                        echo "coordinator membership: $(head -c 1024 /tmp/membership.json)..." >&2
-                        if grep -q "$SELF_HOST" /tmp/membership.json; then
-                          echo "Already a member according to coordinator _membership" >&2
-                          exit 0
-                        fi
-                        # request add_node
-                        echo "requesting add_node for $SELF_HOST" >&2
-                        if curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://$COORD:5984/_cluster_setup" -H "Content-Type: application/json" -d "{\"action\":\"add_node\",\"host\":\"$SELF_HOST\",\"port\":5984}"; then
-                          echo "add_node requested" >&2
-                          # attempt finish_cluster (idempotent)
-                          curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://$COORD:5984/_cluster_setup" -H "Content-Type: application/json" -d '{\"action\":\"finish_cluster\"}' || true
-                          # verify membership includes SELF_HOST on coordinator
-                          if curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" "http://$COORD:5984/_membership" | grep -q "$SELF_HOST"; then
-                            echo "Coordinator reports SELF_HOST present; verifying from SELF_HOST..." >&2
-                            # verify that SELF_HOST endpoint sees the cluster (gives confidence Erlang node joined)
-                            if curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" "http://${SELF_HOST}:5984/_membership" 2>/dev/null | grep -q "$SELF_HOST"; then
-                              echo "SELF_HOST sees itself in membership; Joined cluster" >&2
-                              exit 0
+                    ( # run join procedure in background so main CouchDB process can start immediately
+                      # improved join script: wait until local CouchDB up, then ensure node joins cluster with membership checks and backoff
+                      sleep 5
+                      until curl -sSf "http://127.0.0.1:5984/" >/dev/null 2>&1; do
+                        sleep 2
+                      done
+                      # derive ordinal
+                      if echo "$POD_NAME" | grep -qE "-[0-9]+$"; then
+                        ORDINAL=$(echo "$POD_NAME" | sed -E 's/.*-([0-9]+)$/\1/')
+                      else
+                        ORDINAL=0
+                      fi
+                      if [ "$ORDINAL" -eq 0 ]; then
+                        echo "I am pod-0; coordinator"
+                        exit 0
+                      fi
+                      COORD="shisha-couchdb-0.shisha-couchdb-headless"
+                      until curl -sSf "http://$COORD:5984/_up" >/dev/null 2>&1; do
+                        sleep 2
+                      done
+                      SELF_HOST="${POD_NAME}.shisha-couchdb-headless"
+                      # improved join: wait for coordinator _membership and try to add self if not present, with retries/backoff and extra verification
+                      TRY=0
+                      MAX_TRIES=12
+                      BACKOFF=2
+                      while [ $TRY -lt $MAX_TRIES ]; do
+                        echo "join attempt $((TRY+1))/$MAX_TRIES: checking coordinator membership..." >&2
+                        if curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" "http://$COORD:5984/_membership" >/tmp/membership.json 2>/dev/null; then
+                          echo "coordinator membership: $(head -c 1024 /tmp/membership.json)..." >&2
+                          if grep -q "$SELF_HOST" /tmp/membership.json; then
+                            echo "Already a member according to coordinator _membership" >&2
+                            exit 0
+                          fi
+                          # request add_node
+                          echo "requesting add_node for $SELF_HOST" >&2
+                          if curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://$COORD:5984/_cluster_setup" -H "Content-Type: application/json" -d "{\"action\":\"add_node\",\"host\":\"$SELF_HOST\",\"port\":5984}"; then
+                            echo "add_node requested" >&2
+                            # attempt finish_cluster (idempotent)
+                            curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://$COORD:5984/_cluster_setup" -H "Content-Type: application/json" -d '{\"action\":\"finish_cluster\"}' || true
+                            # verify membership includes SELF_HOST on coordinator
+                            if curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" "http://$COORD:5984/_membership" | grep -q "$SELF_HOST"; then
+                              echo "Coordinator reports SELF_HOST present; verifying from SELF_HOST..." >&2
+                              # verify that SELF_HOST endpoint sees the cluster (gives confidence Erlang node joined)
+                              if curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" "http://${SELF_HOST}:5984/_membership" 2>/dev/null | grep -q "$SELF_HOST"; then
+                                echo "SELF_HOST sees itself in membership; Joined cluster" >&2
+                                exit 0
+                              else
+                                echo "SELF_HOST not yet reporting membership; will retry" >&2
+                              fi
                             else
-                              echo "SELF_HOST not yet reporting membership; will retry" >&2
+                              echo "Coordinator still does not report SELF_HOST; will retry" >&2
                             fi
                           else
-                            echo "Coordinator still does not report SELF_HOST; will retry" >&2
+                            echo "add_node request failed; will retry" >&2
                           fi
                         else
-                          echo "add_node request failed; will retry" >&2
+                          echo "failed to fetch coordinator membership; will retry" >&2
                         fi
-                      else
-                        echo "failed to fetch coordinator membership; will retry" >&2
-                      fi
-                      TRY=$((TRY+1))
-                      sleep $BACKOFF
-                      BACKOFF=$((BACKOFF*2))
-                    done
-                    echo "Warning: join attempts exhausted" >&2
- 
+                        TRY=$((TRY+1))
+                        sleep $BACKOFF
+                        BACKOFF=$((BACKOFF*2))
+                      done
+                      echo "Warning: join attempts exhausted" >&2
+                    ) &
   volumeClaimTemplates:
     - metadata:
         name: couchdb-data
@@ -211,4 +223,4 @@ spec:
         resources:
           requests:
             storage: 1Gi
-        storageClassName: standard
+        storageClassName: "couchdb-storage-class"

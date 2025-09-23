@@ -8,7 +8,10 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: ""
+  storageClassName: "couchdb-storage-class"
+  claimRef:
+    namespace: shisha
+    name: couchdb-data-shisha-couchdb-0
   hostPath:
     path: /var/lib/shisha/couchdb
     type: DirectoryOrCreate

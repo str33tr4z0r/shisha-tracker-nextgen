@@ -17,7 +17,7 @@ spec:
           image: curlimages/curl:8.1.2
           env:
             - name: COUCHDB_URL
-              value: "http://shisha-couchdb:5984"
+              value: "http://shisha-couchdb-0.shisha-couchdb-headless:5984"
             - name: COUCHDB_USER
               valueFrom:
                 secretKeyRef:
@@ -37,37 +37,52 @@ spec:
             - -c
             - |
               set -eu
-              echo "waiting for couchdb..."
-              until curl -sSf "$COUCHDB_URL/"; do
-                sleep 2
+              echo "resolving coordinator (pod-0 preferred, then headless service)..."
+              COORDS="shisha-couchdb-0.shisha-couchdb-headless shisha-couchdb-headless"
+              COUCHDB_URL=""
+              for HOST in $COORDS; do
+                for TRY in 1 2 3 4 5 6 7 8 9 10; do
+                  if curl -sSf "http://$HOST:5984/_up" >/dev/null 2>&1; then
+                    COUCHDB_URL="http://$HOST:5984"
+                    break 2
+                  fi
+                  sleep 2
+                done
               done
-
+    
+              if [ -z "$COUCHDB_URL" ]; then
+                echo "ERROR: could not resolve any coordinator endpoint; exiting" >&2
+                exit 1
+              fi
+    
+              echo "using COUCHDB_URL=$COUCHDB_URL"
+    
               echo "ensure _users exists"
               curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X PUT "$COUCHDB_URL/_users" || true
-
+    
               echo "creating database $COUCHDB_DB (if not exists)"
               curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X PUT "$COUCHDB_URL/$COUCHDB_DB" || true
-
+    
               echo "creating index idx_type_id"
               curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "$COUCHDB_URL/$COUCHDB_DB/_index" -H "Content-Type: application/json" -d '{"index":{"fields":["type","id"]},"name":"idx_type_id","type":"json"}' || true
-
+    
               MEMBERSHIP=$(curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" "$COUCHDB_URL/_membership" || echo "")
               echo "membership: $MEMBERSHIP"
-
+    
               if echo "$MEMBERSHIP" | grep -q '"cluster_nodes":\s*\["nonode@nohost"\]'; then
-                echo "single-node membership detected — attempting cluster setup"
-                curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://shisha-couchdb-0.shisha-couchdb-headless:5984/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"enable_cluster","bind_address":"0.0.0.0","username":"'"$COUCHDB_USER"'","password":"'"$COUCHDB_PASSWORD"'","port":5984,"node_count":'"$DESIRED_REPLICAS"'}' || true
-
+                echo "single-node membership detected — attempting cluster setup (idempotent)"
+                curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "$COUCHDB_URL/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"enable_cluster","bind_address":"0.0.0.0","username":"'"$COUCHDB_USER"'","password":"'"$COUCHDB_PASSWORD"'","port":5984,"node_count":'"$DESIRED_REPLICAS"'}' || true
+    
                 i=1
                 while [ $i -lt "$DESIRED_REPLICAS" ]; do
                   TARGET="shisha-couchdb-$i.shisha-couchdb-headless"
-                  echo "adding node $TARGET"
-                  curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://shisha-couchdb-0.shisha-couchdb-headless:5984/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"add_node","host":"'"$TARGET"'","port":5984,"username":"'"$COUCHDB_USER"'","password":"'"$COUCHDB_PASSWORD"'"}' || true
+                  echo "requesting add_node for $TARGET"
+                  curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "$COUCHDB_URL/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"add_node","host":"'"$TARGET"'","port":5984,"username":"'"$COUCHDB_USER"'","password":"'"$COUCHDB_PASSWORD"'"}' || true
                   i=$((i+1))
                 done
-
+    
                 echo "finishing cluster"
-                curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "http://shisha-couchdb-0.shisha-couchdb-headless:5984/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"finish_cluster"}' || true
+                curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST "$COUCHDB_URL/_cluster_setup" -H "Content-Type: application/json" -d '{"action":"finish_cluster"}' || true
               else
                 echo "cluster already configured"
               fi
