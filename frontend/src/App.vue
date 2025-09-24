@@ -123,11 +123,77 @@
         <div :class="['max-w-4xl mx-auto text-center mb-1', isDark ? 'text-gray-300 font-semibold text-sm' : 'text-gray-600 font-semibold text-sm']">
           Pod: {{ runtimeInfo.pod || 'local' }} — Host: {{ (runtimeInfo.hostname || '').slice(0,12) }}
         </div>
-
+ 
         <div :class="['max-w-4xl mx-auto text-center mb-1 text-sm', isDark ? 'text-gray-300' : 'text-gray-600']">
           <div><strong>Backend Container:</strong> {{ (backendContainerID || runtimeInfo.container_id || runtimeInfo.hostname || '').slice ? ( (backendContainerID || runtimeInfo.container_id || runtimeInfo.hostname || '').slice(0,12) ) : (backendContainerID || runtimeInfo.container_id || runtimeInfo.hostname || '') }}</div>
         </div>
+ 
+        <!-- CouchDB cluster status -->
+        <div class="max-w-4xl mx-auto mt-2 mb-2 text-sm p-3 rounded" :class="isDark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <!-- status icon -->
+              <template v-if="couchClusterError">
+                <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </template>
+              <template v-else-if="!couchCluster">
+                <svg class="w-4 h-4 text-gray-400 animate-pulse" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </template>
+              <template v-else-if="couchCluster.cluster">
+                <svg class="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </template>
+              <template v-else>
+                <svg class="w-4 h-4 text-yellow-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </template>
 
+              <div class="text-sm font-medium">CouchDB Cluster</div>
+            </div>
+
+            <div class="text-sm">
+              <span v-if="couchClusterError" class="couch-error">{{ couchClusterError }}</span>
+              <span v-else-if="!couchCluster" class="text-gray-500">Loading…</span>
+              <span v-else>
+                <span class="badge" :class="couchCluster.cluster ? 'badge-green' : 'badge-yellow'">
+                  {{ couchCluster.cluster ? 'Clustered' : 'Not clustered' }}
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <div class="mt-2 text-xs">
+            <div v-if="couchCluster">
+              <div>
+                <strong>Cluster nodes:</strong>
+                <span v-if="couchCluster.cluster_nodes && couchCluster.cluster_nodes.length">{{ couchCluster.cluster_nodes.join(', ') }}</span>
+                <span v-else class="text-gray-500">-</span>
+              </div>
+              <div class="mt-1">
+                <strong>All nodes:</strong>
+                <span v-if="couchCluster.all_nodes && couchCluster.all_nodes.length">{{ couchCluster.all_nodes.join(', ') }}</span>
+                <span v-else class="text-gray-500">-</span>
+              </div>
+              <div class="mt-1">
+                <strong>Expected replicas:</strong>
+                <span class="ml-1">{{ couchCluster.expected_replicas || 0 }}</span>
+                <span v-if="couchCluster.expected_replicas && couchCluster.cluster_nodes && couchCluster.cluster_nodes.length !== couchCluster.expected_replicas" class="ml-2 badge badge-yellow">Mismatch</span>
+              </div>
+            </div>
+            <div v-else-if="couchClusterError" class="mt-1 text-xs">
+              <span class="couch-error">Unable to load cluster status</span>
+            </div>
+          </div>
+        </div>
+ 
         <div
           :class="['max-w-4xl mx-auto text-center text-sm', isDark ? 'footer-link footer-glow' : 'text-gray-500 opacity-80']"
           :role="isDark ? 'link' : undefined"
@@ -152,6 +218,13 @@ interface Rating { user: string; score: number; timestamp?: number }
 interface Comment { user: string; message: string }
 interface Shisha { id: number; name: string; flavor: string; manufacturer: Manufacturer; ratings?: Rating[]; comments?: Comment[]; smokedCount?: number }
  
+interface CouchCluster {
+  cluster: boolean
+  cluster_nodes: string[]
+  all_nodes: string[]
+  expected_replicas: number
+}
+ 
 const API = import.meta.env.VITE_API_URL || '/api'
  
 const shishas = ref<Shisha[]>([])
@@ -166,6 +239,10 @@ const searchQuery = ref<string>('')
 const runtimeInfo = ref<{ pod?: string; hostname?: string; container_id?: string }>({})
 const backendContainerID = ref<string>('')
 
+// CouchDB cluster state
+const couchCluster = ref<CouchCluster | null>(null)
+const couchClusterError = ref<string>('')
+ 
 const filteredShishas = computed(() => {
   const q = (searchQuery.value || '').toLowerCase().trim()
   if (!q) return shishas.value
@@ -176,7 +253,7 @@ const filteredShishas = computed(() => {
     return name.includes(q) || flavor.includes(q) || manu.includes(q)
   })
 })
-
+ 
 function flavorEmoji(flavor?: string) {
   if (!flavor) return ''
   const f = flavor.toLowerCase()
@@ -198,7 +275,7 @@ function flavorEmoji(flavor?: string) {
   }
   return ''
 }
-
+ 
 function formatTime(ts?: number) {
   if (!ts) return ''
   return new Date(ts * 1000).toLocaleString()
@@ -357,11 +434,29 @@ function toggleDark() {
   else document.documentElement.classList.remove('dark')
 }
  
+async function loadCluster() {
+  try {
+    const r = await fetch(`${API}/couchdb/cluster`)
+    if (!r.ok) {
+      couchCluster.value = null
+      couchClusterError.value = `HTTP ${r.status}`
+      return
+    }
+    const json = await r.json()
+    couchCluster.value = json as CouchCluster
+    couchClusterError.value = ''
+  } catch (e) {
+    couchCluster.value = null
+    couchClusterError.value = 'failed to fetch cluster status'
+    console.warn('loadCluster error', e)
+  }
+}
+ 
 onMounted(async () => {
   const stored = (typeof localStorage !== 'undefined' && localStorage.getItem('shisha-dark')) || '0'
   isDark.value = stored === '1'
   if (isDark.value) document.documentElement.classList.add('dark')
-
+ 
   // fetch runtime info (pod name / hostname) from backend
   try {
     const r = await fetch(`${API}/info`)
@@ -371,7 +466,7 @@ onMounted(async () => {
       console.log('runtimeInfo', runtimeInfo.value)
     }
   } catch (_) {}
-
+ 
   // fetch backend container id explicitly (lightweight endpoint)
   try {
     const r2 = await fetch(`${API}/container-id`)
@@ -385,8 +480,10 @@ onMounted(async () => {
   } catch (e) {
     console.warn('failed to fetch backend container-id', e)
   }
-
+ 
   await load()
+  // load CouchDB cluster status after initial data fetch
+  await loadCluster()
 })
 </script>
  
@@ -415,5 +512,30 @@ footer { text-align:center; margin-top:1.5rem; }
 .dark .footer-link.footer-glow:focus {
   box-shadow: 0 0 0 3px rgba(245,158,11,0.12), 0 6px 18px rgba(0,0,0,0.5);
   outline: none;
+}
+
+/* Cluster status badges and error styling */
+.badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1;
+  vertical-align: middle;
+}
+.badge-green { background: rgba(16,185,129,0.12); color: #10B981; border: 1px solid rgba(16,185,129,0.2); }
+.badge-yellow { background: rgba(234,179,8,0.08); color: #EAB308; border: 1px solid rgba(234,179,8,0.12); }
+.badge-red { background: rgba(239,68,68,0.08); color: #EF4444; border: 1px solid rgba(239,68,68,0.12); }
+
+.couch-error {
+  color: #EF4444;
+  font-weight: 600;
+  background: rgba(239,68,68,0.04);
+  padding: 0.125rem 0.4rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(239,68,68,0.08);
+  display: inline-block;
+  font-size: 0.85rem;
 }
 </style>

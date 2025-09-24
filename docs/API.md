@@ -103,3 +103,35 @@ curl http://localhost:3000/api/info   # über Vite‑Proxy (Devserver)
 - Änderungen an der API bitte in den jeweiligen Handlern dokumentieren (Siehe [`backend/main.go:127`](backend/main.go:127) und [`backend/mock/main.go:47`](backend/mock/main.go:47)).
 
 -- Ende --
+### GET /api/couchdb/cluster
+
+- Prüft, ob der aktuell verwendete CouchDB-Backend-Adapter in einem Cluster läuft und listet die gefundenen Nodes.
+- Verfügbar nur wenn das Backend mit CouchDB-Storage läuft (ENV: `STORAGE=couchdb`).
+
+Request:
+```bash
+curl http://localhost:8080/api/couchdb/cluster
+```
+
+Antwort (JSON):
+```json
+{
+  "cluster": true,                  // bool: "clean" clustered state (siehe Hinweis)
+  "cluster_nodes": ["node1@host", "node2@host"], // aktive Cluster-Mitglieder
+  "all_nodes": ["node1@host", "node2@host", "nonode@nohost"], // alle vom _membership zurückgegebenen Nodes
+  "expected_replicas": 3            // optional, aus ENV gelesen (DESIRED_REPLICAS / COUCHDB_EXPECTED_REPLICAS)
+}
+```
+
+Hinweise:
+- Das Backend ermittelt den Status über das CouchDB-HTTP-API `_membership`. Beim nicht initialisierten CouchDB-Server enthält `cluster_nodes` typischerweise `["nonode@nohost"]`.
+- Das Feld `cluster` wird zusätzlich gegen `expected_replicas` validiert (wenn diese ENV gesetzt ist): stimmt Anzahl `cluster_nodes` nicht mit `expected_replicas` überein, wird `cluster: false` zurückgegeben.
+- ENV zur Konfiguration:
+  - `STORAGE=couchdb` — Backend muss CouchDB-Adapter nutzen
+  - `COUCHDB_URL` — Basis-URL der CouchDB (z. B. `http://shisha-couchdb:5984`)
+  - `COUCHDB_USER`, `COUCHDB_PASSWORD` — optional, Basic Auth für CouchDB
+  - `DESIRED_REPLICAS` oder `COUCHDB_EXPECTED_REPLICAS` — gewünschte Anzahl an Nodes (optional)
+
+Referenzen:
+- Implementierung Handler: [`backend/main.go()`](backend/main.go:323)
+- Implementierung Adapter: [`backend/storage/couchdb_adapter.go()`](backend/storage/couchdb_adapter.go:376)

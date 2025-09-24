@@ -1,6 +1,6 @@
 FROM golang:1.20-alpine AS builder
 WORKDIR /src/backend
-RUN apk add --no-cache git build-base
+RUN apk add --no-cache git build-base ca-certificates
 # Copy go.mod first for caching, then copy sources so go can resolve module dependencies
 COPY backend/go.mod ./
 COPY backend/go.sum ./
