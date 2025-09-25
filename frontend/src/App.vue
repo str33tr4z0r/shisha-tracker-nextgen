@@ -206,13 +206,18 @@ function formatTime(ts?: number) {
  
 async function load() {
   const res = await fetch(`${API}/shishas`)
-  shishas.value = await res.json()
-  // ensure inputs exist for listed shishas
+  const data = await res.json()
+  shishas.value = data
+  // ensure inputs exist for listed shishas and normalize smoked property
   shishas.value.forEach((s: Shisha) => {
     if (ratingInputs.value[s.id] === undefined) ratingInputs.value[s.id] = 0.5
     if (commentText.value[s.id] === undefined) commentText.value[s.id] = ''
     if (commentUser.value[s.id] === undefined) commentUser.value[s.id] = ''
-    if (s.smokedCount === undefined) s.smokedCount = 0
+
+    // backend/storage may return "smoked" (storage) or "smokedCount" (legacy);
+    // normalize to s.smokedCount for the UI
+    const raw = (s as any)
+    if (s.smokedCount === undefined) s.smokedCount = raw.smoked ?? raw.Smoked ?? 0
   })
 }
  
@@ -293,13 +298,36 @@ async function submitComment(id: number) {
 }
  
 async function markSmoked(id: number) {
-  const res = await fetch(`${API}/shishas/${id}/smoked`, { method: 'POST' })
-  if (res.ok) {
-    const data = await res.json()
-    const idx = shishas.value.findIndex((s: Shisha) => s.id === id)
-    if (idx >= 0) shishas.value[idx].smokedCount = data.smokedCount
-  } else {
-    console.error('smoked increment failed', await res.text())
+  try {
+    const res = await fetch(`${API}/shishas/${id}/smoked`, { method: 'POST' })
+    if (!res.ok) {
+      console.error('smoked increment failed', await res.text())
+      return
+    }
+
+    // handle possible 204 No Content (older backend) or 200 with JSON
+    if (res.status === 204) {
+      // nothing returned — reload list to reflect DB state
+      await load()
+      return
+    }
+
+    const contentType = (res.headers.get('content-type') || '').toLowerCase()
+    if (contentType.includes('application/json')) {
+      try {
+        const data = await res.json()
+        const idx = shishas.value.findIndex((s: Shisha) => s.id === id)
+        if (idx >= 0) shishas.value[idx].smokedCount = data?.smokedCount ?? shishas.value[idx].smokedCount
+      } catch (err) {
+        console.warn('failed to parse smoked response, reloading list', err)
+        await load()
+      }
+    } else {
+      // unknown response — reload to be safe
+      await load()
+    }
+  } catch (err) {
+    console.error('smoked increment error', err)
   }
 }
  

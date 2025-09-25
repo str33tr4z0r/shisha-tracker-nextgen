@@ -322,5 +322,17 @@ func addSmoked(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	c.Status(http.StatusNoContent)
+
+	// fetch updated shisha and return smoked count to the client
+	s, err := storageEngine.GetShisha(uint(id))
+	if err != nil {
+		log.Printf("storage.GetShisha id=%d error: %v", id, err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	if s == nil {
+		c.Status(http.StatusNotFound)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"smokedCount": s.Smoked})
 }
