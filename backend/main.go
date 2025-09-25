@@ -127,6 +127,7 @@ func main() {
 
 		api.POST("/shishas/:id/ratings", addRating)
 		api.POST("/shishas/:id/comments", addComment)
+		api.POST("/shishas/:id/smoked", addSmoked)
 	}
 
 	port := os.Getenv("PORT")
@@ -308,4 +309,18 @@ func addComment(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"user": req.User, "message": req.Message})
+}
+
+func addSmoked(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	if err := storageEngine.AddSmoked(uint(id)); err != nil {
+		log.Printf("storage.AddSmoked id=%d error: %v", id, err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.Status(http.StatusNoContent)
 }

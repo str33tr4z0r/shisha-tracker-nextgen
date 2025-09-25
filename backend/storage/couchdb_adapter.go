@@ -118,6 +118,7 @@ type couchShishaDoc struct {
 	Name         string       `json:"name"`
 	Flavor       string       `json:"flavor"`
 	Manufacturer Manufacturer `json:"manufacturer"`
+	Smoked       int          `json:"smoked,omitempty"`
 	Ratings      []Rating     `json:"ratings,omitempty"`
 	Comments     []Comment    `json:"comments,omitempty"`
 }
@@ -182,6 +183,7 @@ func (c *CouchAdapter) ListShishas() ([]Shisha, error) {
 			Name:         d.Name,
 			Flavor:       d.Flavor,
 			Manufacturer: d.Manufacturer,
+			Smoked:       d.Smoked,
 			Ratings:      d.Ratings,
 			Comments:     d.Comments,
 		})
@@ -202,6 +204,7 @@ func (c *CouchAdapter) GetShisha(id uint) (*Shisha, error) {
 		Name:         doc.Name,
 		Flavor:       doc.Flavor,
 		Manufacturer: doc.Manufacturer,
+		Smoked:       doc.Smoked,
 		Ratings:      doc.Ratings,
 		Comments:     doc.Comments,
 	}
@@ -256,6 +259,7 @@ func (c *CouchAdapter) CreateShisha(s *Shisha) (*Shisha, error) {
 		Name:         s.Name,
 		Flavor:       s.Flavor,
 		Manufacturer: s.Manufacturer,
+		Smoked:       s.Smoked,
 		Ratings:      s.Ratings,
 		Comments:     s.Comments,
 	}
@@ -287,6 +291,7 @@ func (c *CouchAdapter) UpdateShisha(id uint, s *Shisha) (*Shisha, error) {
 	doc.Name = s.Name
 	doc.Flavor = s.Flavor
 	doc.Manufacturer = s.Manufacturer
+	doc.Smoked = s.Smoked
 	doc.Ratings = s.Ratings
 	doc.Comments = s.Comments
 
@@ -366,6 +371,28 @@ func (c *CouchAdapter) AddComment(id uint, user, message string) error {
 	if resp.StatusCode >= 400 {
 		b, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("AddComment failed: %s: %s", resp.Status, string(b))
+	}
+	return nil
+}
+
+func (c *CouchAdapter) AddSmoked(id uint) error {
+	doc, err := c.findByNumericID(id)
+	if err != nil {
+		return err
+	}
+	if doc == nil {
+		return errors.New("not found")
+	}
+	doc.Smoked = doc.Smoked + 1
+	path := fmt.Sprintf("%s/%s", c.dbName, doc.DocID)
+	resp, err := c.doRequest("PUT", path, doc)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("AddSmoked failed: %s: %s", resp.Status, string(b))
 	}
 	return nil
 }

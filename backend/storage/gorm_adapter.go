@@ -87,8 +87,8 @@ func (g *GormAdapter) DeleteShisha(id uint) error {
 func (g *GormAdapter) AddRating(id uint, user string, score int) error {
 	// simple GORM-backed implementation: insert into ratings table
 	type ratingGorm struct {
-		ID       uint `gorm:"primaryKey"`
-		ShishaID uint `gorm:"column:shisha_id"`
+		ID       uint   `gorm:"primaryKey"`
+		ShishaID uint   `gorm:"column:shisha_id"`
 		User     string `gorm:"column:user"`
 		Score    int    `gorm:"column:score"`
 	}
@@ -106,8 +106,8 @@ func (g *GormAdapter) AddRating(id uint, user string, score int) error {
 func (g *GormAdapter) AddComment(id uint, user, message string) error {
 	// simple GORM-backed implementation: insert into comments table
 	type commentGorm struct {
-		ID       uint `gorm:"primaryKey"`
-		ShishaID uint `gorm:"column:shisha_id"`
+		ID       uint   `gorm:"primaryKey"`
+		ShishaID uint   `gorm:"column:shisha_id"`
 		User     string `gorm:"column:user"`
 		Message  string `gorm:"column:message"`
 	}
@@ -117,6 +117,14 @@ func (g *GormAdapter) AddComment(id uint, user, message string) error {
 		Message:  message,
 	}
 	if err := g.DB.Create(&c).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *GormAdapter) AddSmoked(id uint) error {
+	// increment smoked counter atomically
+	if err := g.DB.Model(&Shisha{}).Where("id = ?", id).UpdateColumn("smoked", gorm.Expr("COALESCE(smoked,0) + ?", 1)).Error; err != nil {
 		return err
 	}
 	return nil

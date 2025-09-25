@@ -25,6 +25,7 @@ type Shisha struct {
 	Name         string       `json:"name"`
 	Flavor       string       `json:"flavor"`
 	Manufacturer Manufacturer `json:"manufacturer"`
+	Smoked       int          `json:"smoked,omitempty"`
 	Ratings      []Rating     `json:"ratings,omitempty"`
 	Comments     []Comment    `json:"comments,omitempty"`
 }
@@ -38,4 +39,6 @@ type Storage interface {
 	DeleteShisha(id uint) error
 	AddRating(id uint, user string, score int) error
 	AddComment(id uint, user, message string) error
+	// Increment smoked counter for shisha with given id.
+	AddSmoked(id uint) error
 }
