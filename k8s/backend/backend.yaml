@@ -6,7 +6,7 @@ metadata:
   labels:
     app: shisha-backend-mock
 spec:
-  replicas: 2
+  replicas: 12
   selector:
     matchLabels:
       app: shisha-backend-mock
