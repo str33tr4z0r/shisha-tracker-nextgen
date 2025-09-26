@@ -46,7 +46,7 @@ spec:
             - name: COUCHDB_DB
               value: "shisha"
             - name: SKIP_MIGRATIONS
-              value: "true"
+              value: "false"
           ports:
             - containerPort: 8080
               name: http
