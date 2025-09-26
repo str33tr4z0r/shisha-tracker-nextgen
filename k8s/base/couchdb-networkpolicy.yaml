@@ -1,0 +1,67 @@
+# NetworkPolicy: Beschränkt Verkehr auf CouchDB-spezifische Ports innerhalb des Namespaces.
+# Deutsch: Erlaubt nur eingehenden Traffic auf 5984 (HTTP), 4369 (epmd) und 9100-9105 (Erlang Distribution)
+# von Pods im gleichen Namespace. Optionaler Abschnitt (auskommentiert) zeigt, wie man Ingress-Controller erlaubt.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-couchdb-comm
+  namespace: shisha
+  labels:
+    app: couchdb
+spec:
+  podSelector:
+    matchLabels:
+      app: couchdb
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        # Erlaube Zugriff von allen Pods im selben Namespace (shisha)
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 5984
+        - protocol: TCP
+          port: 4369
+        - protocol: TCP
+          port: 9100
+        - protocol: TCP
+          port: 9101
+        - protocol: TCP
+          port: 9102
+        - protocol: TCP
+          port: 9103
+        - protocol: TCP
+          port: 9104
+        - protocol: TCP
+          port: 9105
+  egress:
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 5984
+        - protocol: TCP
+          port: 4369
+        - protocol: TCP
+          port: 9100
+        - protocol: TCP
+          port: 9101
+        - protocol: TCP
+          port: 9102
+        - protocol: TCP
+          port: 9103
+        - protocol: TCP
+          port: 9104
+        - protocol: TCP
+          port: 9105
+
+# Optional: Wenn Sie Zugriff vom Ingress-Controller benötigen, entkommentieren Sie folgendes Beispiel und passen den Namespace/Label an.
+# - from:
+#     - namespaceSelector:
+#         matchLabels:
+#           app.kubernetes.io/name: ingress-nginx
+#       podSelector:
+#         matchLabels:
+#           app.kubernetes.io/component: controller

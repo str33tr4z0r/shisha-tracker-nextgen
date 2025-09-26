@@ -1,0 +1,32 @@
+# HorizontalPodAutoscaler für CouchDB (CPU-basiert)
+# Min/Max: 1-5, Ziel-CPU: 70%
+# Scale-down Stabilisierung: 900s (15min) und maximal 1 Pod Reduktion pro 15 Minuten
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: couchdb-hpa
+  namespace: shisha
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: couchdb
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleDown:
+      # Zeitfenster, in dem die ScaleDown-Stabilisierung wirkt (Verhindert Flapping)
+      stabilizationWindowSeconds: 900
+      policies:
+        # Erlaube maximal 1 Pod Reduktion innerhalb von 900s (15 Minuten)
+        - type: Pods
+          value: 1
+          periodSeconds: 900
+      selectPolicy: Max

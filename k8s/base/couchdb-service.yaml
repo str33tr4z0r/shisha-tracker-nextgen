@@ -1,0 +1,18 @@
+# ClusterIP Service für externe interne Erreichbarkeit von CouchDB (Port 5984)
+# Deutsch: Für TLS/Ingress/ServiceMesh sollte TLS am Ingress/Proxy terminiert werden.
+apiVersion: v1
+kind: Service
+metadata:
+  name: couchdb
+  namespace: shisha
+  labels:
+    app: couchdb
+spec:
+  type: ClusterIP
+  selector:
+    app: couchdb
+  ports:
+    - name: http
+      port: 5984
+      targetPort: 5984
+      protocol: TCP

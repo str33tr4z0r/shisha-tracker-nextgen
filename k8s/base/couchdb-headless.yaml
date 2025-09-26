@@ -1,0 +1,18 @@
+# Headless Service für stabile Hostnames (z. B. couchdb-0.couchdb-headless.<ns>.svc.cluster.local)
+apiVersion: v1
+kind: Service
+metadata:
+  name: couchdb-headless
+  namespace: shisha
+  labels:
+    app: couchdb
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: couchdb
+  ports:
+    - name: http
+      port: 5984
+      targetPort: 5984
+      protocol: TCP

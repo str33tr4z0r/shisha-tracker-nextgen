@@ -1,0 +1,185 @@
+# StatefulSet für Apache CouchDB
+# - Initialer Deploy: replicas: 1 (vollständig clusterfähig für spätere Skalierung)
+# - serviceName: couchdb-headless für stabile Pod-Hostnames (Ordinal DNS)
+# - Keine IP-Hardcodes: DNS/Ordinals werden verwendet
+# - Sidecar 'cluster-manager' führt postStart/preStop-Skripte aus (aus ConfigMap gemountet)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: couchdb
+  namespace: shisha
+  labels:
+    app: couchdb
+spec:
+  serviceName: couchdb-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: couchdb
+  template:
+    metadata:
+      labels:
+        app: couchdb
+    spec:
+      serviceAccountName: couchdb-sa
+      terminationGracePeriodSeconds: 120
+      # Bevorzugte Anti-Affinity, um Pods auf verschiedene Nodes zu ziehen (falls mehrere Replicas)
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app: couchdb
+      containers:
+        - name: couchdb
+          image: couchdb:3.2.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5984
+              protocol: TCP
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # COUCHDB_NODENAME konstruiert aus HOSTNAME (ordinal) und Headless-DNS
+            - name: COUCHDB_NODENAME
+              value: "couchdb@$(HOSTNAME).couchdb-headless.$(POD_NAMESPACE).svc.cluster.local"
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: COUCHDB_USER
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: COUCHDB_PASSWORD
+            - name: ERLANG_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: ERLANG_COOKIE
+            - name: ERL_FLAGS
+              valueFrom:
+                configMapKeyRef:
+                  name: couchdb-config
+                  key: ERL_FLAGS
+          readinessProbe:
+            httpGet:
+              path: /_up
+              port: 5984
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /_up
+              port: 5984
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          volumeMounts:
+            - name: couchdb-data
+              mountPath: /opt/couchdb/data
+            - name: couchdb-config
+              mountPath: /etc/couchdb
+              readOnly: true
+        - name: cluster-manager
+          image: curlimages/curl:latest
+          imagePullPolicy: IfNotPresent
+          # Sidecar darf Hauptcontainer nicht blockieren: postStart startet Skript im Hintergrund (&).
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    # PostStart im Sidecar; startet das Join-Skript im Hintergrund, damit Container-Start nicht blockiert.
+                    /opt/couchdb-scripts/postStart.sh &>/var/log/cluster-manager-poststart.log &
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    # PreStop muss synchron laufen, damit Decommissioning vor Pod-Termination erfolgt.
+                    /opt/couchdb-scripts/preStop.sh &>/var/log/cluster-manager-prestop.log
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: COUCHDB_USER
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: COUCHDB_PASSWORD
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          # Sidecar-Readiness: setzt Gate-Datei /tmp/couchdb-ready; Pod ist erst ready wenn beide Container ready sind.
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - test -f /tmp/couchdb-ready && echo ok
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 10
+          volumeMounts:
+            - name: couchdb-scripts
+              mountPath: /opt/couchdb-scripts
+              readOnly: true
+            - name: couchdb-config
+              mountPath: /etc/couchdb
+              readOnly: true
+      volumes:
+        - name: couchdb-scripts
+          configMap:
+            name: couchdb-scripts
+        - name: couchdb-config
+          configMap:
+            name: couchdb-config
+  volumeClaimTemplates:
+    - metadata:
+        name: couchdb-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: sisha-storage-class
+---
+# Service für StatefullSet-Selector (wird durch Headless-Service für DNS ergänzt)
+apiVersion: v1
+kind: Service
+metadata:
+  name: couchdb
+  namespace: shisha
+  labels:
+    app: couchdb
+spec:
+  type: ClusterIP
+  selector:
+    app: couchdb
+  ports:
+    - name: http
+      port: 5984
+      targetPort: 5984
+      protocol: TCP

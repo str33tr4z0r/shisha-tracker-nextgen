@@ -1,0 +1,18 @@
+# ConfigMap für CouchDB-Konfiguration
+# WICHTIG: COUCHDB_NODENAME wird im Pod aus HOSTNAME und POD_NAMESPACE zusammengesetzt.
+# Kubernetes interpoliert Umgebungsvariablen innerhalb von env.value mittels $(VAR_NAME).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: couchdb-config
+  namespace: shisha
+  labels:
+    app: shisha-couchdb
+data:
+  # Template / Hinweis (wird nicht automatisch expandiert, siehe Pod-Env unten)
+  # COUCHDB_NODENAME Beispiel: couchdb@$(HOSTNAME).couchdb-headless.$(POD_NAMESPACE).svc.cluster.local
+  COUCHDB_NODENAME_TEMPLATE: "couchdb@$(HOSTNAME).couchdb-headless.$(POD_NAMESPACE).svc.cluster.local"
+
+  # Erlang Distribution Ports: Eingrenzen auf 9100-9105 (wichtig für NetworkPolicy/Firewalls).
+  # Deutsch: Diese Flags beschränken die Ports für die Erlang-Verteilung, um NetworkPolicies einfacher zu handhaben.
+  ERL_FLAGS: "-kernel inet_dist_listen_min 9100 inet_dist_listen_max 9105"

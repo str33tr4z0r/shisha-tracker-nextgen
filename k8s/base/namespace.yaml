@@ -1,0 +1,8 @@
+# Namespace für die CouchDB-Installation (wird für alle Ressourcen verwendet)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shisha
+  labels:
+    app.kubernetes.io/name: shisha
+    app.kubernetes.io/managed-by: manual
