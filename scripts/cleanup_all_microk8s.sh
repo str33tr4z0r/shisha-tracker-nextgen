@@ -78,7 +78,7 @@ run microk8s.kubectl delete -f k8s/pdb-backend.yaml -n "$NAMESPACE"  --ignore-no
 run microk8s.kubectl delete -f k8s/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
 
 # 8) Optional: delete namespace
-run microk8s.kubectl delete -f k8s/ingress.yaml "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/ingress.yaml --ignore-not-found
 
 # 9) Optional: delete namespace
 echo "Deleting namespace '$NAMESPACE' (this removes any remaining resources)"
