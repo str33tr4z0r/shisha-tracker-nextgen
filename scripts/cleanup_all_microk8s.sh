@@ -62,6 +62,7 @@ run microk8s.kubectl delete pvc shisha-couchdb-pvc -n "$NAMESPACE" --ignore-not-
 if [ "$NUKE_PV" = true ]; then
   echo "Deleting PV 'shisha-couchdb-pv' (if exists)"
   run microk8s.kubectl delete pv shisha-couchdb-pv --ignore-not-found
+  run sudo rm -rf /var/lib/shisha/couchdb
   echo "If the PV used a hostPath, you must remove data manually on the node."
   echo "Default hostPath from k8s/couchdb-pv.yaml: /var/lib/shisha/couchdb"
   echo "To remove on the node (run on the node or via SSH):"
