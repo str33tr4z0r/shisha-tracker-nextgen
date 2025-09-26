@@ -1,0 +1,20 @@
+# PersistentVolume für lokale Tests (hostPath)
+# Deutsch: Dieses PV ist für lokale/Test-Cluster gedacht und nutzt hostPath.
+# In Cloud-Umgebungen verwenden Sie stattdessen einen cloud-nativen Provisioner.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: couchdb-pv
+  labels:
+    app: couchdb
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: couchdb-storage-class
+  hostPath:
+    path: /var/lib/shisha/couchdb
+    type: DirectoryOrCreate
+  # Hinweis: Stellen Sie sicher, dass der Pfad auf den Nodes existiert oder erstellt werden darf.

@@ -1,0 +1,10 @@
+# StorageClass für lokale Tests: bindet HostPath Provisioner (no-op) als statische Zuordnung
+# Deutsch: Diese StorageClass ist für lokale/Test-Cluster gedacht. In Cloud-Umgebungen nutzen Sie den nativen Provisioner.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: couchdb-storage-class
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+# Hinweis: 'no-provisioner' bedeutet, dass PVs manuell erstellt werden müssen.

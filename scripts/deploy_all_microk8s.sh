@@ -33,11 +33,14 @@ run microk8s.kubectl create secret generic shisha-couchdb-admin -n "$NAMESPACE" 
   --from-literal=ERLANG_COOKIE="$(head -c 32 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | cut -c1-64)" \
   --from-literal=COUCHDB_USER=ichbineinadmin \
   --from-literal=COUCHDB_PASSWORD=ichbin1AdminPasswort! 
+
+run microk8s.kubectl apply -f k8s/PreStage/couchdb-storageclass.yaml -n "$NAMESPACE"
 #run microk8s.kubectl apply -f k8s/couchdb-pv.yaml -n "$NAMESPACE"
 #run microk8s.kubectl apply -f k8s/couchdb.yaml -n "$NAMESPACE"
 #run microk8s.kubectl rollout status deployment/shisha-couchdb -n "$NAMESPACE" --timeout=120s
 
 #Couchdb
+run microk8s.kubectl apply -f k8s/database/couchdb-pv.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-rbac.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-config.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-scripts-configmap.yaml -n "$NAMESPACE"

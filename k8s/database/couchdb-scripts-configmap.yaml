@@ -22,7 +22,7 @@ data:
     # - Headless-Service: couchdb-headless
     # - Dieses Skript läuft im Sidecar und darf den Hauptprozess nicht blockieren.
     
-    set -eu
+    set -u
     
     LOG_PREFIX="[cluster-manager postStart]"
     
@@ -149,6 +149,10 @@ data:
     
           if [ "$found_other" -eq 0 ]; then
             log "Single-node Start (Ordinal 0, keine weiteren Peers). Keine Join-Aktion erforderlich."
+            # Readiness-Gate setzen, damit K8s den Pod als bereit markiert.
+            mkdir -p /tmp /var/log || true
+            log "Setze Readiness-Gate /tmp/couchdb-ready (Single-node)"
+            touch /tmp/couchdb-ready || true
             return 0
           fi
           ;;
@@ -181,6 +185,11 @@ data:
         log "Keine Peers gefunden oder alle Join-Versuche gescheitert."
       fi
     
+      # Readiness-Gate setzen, damit Sidecar-ReadinessProbe erfolgreich wird.
+      mkdir -p /tmp /var/log || true
+      log "Setze Readiness-Gate /tmp/couchdb-ready"
+      touch /tmp/couchdb-ready || true
+    
       return 0
     }
     
@@ -198,7 +207,7 @@ data:
     # - Erfordert Umgebungsvariablen: COUCHDB_USER, COUCHDB_PASSWORD, HOSTNAME, POD_NAMESPACE
     # - Entfernt den Node via /_cluster_setup oder falls vorhanden via /_nodes/<node> API.
     # - Bei Fehlern wird ein nicht-null Exit-Code erzeugt, damit K8s ggf. neu versucht (preStop wird bis zum Container-Stopp ausgeführt).
-    set -eu
+    set -ux
     
     LOG_PREFIX="[cluster-manager preStop]"
     
@@ -256,7 +265,7 @@ data:
       while [ "$attempt" -lt "$max_attempts" ]; do
         attempt=$((attempt + 1))
         log "Versuch ${attempt}: Entferne Node ${node} via ${CLUSTER_SETUP_PATH}"
-        resp=$(_local_curl POST "${CLUSTER_SETUPPath:-$CLUSTER_SETUP_PATH}" "$payload" 2>/dev/null || true)
+        resp=$(_local_curl POST "${CLUSTER_SETUP_PATH}" "$payload" 2>/dev/null || true)
         # Prüfe, ob Node in Membership noch enthalten ist
         if ! membership_contains "$node"; then
           log "Node ${node} nicht mehr in Membership (erfolgreich entfernt)."
@@ -317,6 +326,8 @@ data:
     
     main() {
       node="$(node_name)"
+      # Readiness-Gate entfernen sofort, damit Pod vor Decommission als NotReady gilt.
+      rm -f /tmp/couchdb-ready || true
       log "Starte Decommission für ${node}"
     
       # Wenn der Node gar nicht in Membership ist, nichts tun (idempotent)

@@ -94,7 +94,12 @@ spec:
         - name: cluster-manager
           image: curlimages/curl:latest
           imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - "while true; do sleep 3600; done"
           # Sidecar darf Hauptcontainer nicht blockieren: postStart startet Skript im Hintergrund (&).
+          # Verwende portable Shell-Umleitung (>/file 2>&1), da /bin/sh nicht unbedingt Bash ist.
           lifecycle:
             postStart:
               exec:
@@ -102,16 +107,17 @@ spec:
                   - /bin/sh
                   - -c
                   - |
-                    # PostStart im Sidecar; startet das Join-Skript im Hintergrund, damit Container-Start nicht blockiert.
-                    /opt/couchdb-scripts/postStart.sh &>/var/log/cluster-manager-poststart.log &
+                    # PostStart: Starte Skript im Hintergrund, schreibe Logs nach /tmp (schreibbar für non-root).
+                    # Verwende nohup, damit der Hintergrundprozess nach Shell-Exit weiterläuft.
+                    nohup /opt/couchdb-scripts/postStart.sh >/tmp/cluster-manager-poststart.log 2>&1 &
             preStop:
               exec:
                 command:
                   - /bin/sh
                   - -c
                   - |
-                    # PreStop muss synchron laufen, damit Decommissioning vor Pod-Termination erfolgt.
-                    /opt/couchdb-scripts/preStop.sh &>/var/log/cluster-manager-prestop.log
+                    # PreStop synchron ausführen; Logs nach /tmp (schreibbar für non-root).
+                    /opt/couchdb-scripts/preStop.sh >/tmp/cluster-manager-prestop.log 2>&1
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -153,6 +159,10 @@ spec:
         - name: couchdb-scripts
           configMap:
             name: couchdb-scripts
+            # Wichtig: ConfigMap-Dateien enthalten Scripts; setze execute-Bits via defaultMode,
+            # damit Lifecycle-Hooks die Skripte direkt ausführen können (/opt/.../postStart.sh).
+            # Ohne defaultMode sind Dateien normalerweise 0644 und nicht ausführbar.
+            defaultMode: 0755
         - name: couchdb-config
           configMap:
             name: couchdb-config
@@ -164,13 +174,14 @@ spec:
         resources:
           requests:
             storage: 5Gi
-        storageClassName: sisha-storage-class
+        storageClassName: couchdb-storage-class
 ---
-# Service für StatefullSet-Selector (wird durch Headless-Service für DNS ergänzt)
+# ClusterIP Service für interne Erreichbarkeit von CouchDB
+# DE: Name auf "shisha-couchdb" geändert, damit bestehende Anwendungen (COUCHDB_URL=http://shisha-couchdb:5984) DNS auflösen.
 apiVersion: v1
 kind: Service
 metadata:
-  name: couchdb
+  name: shisha-couchdb
   namespace: shisha
   labels:
     app: couchdb

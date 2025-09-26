@@ -1,104 +1,105 @@
-# CouchDB Kubernetes Deployment (shisha namespace)
+# Skalierung der CouchDB (shisha namespace)
 
-Kurz: Produktionsreife Artefakte für Apache CouchDB als StatefulSet (initial single-node, clusterfähig). Dieses README beschreibt Reihenfolge, Skalierung (up/down), Rollback und Troubleshooting.
+Kurzbeschreibung
+- Dieses Verzeichnis enthält die Kubernetes‑Manifeste für die CouchDB‑StatefulSet‑Installation.
+- Initialer Deploy läuft als Single‑Node StatefulSet (`replicas: 1`) und ist vorbereitet für späteres horizontales Skalieren.
 
-Wichtige Dateien (klickbar):
-- Namespace: [`k8s/base/namespace.yaml`](k8s/base/namespace.yaml:1)
-- Secrets: [`k8s/base/couchdb-secrets.yaml`](k8s/base/couchdb-secrets.yaml:1)
-- Config: [`k8s/base/couchdb-config.yaml`](k8s/base/couchdb-config.yaml:1)
-- Sidecar-Skripte (ConfigMap): [`k8s/base/couchdb-scripts-configmap.yaml`](k8s/base/couchdb-scripts-configmap.yaml:1)
-- Headless Service: [`k8s/base/couchdb-headless.yaml`](k8s/base/couchdb-headless.yaml:1)
-- ClusterIP Service: [`k8s/base/couchdb-service.yaml`](k8s/base/couchdb-service.yaml:1)
-- StatefulSet + Service: [`k8s/base/couchdb-statefulset.yaml`](k8s/base/couchdb-statefulset.yaml:1)
-- PodDisruptionBudget: [`k8s/base/couchdb-pdb.yaml`](k8s/base/couchdb-pdb.yaml:1)
-- NetworkPolicy: [`k8s/base/couchdb-networkpolicy.yaml`](k8s/base/couchdb-networkpolicy.yaml:1)
-- RBAC: [`k8s/base/couchdb-rbac.yaml`](k8s/base/couchdb-rbac.yaml:1)
-- HPA: [`k8s/hpa/couchdb-hpa.yaml`](k8s/hpa/couchdb-hpa.yaml:1)
-- Sidecar helper scripts (falls Sie direkt verwenden möchten): [`scripts/cluster/postStart.sh`](scripts/cluster/postStart.sh:1), [`scripts/cluster/preStop.sh`](scripts/cluster/preStop.sh:1)
+Wichtige Dateien
+- StatefulSet + interner Service: [`k8s/database/couchdb-statefulset.yaml:1`](k8s/database/couchdb-statefulset.yaml:1)
+- Headless Service (Ordinals/DNS): [`k8s/database/couchdb-headless.yaml:1`](k8s/database/couchdb-headless.yaml:1)
+- ClusterIP Service (interner Name `shisha-couchdb`): [`k8s/database/couchdb-service.yaml:1`](k8s/database/couchdb-service.yaml:1)
+- Sidecar‑Skripte (postStart / preStop): [`k8s/database/couchdb-scripts-configmap.yaml:1`](k8s/database/couchdb-scripts-configmap.yaml:1) und lokale Kopien: [`scripts/cluster/postStart.sh:1`](scripts/cluster/postStart.sh:1), [`scripts/cluster/preStop.sh:1`](scripts/cluster/preStop.sh:1)
+- HPA (optional / CPU): [`k8s/hpa/couchdb-hpa.yaml:1`](k8s/hpa/couchdb-hpa.yaml:1)
+- PodDisruptionBudget (minAvailable: 1): [`k8s/pdb/couchdb-pdb.yaml:1`](k8s/pdb/couchdb-pdb.yaml:1)
+- Secrets / Credentials: [`k8s/database/couchdb-secrets.yaml:1`](k8s/database/couchdb-secrets.yaml:1)
 
-Vorbedingungen / Hinweise
-- Namespace: `shisha` (siehe [`k8s/base/namespace.yaml`](k8s/base/namespace.yaml:1)).
-- StorageClass: `sisha-storage-class` (wird im StatefulSet als `storageClassName` verwendet).
-- Secret-Name: `shisha-couchdb-admin` enthält COUCHDB_USER, COUCHDB_PASSWORD, ERLANG_COOKIE.
-- TLS: TLS-Termination wird nicht hier konfiguriert — empfehle Ingress/ServiceMesh für TLS.
+Wichtige Voraussetzungen vor dem Skalieren
+- Admin‑Secret (`shisha-couchdb-admin`) korrekt konfiguriert.
+- Headless Service vorhanden, damit DNS Ordinals resolvbar sind.
+- NetworkPolicy erlaubt Erlang/Dist-Ports (4369, 9100–9105) zwischen den CouchDB‑Pods.
+- Storage: StatefulSet nutzt persistente Volumes; stelle sicher, dass PVs auf allen Nodes verfügbar sind oder ein StorageClass multi‑attach unterstützt.
+- Sidecar‑Skripte (`postStart.sh`, `preStop.sh`) in der ConfigMap sind ausführbar (defaultMode=0755).
 
-Deploy-Reihenfolge (empfohlen)
-1. Namespace erstellen:
-   kubectl apply -f k8s/base/namespace.yaml
-2. RBAC (ServiceAccount + Role + RoleBinding):
-   kubectl apply -f k8s/base/couchdb-rbac.yaml
-3. Secrets (ersetzen Sie Platzhalterwerte!):
-   kubectl apply -f k8s/base/couchdb-secrets.yaml
-4. ConfigMaps (Config + Skripte):
-   kubectl apply -f k8s/base/couchdb-config.yaml
-   kubectl apply -f k8s/base/couchdb-scripts-configmap.yaml
-5. Services:
-   kubectl apply -f k8s/base/couchdb-headless.yaml
-   kubectl apply -f k8s/base/couchdb-service.yaml
-6. StatefulSet (initial replicas:1):
-   kubectl apply -f k8s/base/couchdb-statefulset.yaml
-7. PodDisruptionBudget & NetworkPolicy:
-   kubectl apply -f k8s/base/couchdb-pdb.yaml
-   kubectl apply -f k8s/base/couchdb-networkpolicy.yaml
-8. HPA (optional aktivieren):
-   kubectl apply -f k8s/hpa/couchdb-hpa.yaml
+1) Manuelles Scale‑Up (empfohlen zum Testen)
+- Kurz: erhöhe Replicas und überwache Join-Prozess.
+```bash
+# skaliere auf 3 Replicas
+kubectl -n shisha scale statefulset couchdb --replicas=3
+# prüfe Pods
+kubectl -n shisha get pods -l app=couchdb -o wide
+# prüfe lokalen /_up am neuen Pod
+kubectl -n shisha exec couchdb-1 -- curl -sS -u "$ADMIN:$PASS" http://127.0.0.1:5984/_up
+# prüfe Cluster Membership
+kubectl -n shisha exec couchdb-0 -- curl -sS -u "$ADMIN:$PASS" http://127.0.0.1:5984/_membership
+```
 
-Validierung nach Deploy
-- Prüfen, dass Pod exists und ready:
-  kubectl -n shisha get pods -l app=couchdb
-- Prüfen Health:
-  kubectl -n shisha exec -it couchdb-0 -- curl -sSf http://127.0.0.1:5984/_up
-- Prüfen Membership (bei mehr Pods):
-  kubectl -n shisha exec -it couchdb-0 -- curl -sSf -u $COUCHDB_USER:$COUCHDB_PASSWORD http://127.0.0.1:5984/_membership
+Erwartetes Verhalten
+- Neue Pods starten mit stabilen Hostnames: couchdb-1.couchdb-headless.shisha.svc.cluster.local, couchdb-2...
+- Sidecar `postStart.sh` wartet auf /_up und führt idempotente Cluster‑Join Schritte aus.
+- Pod wird erst Ready, wenn die Gate‑Datei (/tmp/couchdb-ready) gesetzt ist.
 
-Skalieren (manuell)
-- Scale up (StatefulSet): kubectl -n shisha scale sts couchdb --replicas=3
-  - Neue Pods nutzen Headless-DNS: couchdb-1.couchdb-headless.shisha.svc.cluster.local usw.
-  - Sidecar `postStart` versucht idempotent, den Node in das Cluster zu joinen.
-- Scale down (StatefulSet): kubectl -n shisha scale sts couchdb --replicas=1
-  - Beim Termination des Pods läuft Sidecar `preStop` synchron, entfernt Node sauber aus Cluster (Decommission).
-  - PDB minAvailable:1 verhindert, dass gleichzeitig alle Pods entfernt werden.
+2) Automatisches Scaling mit HPA
+- Manifest: [`k8s/hpa/couchdb-hpa.yaml:1`](k8s/hpa/couchdb-hpa.yaml:1)
+- Empfohlene Basiswerte:
+  - minReplicas: 1
+  - maxReplicas: 5
+  - target CPU utilization: 60–70%
+  - scaleDown.behavior.stabilizationWindowSeconds: 600–900
+- Voraussetzungen:
+  - Metrics Server oder Prometheus Adapter für CPU/Custom Metrics vorhanden.
+  - Verwende HPA v2 zur Skalierung von StatefulSets.
+- Anwendung:
+```bash
+kubectl -n shisha apply -f k8s/hpa/couchdb-hpa.yaml
+kubectl -n shisha get hpa
+```
 
-HPA
-- HPA ist CPU-basiert, minReplicas=1, maxReplicas=5, Ziel 70% CPU.
-- Verhalten: scaleDown.stabilizationWindowSeconds = 900 (15min) und Policy maximal 1 Pod Reduktion pro 15 Minuten.
-- Hinweis: CouchDB-Sharding/Rebalancing muss bei großen Änderungen beachtet werden — planen Sie DB-Rebalancing außerhalb automatischer Skalierung falls nötig.
+3) Sauberes Scale‑Down (kritisch)
+- preStop Hook + `preStop.sh` entfernen Node sauber aus der Membership bevor Pod terminiert wird.
+- Empfohlenes kontrolliertes Herunterskalieren:
+```bash
+# skalieren auf 1 Replica
+kubectl -n shisha scale statefulset couchdb --replicas=1
+# logs des entfernten Pods prüfen (cluster-manager container)
+kubectl -n shisha logs couchdb-2 -c cluster-manager --follow
+# membership prüfen
+kubectl -n shisha exec couchdb-0 -- curl -sS -u "$ADMIN:$PASS" http://127.0.0.1:5984/_membership
+```
+- PDB (`k8s/pdb/couchdb-pdb.yaml:1`) verhindert unerwünschtes gleichzeitiges Entfernen mehrerer Pods.
 
-Rollback / Upgrades
-- StatefulSet-Rollout: Kubectl wird RollingUpdate durchführen (Standard für StatefulSet ist RollingUpdate).
-- Bei Problemen: prüfen Sie Logs, setzen Sie replicas wieder auf vorige Anzahl: kubectl -n shisha scale sts couchdb --replicas=<old>
-- Daten: PVCs sind persistent; prüfen Sie Snapshots/Backups vor Major-Upgrades.
+4) Prüfungen nach Skalierung (Quick‑Checks)
+- Jeder neue Pod: /_up → HTTP 200
+- /_membership listet alle Nodes
+- Sidecar hat Gate‑Datei gesetzt → Pod ist Ready
+- Beispiel:
+```bash
+kubectl -n shisha exec couchdb-0 -- curl -u "$ADMIN:$PASS" http://127.0.0.1:5984/_membership
+kubectl -n shisha exec couchdb-1 -- curl -u "$ADMIN:$PASS" http://127.0.0.1:5984/_up
+kubectl -n shisha get pods -l app=couchdb -o wide
+```
 
-Troubleshooting (häufige Fehler)
-- Pod startet, aber /_up fehlt:
-  - Logs prüfen: kubectl -n shisha logs couchdb-0 -c couchdb
-  - Prüfen, ob Env-Variablen korrekt aus Secret gesetzt sind.
-- Node join scheitert nach Scale-up:
-  - DNS-Auflösung prüfen: getent hosts couchdb-1.couchdb-headless.shisha.svc.cluster.local
-  - Membership überprüfen: GET /_membership auf jedem Knoten
-  - Sidecar-Logs prüfen: kubectl -n shisha logs couchdb-1 -c cluster-manager
-- Scale-down entfernt nicht sauber:
-  - preStop prüft und entfernt Node; bei verbleibenden Membership-Einträgen prüfen, ob preStop Fehler hatte (Logs).
-  - Bei Timeout manuell entfernen via Club-API: POST /_cluster_setup?action=remove_node oder DELETE /_nodes/<node>
-- PDB blockiert evtl. Wartung: PDB ist bewusst streng (minAvailable:1). Für Wartungsfenster temporär PDB anpassen.
+Fehlerbehebung — typische Ursachen
+- DNS/Headless Service nicht korrekt → prüfe [`k8s/database/couchdb-headless.yaml:1`](k8s/database/couchdb-headless.yaml:1) und CoreDNS.
+- 401 Unauthorized → Secret prüfen (`k8s/database/couchdb-secrets.yaml:1`).
+- Sidecar startet nicht / Skripte nicht ausführbar → ConfigMap defaultMode prüfen (`k8s/database/couchdb-scripts-configmap.yaml:1`).
+- NetworkPolicy blockiert Erlang‑Ports → vergleiche mit [`k8s/database/couchdb-networkpolicy.yaml:1`](k8s/database/couchdb-networkpolicy.yaml:1).
+- Storage‑Probleme / PV fehlt → prüfe `k8s/database/couchdb-pv.yaml:1` und StorageClass.
 
-Ports und DNS
-- HTTP API: 5984 (intern)
-- EPMD: 4369
-- Erlang Distribution: 9100-9105 (eingeschränkt via ERL_FLAGS)
-- Headless DNS für Pods: couchdb-<ordinal>.couchdb-headless.shisha.svc.cluster.local
-- Nodename Format: couchdb@<podname> (z. B. couchdb@couchdb-0)
+Rollback / Notfall
+- Schnelles Rollback auf 1 Replica:
+```bash
+kubectl -n shisha scale statefulset couchdb --replicas=1
+```
+- Wenn Membership inkonsistent: nutze `preStop` logs und CouchDB API zum sauberen Entfernen der Nodes statt forcierter Pod‑Stops.
 
 Sicherheit / TLS
-- TLS wird nicht direkt konfiguriert. Empfohlen: TLS am Ingress oder ServiceMesh terminieren.
-- ERLANG_COOKIE in Secret muss identisch für alle Nodes sein.
+- Terminiere TLS am Ingress/Proxy oder Service‑Mesh; interne Erlang‑Dist Kommunikation bleibt unverschlüsselt in diesem Setup.
+- Secrets nicht im Klartext im Repo ablegen.
 
-Akzeptanz-Checkliste (manuell prüfbar)
-- [ ] replicas=1 → Pod ready, GET /_up 200, keine Join-Versuche im Sidecar-Log
-- [ ] Scale up auf 3 → couchdb-1/2 resolvable, /_membership listet alle Nodes
-- [ ] Scale down auf 1 → preStop entfernt -2 und -1 sauber, /_membership OK, keine Shard-Fehler
-- [ ] PDB verhindert Unterschreitung von 1 Pod
-- [ ] NetworkPolicy nur die spezifizierten Ports offen
+Kurzbefehle (Übersicht)
+- Manuell skalieren: `kubectl -n shisha scale statefulset couchdb --replicas=3`
+- HPA anwenden: `kubectl -n shisha apply -f k8s/hpa/couchdb-hpa.yaml`
+- Membership prüfen: `kubectl -n shisha exec couchdb-0 -- curl -u "$ADMIN:$PASS" http://127.0.0.1:5984/_membership`
 
-Weiteres
-- Für Produktionsbetrieb: Backup-Strategie, Monitoring (Prometheus-Exporter), Alerting, und Tests des Decommissioning-Prozesses vornehmen.
+Support-Info
+- Bei konkreten Fehlern (Join‑Fehler, Shard‑Fehler) bitte Log‑Auszüge der betroffenen Pods (CouchDB + cluster-manager) bereitstellen.
