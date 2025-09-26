@@ -43,13 +43,13 @@ echo "Nuke PV: $NUKE_PV"
 #run kubectl delete job shisha-couchdb-seed -n "$NAMESPACE" --ignore-not-found
 
 # 2) Delete frontend and backend
-run microk8s.kubectl delete -f k8s/frontend.yaml -n "$NAMESPACE" --ignore-not-found
-run microk8s.kubectl delete -f k8s/backend.yaml -n "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/frontend/frontend.yaml -n "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/backend/backend.yaml -n "$NAMESPACE" --ignore-not-found
 
 # 3) Delete CouchDB deployment & service
-run microk8s.kubectl delete -f k8s/couchdb.yaml -n "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/basic-database/couchdb.yaml -n "$NAMESPACE" --ignore-not-found
 #Delete Sample, if applied
-run microk8s.kubectl delete -f k8s/shisha-sample-data.yaml -n "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE" --ignore-not-found
 
 # 4) Delete secrets and configmaps
 run microk8s.kubectl delete secret shisha-couchdb-admin -n "$NAMESPACE" --ignore-not-found
@@ -71,14 +71,14 @@ fi
 
 
 # 7) Delte HPA and PDB
-run microk8s.kubectl delete -f k8s/hpa-frontend.yaml -n "$NAMESPACE"  --ignore-not-found
-run microk8s.kubectl delete -f k8s/hpa-backend.yaml -n "$NAMESPACE"  --ignore-not-found
+run microk8s.kubectl delete -f k8s/hpa/hpa-frontend.yaml -n "$NAMESPACE"  --ignore-not-found
+run microk8s.kubectl delete -f k8s/hpa/hpa-backend.yaml -n "$NAMESPACE"  --ignore-not-found
 
-run microk8s.kubectl delete -f k8s/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
-run microk8s.kubectl delete -f k8s/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
+run microk8s.kubectl delete -f k8s/pdb/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
+run microk8s.kubectl delete -f k8s/pdb/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
 
 # 8) Optional: delete namespace
-run microk8s.kubectl delete -f k8s/ingress.yaml "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/frontend/ingress.yaml "$NAMESPACE" --ignore-not-found
 
 # 9) Optional: delete namespace
 echo "Deleting namespace '$NAMESPACE' (this removes any remaining resources)"
