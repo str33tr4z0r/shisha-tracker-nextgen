@@ -50,9 +50,14 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            # COUCHDB_NODENAME konstruiert aus POD_NAME (ordinal) und Headless-DNS
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            # COUCHDB_NODENAME auf IP-Basis: couchdb@<pod_ip>
+            # Vorteil: Umgeht kurzfristige DNS-Probleme; Nachteil: Node-Hostteil ist eine IP.
             - name: COUCHDB_NODENAME
-              value: "couchdb@$(POD_NAME).couchdb-headless.$(POD_NAMESPACE).svc.cluster.local"
+              value: "couchdb@$(POD_IP)"
             - name: COUCHDB_USER
               valueFrom:
                 secretKeyRef:

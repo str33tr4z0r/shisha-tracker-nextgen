@@ -100,32 +100,46 @@ get_pod_ip_via_k8s_api() {
  
 # 5) Versuche, Peer hinzuzufügen (idempotent) -- mit DNS- und API-Fallback
 attempt_add_node() {
-  peer_host="$1"
-  peer_node_name="couchdb@${peer_host%%.*}" # couchdb@couchdb-1
+  peer_host_input="$1"
+  peer_ip=""
+  peer_node_name=""
+
+  # 1) Wenn Input bereits eine IP ist, verwende diese
+  if printf '%s' "$peer_host_input" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+    peer_ip="$peer_host_input"
+    log "Peer Input ist eine IP: ${peer_ip}"
+  else
+    # 2) Versuche DNS -> extrahiere IP via getent
+    host_ip="$(getent hosts "$peer_host_input" 2>/dev/null | awk '{print $1}' | head -n1 || true)"
+    if [ -n "$host_ip" ]; then
+      peer_ip="$host_ip"
+      log "DNS-Auflösung ${peer_host_input} -> ${peer_ip}"
+    else
+      # 3) Fallback: K8s API nach Pod-IP (verwende kurzen Pod-Namen)
+      peer_short=$(printf '%s' "$peer_host_input" | cut -d. -f1)
+      log "DNS für ${peer_host_input} nicht auflösbar, versuche Pod-IP via K8s API für ${peer_short}"
+      pod_ip="$(get_pod_ip_via_k8s_api "$peer_short" || true)"
+      if [ -n "$pod_ip" ]; then
+        peer_ip="$pod_ip"
+        log "Erhalte IP ${pod_ip} für Pod ${peer_short}, verwende als Ziel"
+      else
+        log "Konnte Pod-IP für ${peer_short} nicht ermitteln, überspringe ${peer_host_input}."
+        return 1
+      fi
+    fi
+  fi
+
+  peer_node_name="couchdb@${peer_ip}"
+
   # Prüfen: ist Peer bereits in Membership des lokalen Knotens?
   if membership_contains "$peer_node_name"; then
     log "Peer ${peer_node_name} bereits in Membership, überspringe."
     return 0
   fi
- 
-  # Wenn DNS für peer_host nicht funktioniert, versuche Pod-IP via K8s API
-  if ! getent hosts "$peer_host" >/dev/null 2>&1; then
-    peer_short=$(printf '%s' "$peer_host" | cut -d. -f1)
-    log "DNS für ${peer_host} nicht auflösbar, versuche Pod-IP via K8s API für ${peer_short}"
-    pod_ip="$(get_pod_ip_via_k8s_api "$peer_short" || true)"
-    if [ -n "$pod_ip" ]; then
-      log "Erhalte IP ${pod_ip} für Pod ${peer_short}, verwende als Ziel"
-      peer_host="$pod_ip"
-      peer_node_name="couchdb@${peer_short}"
-    else
-      log "Konnte Pod-IP für ${peer_short} nicht ermitteln, überspringe ${peer_host}."
-      return 1
-    fi
-  fi
- 
-  log "Versuche, Peer ${peer_host} als Node hinzuzufügen ..."
-  payload="$(printf '{"action":"add_node","host":"%s","port":%s,"username":"%s","password":"%s"}' "$peer_host" "$COUCH_PORT" "$COUCHDB_USER" "$COUCHDB_PASSWORD")"
- 
+
+  log "Versuche, Peer ${peer_ip} als Node hinzuzufügen (node name: ${peer_node_name}) ..."
+  payload="$(printf '{"action":"add_node","host":"%s","port":%s,"username":"%s","password":"%s"}' "$peer_ip" "$COUCH_PORT" "$COUCHDB_USER" "$COUCHDB_PASSWORD")"
+
   # Retry mit Backoff
   attempt=0
   max_attempts=6
@@ -133,17 +147,17 @@ attempt_add_node() {
   while [ "$attempt" -lt "$max_attempts" ]; do
     attempt=$((attempt + 1))
     resp=$(_local_curl POST "${CLUSTER_SETUP_PATH}" "$payload" 2>/dev/null || true)
-    # Prüfe Membership erneut
+    # Prüfe Membership erneut (wartet auf couchdb@<ip>)
     if membership_contains "$peer_node_name"; then
       log "Peer ${peer_node_name} erfolgreich hinzugefügt (oder bereits vorhanden)."
       return 0
     fi
-    log "Add_node attempt ${attempt} für ${peer_host} fehlgeschlagen, retry in ${sleep_sec}s. Response: ${resp}"
+    log "Add_node attempt ${attempt} für ${peer_ip} fehlgeschlagen, retry in ${sleep_sec}s. Response: ${resp}"
     sleep "$sleep_sec"
     sleep_sec=$((sleep_sec * 2))
   done
- 
-  log "ERROR: Konnte Peer ${peer_host} nach ${max_attempts} Versuchen nicht hinzufügen."
+
+  log "ERROR: Konnte Peer ${peer_ip} nach ${max_attempts} Versuchen nicht hinzufügen."
   return 1
 }
 

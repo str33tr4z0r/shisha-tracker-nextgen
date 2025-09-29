@@ -42,9 +42,38 @@ log() {
   echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") ${LOG_PREFIX} $*"
 }
 
-# Liefert den CouchDB Node-Namen im Format couchdb@<podname>
+# Liefert den CouchDB Node-Namen im Format couchdb@<podip> oder couchdb@<podname> (Fallback)
+# Versucht zuerst POD_IP (Umgebungsvariable), dann K8s API, zuletzt HOSTNAME.
+get_pod_ip_via_k8s_api() {
+  pod="$1"
+  token_file="/var/run/secrets/kubernetes.io/serviceaccount/token"
+  ca_file="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+  api_host="https://kubernetes.default.svc"
+  if [ ! -r "$token_file" ] || [ ! -r "$ca_file" ]; then
+    return 1
+  fi
+  token="$(cat "$token_file")"
+  url="$api_host/api/v1/namespaces/${POD_NAMESPACE}/pods/${pod}"
+  resp="$(curl -sS --header "Authorization: Bearer $token" --cacert "$ca_file" "$url" 2>/dev/null || true)"
+  podip="$(printf '%s' "$resp" | grep -o '"podIP"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | sed 's/.*"podIP"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')"
+  printf '%s' "$podip"
+}
+
 node_name() {
-  echo "couchdb@${HOSTNAME}"
+  # Verwende POD_IP wenn gesetzt (wird in StatefulSet gesetzt), sonst versuche K8s API, sonst HOSTNAME
+  if [ -n "${POD_IP:-}" ]; then
+    echo "couchdb@${POD_IP}"
+    return 0
+  fi
+
+  # HOSTNAME erwartet z.B. couchdb-1
+  pod_short="${HOSTNAME}"
+  pod_ip="$(get_pod_ip_via_k8s_api "$pod_short" || true)"
+  if [ -n "$pod_ip" ]; then
+    echo "couchdb@${pod_ip}"
+  else
+    echo "couchdb@${HOSTNAME}"
+  fi
 }
 
 # Prüfe aktuelle Membership
