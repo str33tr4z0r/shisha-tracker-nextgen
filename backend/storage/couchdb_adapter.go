@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -183,6 +184,7 @@ func (c *CouchAdapter) findByNumericID(id uint) (*couchShishaDoc, error) {
 }
 
 func (c *CouchAdapter) ListShishas() ([]Shisha, error) {
+	log.Printf("couchdb ListShishas: starting _find db=%s", c.dbName)
 	// Use _find with selector type=shisha
 	selector := map[string]interface{}{
 		"selector": map[string]interface{}{
@@ -192,20 +194,23 @@ func (c *CouchAdapter) ListShishas() ([]Shisha, error) {
 	}
 	resp, err := c.doRequest("POST", c.dbName+"/_find", selector)
 	if err != nil {
+		log.Printf("couchdb ListShishas: request error: %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
 		b, _ := io.ReadAll(resp.Body)
+		log.Printf("couchdb ListShishas: _find failed status=%s body=%s", resp.Status, string(b))
 		return nil, fmt.Errorf("ListShishas _find failed: %s: %s", resp.Status, string(b))
 	}
 	var out struct {
 		Docs []couchShishaDoc `json:"docs"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		log.Printf("couchdb ListShishas: decode error: %v", err)
 		return nil, err
 	}
-	var res []Shisha
+	res := make([]Shisha, 0, len(out.Docs))
 	for _, d := range out.Docs {
 		res = append(res, Shisha{
 			ID:           d.ID,
@@ -217,6 +222,7 @@ func (c *CouchAdapter) ListShishas() ([]Shisha, error) {
 			Comments:     d.Comments,
 		})
 	}
+	log.Printf("couchdb ListShishas: returning %d docs", len(res))
 	return res, nil
 }
 
