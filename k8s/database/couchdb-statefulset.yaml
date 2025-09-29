@@ -46,9 +46,13 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            # COUCHDB_NODENAME konstruiert aus HOSTNAME (ordinal) und Headless-DNS
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            # COUCHDB_NODENAME konstruiert aus POD_NAME (ordinal) und Headless-DNS
             - name: COUCHDB_NODENAME
-              value: "couchdb@$(HOSTNAME).couchdb-headless.$(POD_NAMESPACE).svc.cluster.local"
+              value: "couchdb@$(POD_NAME).couchdb-headless.$(POD_NAMESPACE).svc.cluster.local"
             - name: COUCHDB_USER
               valueFrom:
                 secretKeyRef:
@@ -65,10 +69,7 @@ spec:
                   name: shisha-couchdb-admin
                   key: ERLANG_COOKIE
             - name: ERL_FLAGS
-              valueFrom:
-                configMapKeyRef:
-                  name: couchdb-config
-                  key: ERL_FLAGS
+              value: "-name $(COUCHDB_NODENAME) -setcookie $(ERLANG_COOKIE) -kernel inet_dist_listen_min 9100 inet_dist_listen_max 9105"
           readinessProbe:
             httpGet:
               path: /_up
