@@ -180,7 +180,7 @@ spec:
         resources:
           requests:
             storage: 5Gi
-        storageClassName: local-path
+        storageClassName: couchdb-storage-class
 ---
 # ClusterIP Service für interne Erreichbarkeit von CouchDB
 # DE: Name auf "shisha-couchdb" geändert, damit bestehende Anwendungen (COUCHDB_URL=http://shisha-couchdb:5984) DNS auflösen.
