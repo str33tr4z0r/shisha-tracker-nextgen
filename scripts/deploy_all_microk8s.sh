@@ -28,11 +28,11 @@ echo "Namespace: $NAMESPACE"
 # PreStage
 run microk8s.kubectl apply -f k8s/PreStage/namespace.yaml
 run microk8s.kubectl create secret generic shisha-couchdb-admin -n "$NAMESPACE" \
-  --from-literal=username=ichbineinadmin \
+  --from-literal=username=shisha_admin \
   --from-literal=password=ichbin1AdminPasswort! \
   --from-literal=ERLANG_COOKIE="$(head -c 32 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | cut -c1-64)" \
-  --from-literal=COUCHDB_USER=ichbineinadmin \
-  --from-literal=COUCHDB_PASSWORD=ichbin1AdminPasswort! 
+  --from-literal=COUCHDB_USER=shisha_admin \
+  --from-literal=COUCHDB_PASSWORD=ichbin1AdminPasswort!
 
 run microk8s.kubectl apply -f k8s/PreStage/couchdb-storageclass.yaml -n "$NAMESPACE"
 #run microk8s.kubectl apply -f k8s/couchdb-pv.yaml -n "$NAMESPACE"
