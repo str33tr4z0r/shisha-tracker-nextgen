@@ -3,14 +3,15 @@ set -euo pipefail
 
 NAMESPACE=shisha
 DRY_RUN=false
-NUKE_PV=false
+# Default to nuking PVs in dev to ensure a full clean state. Use --no-nuke-pv (not implemented) to skip.
+NUKE_PV=true
 
 usage() {
   cat <<EOF
 Usage: $0 [--namespace NAME] [--dry-run] [--nuke-pv]
   --namespace NAME  Namespace to delete resources from (default: shisha)
   --dry-run         Show commands without executing
-  --nuke-pv         Also delete PV and print hostPath removal instructions
+  --nuke-pv         Also delete PVs (default: true)
 EOF
 }
 
@@ -46,48 +47,67 @@ echo "Nuke PV: $NUKE_PV"
 run microk8s.kubectl delete -f k8s/frontend/frontend.yaml -n "$NAMESPACE" --ignore-not-found
 run microk8s.kubectl delete -f k8s/backend/backend.yaml -n "$NAMESPACE" --ignore-not-found
 
-# 3) Delete CouchDB deployment & service
-run microk8s.kubectl delete -f k8s/basic-database/couchdb.yaml -n "$NAMESPACE" --ignore-not-found
-#Delete Sample, if applied
+# 3) Delete CouchDB StatefulSet, Deployments & Services (by manifest and by label)
+# Delete manifest-driven resources (if present)
+run microk8s.kubectl delete -f k8s/database/couchdb-statefulset.yaml -n "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/database/couchdb-service.yaml -n "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/database/couchdb-headless.yaml -n "$NAMESPACE" --ignore-not-found
+run microk8s.kubectl delete -f k8s/basic-database/couchdb.yaml -n "$NAMESPACE" --ignore-not-found || true
+
+# Delete any resources selected by label to catch manual creations
+run microk8s.kubectl -n "$NAMESPACE" delete statefulset -l app=couchdb --ignore-not-found
+run microk8s.kubectl -n "$NAMESPACE" delete svc -l app=couchdb --ignore-not-found
+run microk8s.kubectl -n "$NAMESPACE" delete deployment -l app=couchdb --ignore-not-found
+
+# Delete Sample, if applied
 run microk8s.kubectl delete -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE" --ignore-not-found
 
 # 4) Delete secrets and configmaps
 run microk8s.kubectl delete secret shisha-couchdb-admin -n "$NAMESPACE" --ignore-not-found
 run microk8s.kubectl delete configmap shisha-frontend-nginx -n "$NAMESPACE" --ignore-not-found
 
-# 5) Delete PVC
-run microk8s.kubectl delete pvc shisha-couchdb-pvc -n "$NAMESPACE" --ignore-not-found
+# 5) Delete PVCs for CouchDB and related resources (by label/namespace)
+run microk8s.kubectl -n "$NAMESPACE" delete pvc -l app=couchdb --ignore-not-found || true
+run microk8s.kubectl -n "$NAMESPACE" delete pvc --all --ignore-not-found || true
 
-# 6) Optionally delete PV
+# 6) Optionally delete PVs bound to this namespace or labelled for this app
 if [ "$NUKE_PV" = true ]; then
-  echo "Deleting PV 'shisha-couchdb-pv' (if exists)"
-  run microk8s.kubectl delete pv shisha-couchdb-pv --ignore-not-found
-  echo "If the PV used a hostPath, you must remove data manually on the node."
-  echo "Default hostPath from k8s/couchdb-pv.yaml: /var/lib/shisha/couchdb"
+  echo "Deleting PVs bound to namespace '$NAMESPACE' or labelled for couchdb (if any)"
+  # Delete PVs whose claimRef references the namespace
+  run sh -c "microk8s.kubectl get pv -o jsonpath='{range .items[*]}{.metadata.name}{\" \"}{.spec.claimRef.namespace}{\"\\n\"}{end}' | awk '\$2==\"'$NAMESPACE'\"{print \$1}' | xargs -r microk8s.kubectl delete pv --ignore-not-found || true"
+  # Also delete PVs labelled for this app (if any)
+  run microk8s.kubectl delete pv -l app=couchdb --ignore-not-found || true
+
+  echo "If the PV used a hostPath, you may need to remove data manually on the node."
+  echo "Default hostPath example from k8s/database/couchdb-pv.yaml (if used): /var/lib/shisha/couchdb"
   echo "To remove on the node (run on the node or via SSH):"
   echo "  sudo rm -rf /var/lib/shisha/couchdb"
 fi
 
 
 
-# 7) Delte HPA and PDB
-run microk8s.kubectl delete -f k8s/hpa/hpa-frontend.yaml -n "$NAMESPACE"  --ignore-not-found
-run microk8s.kubectl delete -f k8s/hpa/hpa-backend.yaml -n "$NAMESPACE"  --ignore-not-found
+# 7) Delete HPA and PDBs (if present)
+run microk8s.kubectl delete -f k8s/hpa/hpa-frontend.yaml -n "$NAMESPACE"  --ignore-not-found || true
+run microk8s.kubectl delete -f k8s/hpa/hpa-backend.yaml -n "$NAMESPACE"  --ignore-not-found || true
+run microk8s.kubectl -n "$NAMESPACE" delete hpa --all --ignore-not-found || true
 
-run microk8s.kubectl delete -f k8s/pdb/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
-run microk8s.kubectl delete -f k8s/pdb/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found
+run microk8s.kubectl delete -f k8s/pdb/pdb-backend.yaml -n "$NAMESPACE"  --ignore-not-found || true
+run microk8s.kubectl delete -f k8s/pdb/pdb-frontend.yaml -n "$NAMESPACE"  --ignore-not-found || true
+run microk8s.kubectl -n "$NAMESPACE" delete pdb --all --ignore-not-found || true
 
-# 8) Optional: delete namespace
-run microk8s.kubectl delete -f k8s/frontend/ingress.yaml "$NAMESPACE" --ignore-not-found
+# 8) Optional: delete ingress and related frontend objects
+# delete by file and namespace (previous invocation passed namespace as a positional argument which fails)
+run microk8s.kubectl delete -f k8s/frontend/ingress.yaml -n "$NAMESPACE" --ignore-not-found || true
 
 # 9) Optional: delete namespace
 echo "Deleting namespace '$NAMESPACE' (this removes any remaining resources)"
 run microk8s.kubectl delete namespace "$NAMESPACE" --ignore-not-found
 
 # 10) Final checks
-echo "Final resource check (filtered by name 'shisha')"
-run microk8s.kubectl get all -A | grep shisha || true
-run microk8s.kubectl get pvc -A | grep shisha || true
-run microk8s.kubectl get pv | grep shisha || true
+echo "Final resource check (filtered by name/namespace '$NAMESPACE')"
+run microk8s.kubectl get all -A | grep "$NAMESPACE" || true
+run microk8s.kubectl get pvc -A | grep "$NAMESPACE" || true
+run microk8s.kubectl get pv | grep "$NAMESPACE" || true
+run microk8s.kubectl get storageclass | grep couchdb || true
 
 echo "Cleanup script finished."

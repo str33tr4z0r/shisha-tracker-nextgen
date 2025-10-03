@@ -40,7 +40,6 @@ run microk8s.kubectl apply -f k8s/PreStage/couchdb-storageclass.yaml -n "$NAMESP
 #run microk8s.kubectl rollout status deployment/shisha-couchdb -n "$NAMESPACE" --timeout=120s
 
 #Couchdb
-run microk8s.kubectl apply -f k8s/database/couchdb-pv.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-rbac.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-config.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-scripts-configmap.yaml -n "$NAMESPACE"
@@ -56,7 +55,7 @@ run microk8s.kubectl rollout status deployment/shisha-backend-mock -n "$NAMESPAC
 #Frontend
 run microk8s.kubectl apply -f k8s/frontend/shisha-frontend-nginx-configmap.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/frontend/frontend.yaml -n "$NAMESPACE"
-run microk8s.kubectl rollout status deployment/frontend/shisha-frontend -n "$NAMESPACE" --timeout=120s
+run microk8s.kubectl rollout status deployment shisha-frontend -n "$NAMESPACE" --timeout=120s
 run microk8s.kubectl apply -f k8s/frontend/ingress.yaml -n "$NAMESPACE"
 #run microk8s.kubectl patch svc shisha-frontend -n "$NAMESPACE" --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
 
@@ -68,9 +67,12 @@ run microk8s.kubectl apply -f k8s/pdb-frontend.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/hpa/couchdb-hpa.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/pdb/couchdb-pdb.yaml -n "$NAMESPACE"
 
+#scale couchdb
+run microk8s.kubectl scale statefulset couchdb --replicas=3 -n "$NAMESPACE"
+
 #PostStage (optional)
-run microk8s.kubectl apply -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
-run microk8s.kubectl logs -l job-name=shisha-sample-data -n "$NAMESPACE" --tail=200
+#run microk8s.kubectl apply -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
+#srun microk8s.kubectl logs -l job-name=shisha-sample-data -n "$NAMESPACE" --tail=200
 
 
 # 9) Final checks
