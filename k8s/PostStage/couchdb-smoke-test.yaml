@@ -1,0 +1,94 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: couchdb-smoke-test
+  namespace: shisha
+  labels:
+    app: couchdb
+    role: smoke-test
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: couchdb
+        role: smoke-test
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: smoke-test
+          image: curlimages/curl:8.1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: COUCHDB_USER
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: COUCHDB_PASSWORD
+            - name: COUCHDB_HOST
+              value: "shisha-couchdb"
+            - name: COUCHDB_PORT
+              value: "5984"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              HOST="${COUCHDB_HOST}:${COUCHDB_PORT}"
+              BASE="http://${HOST}"
+              UP_PATH="/_up"
+              MEMBERSHIP_PATH="/_membership"
+              ALL_DBS_PATH="/_all_dbs"
+              AUTH="-u ${COUCHDB_USER}:${COUCHDB_PASSWORD}"
+              log() { printf '%s %s\n' "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "$*"; }
+              # Wait for /_up with retries
+              tries=0
+              max_tries=60
+              until [ "$tries" -ge "$max_tries" ]; do
+                tries=$((tries+1))
+                code="$(curl -sS -o /dev/null -w '%{http_code}' ${AUTH} ${BASE}${UP_PATH} 2>/dev/null || true)"
+                if [ "$code" = "200" ]; then
+                  log "CouchDB /_up responded 200 (attempt ${tries})"
+                  break
+                fi
+                log "Waiting for CouchDB /_up (attempt ${tries}/${max_tries}), got ${code:-nil}"
+                sleep 2
+              done
+              if [ "$code" != "200" ]; then
+                log "ERROR: CouchDB /_up not reachable after ${max_tries} attempts"
+                exit 1
+              fi
+              # Check membership
+              log "Querying ${MEMBERSHIP_PATH}"
+              memb_code="$(curl -sS -o /tmp/membership.json -w '%{http_code}' ${AUTH} ${BASE}${MEMBERSHIP_PATH} 2>/dev/null || true)"
+              if [ "$memb_code" != "200" ]; then
+                log "ERROR: /_membership returned ${memb_code}"
+                cat /tmp/membership.json || true
+                exit 2
+              fi
+              log "/_membership OK; contents:"
+              cat /tmp/membership.json || true
+              # Check _all_dbs
+              log "Querying ${ALL_DBS_PATH}"
+              all_code="$(curl -sS -o /tmp/all_dbs.json -w '%{http_code}' ${AUTH} ${BASE}${ALL_DBS_PATH} 2>/dev/null || true)"
+              if [ "$all_code" != "200" ]; then
+                log "ERROR: /_all_dbs returned ${all_code}"
+                cat /tmp/all_dbs.json || true
+                exit 3
+              fi
+              log "/_all_dbs OK; contents:"
+              cat /tmp/all_dbs.json || true
+              # Basic sanity: expect at least _users or shisha DB to appear in list
+              if grep -q '"shisha"' /tmp/all_dbs.json || grep -q '"_users"' /tmp/all_dbs.json; then
+                log "Smoke test SUCCESS: expected DBs present"
+                exit 0
+              else
+                log "WARN: expected DBs not found in _all_dbs"
+                cat /tmp/all_dbs.json || true
+                exit 4
+      # service account not required; use default namespace permissions for Job

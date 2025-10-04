@@ -47,6 +47,7 @@ run microk8s.kubectl apply -f k8s/database/couchdb-headless.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-service.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-statefulset.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-networkpolicy.yaml -n "$NAMESPACE"
+run microk8s.kubectl rollout status statefulset/couchdb -n "$NAMESPACE" --timeout=240s
 
 #Backend
 run microk8s.kubectl apply -f k8s/backend/backend.yaml -n "$NAMESPACE"
@@ -60,12 +61,12 @@ run microk8s.kubectl apply -f k8s/frontend/ingress.yaml -n "$NAMESPACE"
 #run microk8s.kubectl patch svc shisha-frontend -n "$NAMESPACE" --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
 
 #HPA / PDBs / Optionales Monitoring
-run microk8s.kubectl apply -f k8s/hpa-backend.yaml -n "$NAMESPACE"
-run microk8s.kubectl apply -f k8s/hpa-frontend.yaml -n "$NAMESPACE"
-run microk8s.kubectl apply -f k8s/pdb-backend.yaml -n "$NAMESPACE"
-run microk8s.kubectl apply -f k8s/pdb-frontend.yaml -n "$NAMESPACE"
-run microk8s.kubectl apply -f k8s/hpa/couchdb-hpa.yaml -n "$NAMESPACE"
-run microk8s.kubectl apply -f k8s/pdb/couchdb-pdb.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/hpa/hpa-backend.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/hpa/hpa-frontend.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/pdb/pdb-backend.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/pdb/pdb-frontend.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/hpa/couchdb-hpa.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/pdb/couchdb-pdb.yaml -n "$NAMESPACE"
 
 #scale couchdb
 run microk8s.kubectl scale statefulset couchdb --replicas=3 -n "$NAMESPACE"
