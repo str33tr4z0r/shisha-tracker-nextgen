@@ -269,8 +269,42 @@ func (c *CouchAdapter) nextID() (uint, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
+		// Read body and detect common CouchDB error indicating missing/unsuitable index.
 		b, _ := io.ReadAll(resp.Body)
-		return 0, fmt.Errorf("nextID _find failed: %s: %s", resp.Status, string(b))
+		bodyStr := string(b)
+		// If error indicates no usable index, fall back to scanning all docs (safer for bootstrapping).
+		if strings.Contains(bodyStr, "no_usable_index") || strings.Contains(bodyStr, "No index exists") {
+			// Fallback: GET _all_docs?include_docs=true and scan numeric id fields.
+			ar, err := c.doRequest("GET", c.dbName+"/_all_docs?include_docs=true", nil)
+			if err != nil {
+				return 0, err
+			}
+			defer ar.Body.Close()
+			if ar.StatusCode >= 400 {
+				b2, _ := io.ReadAll(ar.Body)
+				return 0, fmt.Errorf("nextID fallback _all_docs failed: %s: %s", ar.Status, string(b2))
+			}
+			var all struct {
+				TotalRows int `json:"total_rows"`
+				Rows      []struct {
+					Doc couchShishaDoc `json:"doc"`
+				} `json:"rows"`
+			}
+			if err := json.NewDecoder(ar.Body).Decode(&all); err != nil {
+				return 0, err
+			}
+			max := uint(0)
+			for _, r := range all.Rows {
+				if r.Doc.ID > max {
+					max = r.Doc.ID
+				}
+			}
+			if max == 0 {
+				return 1, nil
+			}
+			return max + 1, nil
+		}
+		return 0, fmt.Errorf("nextID _find failed: %s: %s", resp.Status, bodyStr)
 	}
 	var out struct {
 		Docs []couchShishaDoc `json:"docs"`

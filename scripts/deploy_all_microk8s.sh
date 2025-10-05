@@ -70,10 +70,12 @@ run microk8s.kubectl apply -f k8s/frontend/ingress.yaml -n "$NAMESPACE"
 #run microk8s.kubectl apply -f k8s/pdb/couchdb-pdb.yaml -n "$NAMESPACE"
 
 #scale couchdb
-run microk8s.kubectl scale statefulset couchdb --replicas=3 -n "$NAMESPACE" --wait
+run microk8s.kubectl scale statefulset couchdb --replicas=3 -n "$NAMESPACE"
+
+run sleep 40
 
 #PostStage (optional)
-#run microk8s.kubectl apply -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
+run microk8s.kubectl apply -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
 #run microk8s.kubectl logs -l job-name=shisha-sample-data -n "$NAMESPACE" --tail=200
 
 
