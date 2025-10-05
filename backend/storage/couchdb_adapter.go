@@ -118,17 +118,18 @@ func (c *CouchAdapter) ensureDB() error {
 // repeatedly; if the index already exists CouchDB will return a non-error response.
 func (c *CouchAdapter) ensureIndexes() error {
 	// Create a Mango index suitable for sorting by "id" (desc) while selecting by "type".
-	// Use an explicit field-order map to ensure CouchDB can use the index for the requested sort.
+	// CouchDB requires a single sort direction for all fields in a multi-field sort.
+	// Create an index with both fields descending to match nextID() which sorts by id desc.
 	idx := map[string]interface{}{
 		"index": map[string]interface{}{
 			"fields": []interface{}{
-				map[string]string{"type": "asc"},
+				map[string]string{"type": "desc"},
 				map[string]string{"id": "desc"},
 			},
 		},
-		"name": "idx_type_id",
+		"name": "idx_type_id_desc",
 		"type": "json",
-		"ddoc": "ddoc_idx_type_id",
+		"ddoc": "ddoc_idx_type_id_desc",
 	}
 	resp, err := c.doRequest("POST", c.dbName+"/_index", idx)
 	if err != nil {
