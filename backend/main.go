@@ -189,12 +189,18 @@ func containerIDHandler(c *gin.Context) {
 }
 
 func listShishas(c *gin.Context) {
+	log.Printf("GET /api/shishas start remote=%s", c.ClientIP())
 	shishas, err := storageEngine.ListShishas()
 	if err != nil {
-		log.Printf("storage.ListShishas error: %v", err)
+		log.Printf("GET /api/shishas storage error: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
+	if shishas == nil {
+		log.Printf("GET /api/shishas: storage returned nil slice - normalizing to empty")
+		shishas = make([]storage.Shisha, 0)
+	}
+	log.Printf("GET /api/shishas ok count=%d", len(shishas))
 	c.JSON(http.StatusOK, shishas)
 }
 

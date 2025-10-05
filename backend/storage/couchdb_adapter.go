@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -51,6 +52,10 @@ func NewCouchAdapter(baseURL, user, pass, dbName string) (*CouchAdapter, error) 
 	}
 	// ensure DB exists
 	if err := c.ensureDB(); err != nil {
+		return nil, err
+	}
+	// ensure required Mango indexes exist (needed for sorted _find used by nextID)
+	if err := c.ensureIndexes(); err != nil {
 		return nil, err
 	}
 	return c, nil
@@ -109,6 +114,36 @@ func (c *CouchAdapter) ensureDB() error {
 	return fmt.Errorf("ensureDB failed: %s: %s", resp.Status, string(b))
 }
 
+// ensureIndexes creates necessary Mango indexes used by the adapter. It's safe to call
+// repeatedly; if the index already exists CouchDB will return a non-error response.
+func (c *CouchAdapter) ensureIndexes() error {
+	// Create a Mango index suitable for sorting by "id" (desc) while selecting by "type".
+	// CouchDB requires a single sort direction for all fields in a multi-field sort.
+	// Create an index with both fields descending to match nextID() which sorts by id desc.
+	idx := map[string]interface{}{
+		"index": map[string]interface{}{
+			"fields": []interface{}{
+				map[string]string{"type": "desc"},
+				map[string]string{"id": "desc"},
+			},
+		},
+		"name": "idx_type_id_desc",
+		"type": "json",
+		"ddoc": "ddoc_idx_type_id_desc",
+	}
+	resp, err := c.doRequest("POST", c.dbName+"/_index", idx)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	// Accept 200/201 as success. For other 4xx/5xx return error.
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("ensureIndexes failed: %s: %s", resp.Status, string(b))
+	}
+	return nil
+}
+
 // internal types for CouchDB docs
 type couchShishaDoc struct {
 	DocID        string       `json:"_id,omitempty"`
@@ -154,6 +189,7 @@ func (c *CouchAdapter) findByNumericID(id uint) (*couchShishaDoc, error) {
 }
 
 func (c *CouchAdapter) ListShishas() ([]Shisha, error) {
+	log.Printf("couchdb ListShishas: starting _find db=%s", c.dbName)
 	// Use _find with selector type=shisha
 	selector := map[string]interface{}{
 		"selector": map[string]interface{}{
@@ -163,20 +199,23 @@ func (c *CouchAdapter) ListShishas() ([]Shisha, error) {
 	}
 	resp, err := c.doRequest("POST", c.dbName+"/_find", selector)
 	if err != nil {
+		log.Printf("couchdb ListShishas: request error: %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
 		b, _ := io.ReadAll(resp.Body)
+		log.Printf("couchdb ListShishas: _find failed status=%s body=%s", resp.Status, string(b))
 		return nil, fmt.Errorf("ListShishas _find failed: %s: %s", resp.Status, string(b))
 	}
 	var out struct {
 		Docs []couchShishaDoc `json:"docs"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		log.Printf("couchdb ListShishas: decode error: %v", err)
 		return nil, err
 	}
-	var res []Shisha
+	res := make([]Shisha, 0, len(out.Docs))
 	for _, d := range out.Docs {
 		res = append(res, Shisha{
 			ID:           d.ID,
@@ -188,6 +227,7 @@ func (c *CouchAdapter) ListShishas() ([]Shisha, error) {
 			Comments:     d.Comments,
 		})
 	}
+	log.Printf("couchdb ListShishas: returning %d docs", len(res))
 	return res, nil
 }
 
@@ -229,8 +269,42 @@ func (c *CouchAdapter) nextID() (uint, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
+		// Read body and detect common CouchDB error indicating missing/unsuitable index.
 		b, _ := io.ReadAll(resp.Body)
-		return 0, fmt.Errorf("nextID _find failed: %s: %s", resp.Status, string(b))
+		bodyStr := string(b)
+		// If error indicates no usable index, fall back to scanning all docs (safer for bootstrapping).
+		if strings.Contains(bodyStr, "no_usable_index") || strings.Contains(bodyStr, "No index exists") {
+			// Fallback: GET _all_docs?include_docs=true and scan numeric id fields.
+			ar, err := c.doRequest("GET", c.dbName+"/_all_docs?include_docs=true", nil)
+			if err != nil {
+				return 0, err
+			}
+			defer ar.Body.Close()
+			if ar.StatusCode >= 400 {
+				b2, _ := io.ReadAll(ar.Body)
+				return 0, fmt.Errorf("nextID fallback _all_docs failed: %s: %s", ar.Status, string(b2))
+			}
+			var all struct {
+				TotalRows int `json:"total_rows"`
+				Rows      []struct {
+					Doc couchShishaDoc `json:"doc"`
+				} `json:"rows"`
+			}
+			if err := json.NewDecoder(ar.Body).Decode(&all); err != nil {
+				return 0, err
+			}
+			max := uint(0)
+			for _, r := range all.Rows {
+				if r.Doc.ID > max {
+					max = r.Doc.ID
+				}
+			}
+			if max == 0 {
+				return 1, nil
+			}
+			return max + 1, nil
+		}
+		return 0, fmt.Errorf("nextID _find failed: %s: %s", resp.Status, bodyStr)
 	}
 	var out struct {
 		Docs []couchShishaDoc `json:"docs"`

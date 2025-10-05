@@ -205,23 +205,36 @@ function formatTime(ts?: number) {
 }
  
 async function load() {
-  const res = await fetch(`${API}/shishas`)
-  const data = await res.json()
-  // Normalize items into new array objects to ensure Vue reactivity for added fields
-  shishas.value = (data || []).map((s: any) => {
-    // ensure per-item inputs exist
-    if (ratingInputs.value[s.id] === undefined) ratingInputs.value[s.id] = 0.5
-    if (commentText.value[s.id] === undefined) commentText.value[s.id] = ''
-    if (commentUser.value[s.id] === undefined) commentUser.value[s.id] = ''
-    // backend/storage may return "smoked", "smokedCount" or "Smoked"
-    const smoked = s.smokedCount ?? s.smoked ?? s.Smoked ?? 0
-    return {
-      ...s,
-      smokedCount: smoked,
-      ratings: s.ratings || [],
-      comments: s.comments || [],
-    } as Shisha
-  })
+  try {
+    const res = await fetch(`${API}/shishas`)
+    let data: any
+    try {
+      data = await res.json()
+    } catch (err) {
+      console.error('failed to parse /api/shishas response', err)
+      data = []
+    }
+    if (!Array.isArray(data)) {
+      console.warn('unexpected /api/shishas payload, treating as empty array', data)
+      shishas.value = []
+    } else {
+      shishas.value = data
+      // ensure inputs exist for listed shishas and normalize smoked property
+      shishas.value.forEach((s: Shisha) => {
+        if (ratingInputs.value[s.id] === undefined) ratingInputs.value[s.id] = 0.5
+        if (commentText.value[s.id] === undefined) commentText.value[s.id] = ''
+        if (commentUser.value[s.id] === undefined) commentUser.value[s.id] = ''
+  
+        // backend/storage may return "smoked" (storage) or "smokedCount" (legacy);
+        // normalize to s.smokedCount for the UI
+        const raw = (s as any)
+        if (s.smokedCount === undefined) s.smokedCount = raw.smoked ?? raw.Smoked ?? 0
+      })
+    }
+  } catch (err) {
+    console.error('error fetching /api/shishas', err)
+    shishas.value = []
+  }
 }
  
 function userScore(shisha: Shisha, user: string): string {

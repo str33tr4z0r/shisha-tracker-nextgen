@@ -1,77 +1,68 @@
-# Migration: PocketBase → CouchDB (Dokumentation)
+# Migration: CouchDB Cluster auf IP‑basierte Nodename & local-path Storage
 
-Kurz: Dieses Dokument fasst die durchgeführten Änderungen zusammen, beschreibt die Reihenfolge zum Deployen per kubectl/Helm, listet die betroffenen Dateien und enthält eine kurze Cleanup‑/PR‑Checkliste.
+Kurzbeschreibung
+- Diese Anleitung beschreibt die Änderungen, die vorgenommen wurden, und wie das aktuelle Setup deployed, bereinigt oder zurückgesetzt werden kann.
 
-Zusammenfassung der Änderungen
-- PocketBase wurde staged aus aktiven Deployments/Charts entfernt und vollständig in das Verzeichnis `archive/pocketbase/` verschoben.
-- CouchDB wurde als neuer Standard‑Storage eingeführt. Backend default: `STORAGE=couchdb`.
-- Neue k8s‑Manifeste/Charts für CouchDB und ein Seed‑Job wurden erstellt.
-- README.md wurde um eine präzise Reihenfolge für plain‑kubectl Deploys erweitert.
+Änderungen (Dateien)
+- [`k8s/database/couchdb-statefulset.yaml`](k8s/database/couchdb-statefulset.yaml:175) — env POD_IP, COUCHDB_NODENAME="couchdb@$(POD_IP)"; PVCs nutzen `storageClassName: local-path`.
+- [`scripts/cluster/postStart.sh`](scripts/cluster/postStart.sh:1) — Join-Logic erweitert: DNS → getent → K8s API → IP‑Fallback.
+- [`scripts/cluster/preStop.sh`](scripts/cluster/preStop.sh:1) — node_name() nutzt POD_IP als Fallback.
+- [`k8s/database/local-path-provisioner.yaml`](k8s/database/local-path-provisioner.yaml:1) — local-path provisioner manifest (installiert).
+- (entfernt) [`k8s/database/hostpath-pv-sc.yaml`](k8s/database/hostpath-pv-sc.yaml:1) und [`k8s/database/couchdb-pv-1.yaml`](k8s/database/couchdb-pv-1.yaml:1) — statische PV/SC entfernt.
 
-Wichtige Aktionen (bereits erledigt)
-- Backend: default STORAGE auf CouchDB gesetzt (`backend/main.go`).
-- Storage Adapter & Tests: CouchDB Adapter implementiert und Unit‑Tests erfolgreich ausgeführt (`backend/storage/`).
-- Helm: `charts/couchdb/` hinzugefügt; `charts/backend` aktualisiert, um CouchDB Env/Secrets zu nutzen.
-- Kubernetes: aktiv genutzte PocketBase Manifeste entfernt; CouchDB Manifeste erstellt:
-  - `k8s/couchdb.yaml`
-  - `k8s/couchdb-pv.yaml` (hostPath für Dev)
-  - `k8s/couchdb-seed-job.yaml`
-  - `k8s/backend.yaml` angepasst auf CouchDB Env/Secrets
-- Archive: Alle ursprünglichen PocketBase‑Charts/Manifeste/Jobs in `archive/pocketbase/` abgelegt.
+Deployment Schritte
+1. Installiere local-path provisioner (falls noch nicht installiert):
+   kubectl apply -f k8s/database/local-path-provisioner.yaml
+2. Optional: Setze local-path als Default:
+   kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+3. Deploy/Update StatefulSet:
+   kubectl apply -f k8s/database/couchdb-statefulset.yaml
+4. Prüfe PVC/PV Bindung:
+   kubectl -n shisha get pvc
+   kubectl get pv
 
-Empfohlene Apply‑Reihenfolge (plain kubectl)
-1. Namespace
-   - [`k8s/namespace.yaml`](k8s/namespace.yaml:1)
-2. CouchDB Admin Secret (Name: `shisha-couchdb-admin`)
-   - `kubectl create secret generic shisha-couchdb-admin -n <ns> --from-literal=username=<user> --from-literal=password=<pass>`
-3. (Dev) PV für CouchDB (hostPath)
-   - [`k8s/couchdb-pv.yaml`](k8s/couchdb-pv.yaml:1)
-   - Wichtig: Ein PersistentVolume (PV) muss vorhanden sein, bevor das PVC erstellt wird. Die vorhandenen CouchDB‑Manifeste setzen in der PVC kein storageClassName; ohne passenden PV bleibt das PVC im Pending‑Zustand und der Pod kann nicht scheduled werden. Erstelle das PV manuell (Dev, hostPath) mit:
-```bash
-kubectl apply -f k8s/couchdb-pv.yaml
-```
-   - Alternative: Nutze eine StorageClass (z. B. microk8s-hostpath) und passe das PVC an, damit die dynamische Provisionierung greift.
-4. CouchDB Deployment (Service / PVC / Deployment)
-   - [`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
-   - `kubectl rollout status deployment/shisha-couchdb -n <ns>`
-5. Seed Job (erst wenn CouchDB Ready)
-   - [`k8s/couchdb-seed-job.yaml`](k8s/couchdb-seed-job.yaml:1)
-   - `kubectl wait --for=condition=complete job/shisha-couchdb-seed -n <ns> --timeout=120s`
-6. Backend
-   - [`k8s/backend.yaml`](k8s/backend.yaml:1)
-   - `kubectl rollout status deployment/shisha-backend -n <ns>`
-7. Frontend: ConfigMap → Deployment
-   - [`k8s/shisha-frontend-nginx-configmap.yaml`](k8s/shisha-frontend-nginx-configmap.yaml:1)
-   - [`k8s/frontend.yaml`](k8s/frontend.yaml:1)
+Hinweise zu PV Cleanup (wenn alte PVs stuck sind)
+- Entferne Finalizer falls PV im Terminating hängt:
+  kubectl patch pv <pv-name> --type=merge -p '{"metadata":{"finalizers":null}}'
+- Dann PV löschen:
+  kubectl delete pv <pv-name> --ignore-not-found
+- Entferne lokale Manifestdateien aus Git und commit:
+  git rm k8s/database/hostpath-pv-sc.yaml k8s/database/couchdb-pv-1.yaml && git commit -m "remove static PV manifests" && git push
 
-Beobachtungen / Troubleshooting
-- CouchDB persistiert Admin‑Hashes im Datenverzeichnis. Bei hostPath PV: Vor dem Wechsel der Admin‑Credentials unbedingt das Node‑Verzeichnis bereinigen, sonst lehnt CouchDB neue Admin‑Secrets ab.
-- Logs können Notices enthalten, wenn `_users` fehlt. Das Anlegen der `_users` DB behebt die noisy notices.
-- Seed‑Jobs sind idempotent: `file_exists` auf DB ist normal, wenn DB bereits angelegt wurde.
-- Hinweis: Die aktuellen CouchDB‑Manifeste in `k8s/` enthalten kein `metadata.namespace`. Beim Anwenden entweder `kubectl apply -f <file> -n shisha` verwenden oder in den Manifests `metadata: namespace: shisha` hinzufügen, damit Ressourcen im Namespace `shisha` erstellt werden.
+Netzwerk / Ports
+- CouchDB Erlang‑Distribution verwendet Ports 9100–9105. Stelle sicher, dass die Nodes diese Ports erreichen können.
+- NetworkPolicy Datei: [`k8s/database/couchdb-networkpolicy.yaml`](k8s/database/couchdb-networkpolicy.yaml:1)
 
-Dateien / Bereiche mit PocketBase‑Resten (Archiv)
-- `archive/pocketbase/` enthält:
-  - `k8s-pocketbase.yaml`, `k8s-pocketbase-token-job.yaml`, `Chart.yaml`, `values.yaml`, `archived-backend-client.go`, templates/...
-- Aktive Placeholder:
-  - `backend/pocketbase/client.go` (kleiner Placeholder, um Builds nicht zu brechen)
-- Sonstige verbleibende Verweise (Dokumentation / README / scripts) wurden aktualisiert auf CouchDB‑Flow, aber es existieren noch referenzielle Erwähnungen in README/archives für Nachvollziehbarkeit.
+Cluster Health Checks
+- Lokaler /_up:
+  kubectl -n shisha exec pod/couchdb-0 -- curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_up
+- Cluster membership:
+  kubectl -n shisha exec pod/couchdb-0 -- curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_membership
+- Prüfe DBs / Shards:
+  kubectl -n shisha exec pod/couchdb-0 -- curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" http://127.0.0.1:5984/_all_dbs
 
-Cleanup‑/PR‑Checkliste (vor vollständigem Entfernen von PocketBase‑Artefakten)
-- [ ] Backend Integration smoke tests erfolgreich (Backend verbindet zu CouchDB, liest/schreibt korrekt).
-- [ ] HostPath‑State geprüft/gesäubert (falls hostPath verwendet).
-- [ ] Linting für Charts/YAMLs durchlaufen.
-- [ ] Entferne `backend/pocketbase/client.go` (Placeholder) sobald Integrationstests grün sind.
-- [ ] Optional: Lösche `charts/pocketbase/` und `k8s/pocketbase*.yaml` aus dem aktiven Tree; behalte `archive/pocketbase/` in Repo für Historie.
-- [ ] Ergänze Helm NOTES in `charts/couchdb/` mit Hinweisen zu Secret/PV und Cleanup.
+Rollback Schritte
+- Setze StatefulSet PVCs zurück auf vorherige storageClass (falls nötig):
+  edit `k8s/database/couchdb-statefulset.yaml` volumeClaimTemplates storageClassName: <previous-class>
+- Entferne local-path und reapply alte PV-Manifeste falls gewünscht (Achtung: Datenverlust möglich)
 
-Vorgeschlagener Git Commit (Message)
-Title:
-docs: document CouchDB migration and staged PocketBase archive
+Automatisierung / Hinweise
+- IP‑basierte Nodename umgehen kurzfristige DNS‑Probleme, führen aber zu IP‑basierter Mitgliedschaft; bei Node‑IP‑Änderungen muss Cluster‑Mitgliedschaft bereinigt werden.
+- Für Production: DNS‑basierte Nodename mit stabiler DNS (CoreDNS) oder ein Produktions‑PV‑Provisioner (OpenEBS/Longhorn/NFS) bevorzugen.
+- local-path ist für Dev/Single‑Node geeignet; für Production alternative Provisioner verwenden.
 
-Body:
-- README: add precise kubectl apply order and notes about CouchDB admin secret + hostPath caveats
-- Add `docs/MIGRATION_TO_COUCHDB.md` (this file) summarizing migration steps, files changed and cleanup checklist
-- Archive PocketBase manifests under `archive/pocketbase/` and leave placeholder `backend/pocketbase/client.go` until QA passes
+Wo sind die Skripte
+- Cluster scripts ConfigMap: [`k8s/database/couchdb-scripts-configmap.yaml`](k8s/database/couchdb-scripts-configmap.yaml:1)
+- PostStart/PreStop Skripte werden im Sidecar unter /opt/couchdb-scripts gemountet.
 
-Ende.
+ToDo / offengeblieben
+- NetworkPolicy prüfen und ggf. anpassen (Ports 9100–9105)
+- Monitoring & Health Alerts definieren
+- System‑DBs prüfen/erstellen (_users, _replicator, _global_changes)
+
+Kontakt / Hinweise
+- Änderungen sind im Branch `feature/ip-couchdb-cluster` gepusht.
+- Logs prüfen:
+  kubectl -n shisha logs pod/<pod> -c couchdb
+
+End of document

@@ -8,3 +8,4 @@ scripts/deploy_all_microk8s.sh
 venv/*
 
 scripts/build.sh
+integration-logs/*

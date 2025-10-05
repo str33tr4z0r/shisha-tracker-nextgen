@@ -1,0 +1,10 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: couchdb-storage-class
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: microk8s.io/hostpath
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+# Hinweis: 'no-provisioner' bedeutet, dass PVs manuell erstellt werden müssen.
