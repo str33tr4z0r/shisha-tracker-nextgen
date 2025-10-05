@@ -50,7 +50,7 @@ run microk8s.kubectl delete -f k8s/backend/backend.yaml -n "$NAMESPACE" --ignore
 # 3) Delete CouchDB StatefulSet, Deployments & Services (by manifest and by label)
 # Delete manifest-driven resources (if present)
 run microk8s.kubectl delete -f k8s/database/couchdb-statefulset.yaml -n "$NAMESPACE" --ignore-not-found
-run microk8s.kubectl delete -f k8s/database/couchdb-service.yaml -n "$NAMESPACE" --ignore-not-found
+#run microk8s.kubectl delete -f k8s/database/couchdb-service.yaml -n "$NAMESPACE" --ignore-not-found
 #run microk8s.kubectl delete -f k8s/database/couchdb-headless.yaml -n "$NAMESPACE" --ignore-not-found
 run microk8s.kubectl delete -f k8s/basic-database/couchdb.yaml -n "$NAMESPACE" --ignore-not-found || true
 

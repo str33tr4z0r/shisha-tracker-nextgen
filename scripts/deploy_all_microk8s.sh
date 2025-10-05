@@ -45,7 +45,7 @@ run microk8s.kubectl apply -f k8s/PreStage/couchdb-storageclass.yaml -n "$NAMESP
 #run microk8s.kubectl apply -f k8s/database/couchdb-config.yaml -n "$NAMESPACE"
 #run microk8s.kubectl apply -f k8s/database/couchdb-scripts-configmap.yaml -n "$NAMESPACE"
 #run microk8s.kubectl apply -f k8s/database/couchdb-headless.yaml -n "$NAMESPACE"
-run microk8s.kubectl apply -f k8s/database/couchdb-service.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/database/couchdb-service.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-statefulset.yaml -n "$NAMESPACE"
 #run microk8s.kubectl apply -f k8s/database/couchdb-networkpolicy.yaml -n "$NAMESPACE"
 run microk8s.kubectl rollout status statefulset/couchdb -n "$NAMESPACE" --timeout=240s
