@@ -51,7 +51,7 @@ run microk8s.kubectl delete -f k8s/backend/backend.yaml -n "$NAMESPACE" --ignore
 # Delete manifest-driven resources (if present)
 run microk8s.kubectl delete -f k8s/database/couchdb-statefulset.yaml -n "$NAMESPACE" --ignore-not-found
 run microk8s.kubectl delete -f k8s/database/couchdb-service.yaml -n "$NAMESPACE" --ignore-not-found
-run microk8s.kubectl delete -f k8s/database/couchdb-headless.yaml -n "$NAMESPACE" --ignore-not-found
+#run microk8s.kubectl delete -f k8s/database/couchdb-headless.yaml -n "$NAMESPACE" --ignore-not-found
 run microk8s.kubectl delete -f k8s/basic-database/couchdb.yaml -n "$NAMESPACE" --ignore-not-found || true
 
 # Delete any resources selected by label to catch manual creations
@@ -82,6 +82,7 @@ if [ "$NUKE_PV" = true ]; then
   echo "Default hostPath example from k8s/database/couchdb-pv.yaml (if used): /var/lib/shisha/couchdb"
   echo "To remove on the node (run on the node or via SSH):"
   echo "  sudo rm -rf /var/lib/shisha/couchdb"
+  sudo rm -rf /var/lib/shisha/couchdb
 fi
 
 

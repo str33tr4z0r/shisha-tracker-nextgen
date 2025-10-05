@@ -34,19 +34,20 @@ run microk8s.kubectl create secret generic shisha-couchdb-admin -n "$NAMESPACE" 
   --from-literal=COUCHDB_USER=shisha_admin \
   --from-literal=COUCHDB_PASSWORD=ichbin1AdminPasswort!
 
+
 run microk8s.kubectl apply -f k8s/PreStage/couchdb-storageclass.yaml -n "$NAMESPACE"
 #run microk8s.kubectl apply -f k8s/couchdb-pv.yaml -n "$NAMESPACE"
 #run microk8s.kubectl apply -f k8s/couchdb.yaml -n "$NAMESPACE"
 #run microk8s.kubectl rollout status deployment/shisha-couchdb -n "$NAMESPACE" --timeout=120s
 
 #Couchdb
-run microk8s.kubectl apply -f k8s/database/couchdb-rbac.yaml -n "$NAMESPACE"
-run microk8s.kubectl apply -f k8s/database/couchdb-config.yaml -n "$NAMESPACE"
-run microk8s.kubectl apply -f k8s/database/couchdb-scripts-configmap.yaml -n "$NAMESPACE"
-run microk8s.kubectl apply -f k8s/database/couchdb-headless.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/database/couchdb-rbac.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/database/couchdb-config.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/database/couchdb-scripts-configmap.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/database/couchdb-headless.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-service.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/database/couchdb-statefulset.yaml -n "$NAMESPACE"
-run microk8s.kubectl apply -f k8s/database/couchdb-networkpolicy.yaml -n "$NAMESPACE"
+#run microk8s.kubectl apply -f k8s/database/couchdb-networkpolicy.yaml -n "$NAMESPACE"
 run microk8s.kubectl rollout status statefulset/couchdb -n "$NAMESPACE" --timeout=240s
 
 #Backend
