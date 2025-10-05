@@ -117,13 +117,18 @@ func (c *CouchAdapter) ensureDB() error {
 // ensureIndexes creates necessary Mango indexes used by the adapter. It's safe to call
 // repeatedly; if the index already exists CouchDB will return a non-error response.
 func (c *CouchAdapter) ensureIndexes() error {
-	// create an index on ["type","id"] so nextID() can sort by id efficiently
+	// Create a Mango index suitable for sorting by "id" (desc) while selecting by "type".
+	// Use an explicit field-order map to ensure CouchDB can use the index for the requested sort.
 	idx := map[string]interface{}{
 		"index": map[string]interface{}{
-			"fields": []interface{}{"type", "id"},
+			"fields": []interface{}{
+				map[string]string{"type": "asc"},
+				map[string]string{"id": "desc"},
+			},
 		},
 		"name": "idx_type_id",
 		"type": "json",
+		"ddoc": "ddoc_idx_type_id",
 	}
 	resp, err := c.doRequest("POST", c.dbName+"/_index", idx)
 	if err != nil {
@@ -132,7 +137,6 @@ func (c *CouchAdapter) ensureIndexes() error {
 	defer resp.Body.Close()
 	// Accept 200/201 as success. For other 4xx/5xx return error.
 	if resp.StatusCode >= 400 {
-		// If server responds with a usable message, include it.
 		b, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("ensureIndexes failed: %s: %s", resp.Status, string(b))
 	}
