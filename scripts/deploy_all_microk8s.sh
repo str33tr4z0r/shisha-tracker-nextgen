@@ -66,8 +66,6 @@ run microk8s.kubectl scale statefulset couchdb --replicas=3 -n "$NAMESPACE"
 
 run sleep 40
 
-#PostStage (optional)
-run microk8s.kubectl apply -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
 #run microk8s.kubectl logs -l job-name=shisha-sample-data -n "$NAMESPACE" --tail=200
 
 #HPA / PDBs / Optionales Monitoring
@@ -78,6 +76,9 @@ run microk8s.kubectl apply -f k8s/pdb/pdb-frontend.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/hpa/couchdb-hpa.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/pdb/couchdb-pdb.yaml -n "$NAMESPACE"
 
+
+#PostStage (optional)
+run microk8s.kubectl apply -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
 
 # 9) Final checks
 echo 'Final resource check (filtered by name '"$NAMESPACE"')'
