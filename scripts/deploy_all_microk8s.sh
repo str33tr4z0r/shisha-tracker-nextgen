@@ -70,7 +70,7 @@ run sleep 40
 run microk8s.kubectl apply -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
 #run microk8s.kubectl logs -l job-name=shisha-sample-data -n "$NAMESPACE" --tail=200
 
-HPA / PDBs / Optionales Monitoring
+#HPA / PDBs / Optionales Monitoring
 run microk8s.kubectl apply -f k8s/hpa/hpa-backend.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/hpa/hpa-frontend.yaml -n "$NAMESPACE"
 run microk8s.kubectl apply -f k8s/pdb/pdb-backend.yaml -n "$NAMESPACE"

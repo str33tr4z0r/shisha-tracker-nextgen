@@ -76,12 +76,29 @@ data:
       SA_TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
       SA_CA_FILE="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
       API="https://kubernetes.default.svc"
-      [ -r "$SA_TOKEN_FILE" ] || return 0
+      [ -r "$SA_TOKEN_FILE" ] || { echo ""; return 0; }
       T=$(cat "$SA_TOKEN_FILE")
-      R=$(curl -sS --cacert "$SA_CA_FILE" -H "Authorization: Bearer $T" \
-           "${API}/api/v1/namespaces/${POD_NAMESPACE}/pods?labelSelector=app=couchdb" || true)
-      echo "$R" | grep -o '"name":[[:space:]]*"couchdb-[0-9]\+"' | sed 's/.*"couchdb-\([0-9]\+\)".*/\1/' | sort -n | tr '\n' ' '
+
+      # 1) EndpointSlices (discovery.k8s.io/v1)
+      R_es="$(curl -sS --cacert "$SA_CA_FILE" -H "Authorization: Bearer $T" \
+            "${API}/apis/discovery.k8s.io/v1/namespaces/${POD_NAMESPACE}/endpointslices?labelSelector=kubernetes.io/service-name=couchdb-headless" || true)"
+      ords_es="$(printf '%s' "$R_es" | grep -o 'couchdb-[0-9]\+' | sed 's/.*-\([0-9]\+\)$/\1/' | sort -n | uniq | tr '\n' ' ')"
+      [ -n "$ords_es" ] && { echo "$ords_es"; return 0; }
+
+      # 2) Fallback: Endpoints (v1)
+      R_ep="$(curl -sS --cacert "$SA_CA_FILE" -H "Authorization: Bearer $T" \
+            "${API}/api/v1/namespaces/${POD_NAMESPACE}/endpoints/couchdb-headless" || true)"
+      ords_ep="$(printf '%s' "$R_ep" | grep -o 'couchdb-[0-9]\+' | sed 's/.*-\([0-9]\+\)$/\1/' | sort -n | uniq | tr '\n' ' ')"
+      [ -n "$ords_ep" ] && { echo "$ords_ep"; return 0; }
+
+      # 3) Fallback: Pods (v1)
+      R_pods="$(curl -sS --cacert "$SA_CA_FILE" -H "Authorization: Bearer $T" \
+              "${API}/api/v1/namespaces/${POD_NAMESPACE}/pods?labelSelector=app=couchdb" || true)"
+      ords_pods="$(printf '%s' "$R_pods" | grep -o 'couchdb-[0-9]\+' | sed 's/.*-\([0-9]\+\)$/\1/' | sort -n | uniq | tr '\n' ' ')"
+      echo "$ords_pods"
     }
+
+
 
     enable_cluster_local(){
       count="$1"
@@ -151,7 +168,8 @@ data:
 
       # Warte bis alle bekannten Pods in cluster_nodes sind (max 60s)
       want="$(k8s_list_ordinals | wc -w | tr -d ' ')"
-      [ -z "$want" ] && want=1
+      case "${want:-0}" in ""|0) want=1;; esac
+
       log "waiting membership cluster_nodes == ${want}"
       for i in $(seq 1 30); do
         m="$(curl_local GET "${MEMBERSHIP}" 2>/dev/null || true)"
@@ -188,18 +206,43 @@ data:
       log "WARN app db not created: ${db}"
     }
 
+    my_ordinal(){ echo "${HOSTNAME##*-}"; }
+
+    current_leader_ord(){
+      ords="$(k8s_list_ordinals)"
+      log "k8s ordinals: ${ords:-<none>}"
+      # erstes (kleinstes) Element aus der sortierten Liste
+      for o in $ords; do echo "$o"; break; done
+    }
+
+    i_am_leader(){
+      me="$(my_ordinal)"
+      ords="$(k8s_list_ordinals)"
+      # Bootstrap-Fallback: wenn Discovery leer, lass couchdb-0 führen
+      if [ -z "$ords" ]; then
+        [ "$me" = "0" ] && return 0 || return 1
+      fi
+      # Leader = kleinstes Ready-Ordinal
+      for o in $ords; do
+        [ "$o" = "$me" ] && return 0 || break
+      done
+      return 1
+    }
+
+
     reconcile_once(){
       ensure_system_db "_users"
       ensure_system_db "_replicator"
       ensure_app_db "shisha"
 
-      if [ "$HOSTNAME" != "couchdb-0" ]; then
+      if ! i_am_leader; then
         return 0
       fi
 
       ords="$(k8s_list_ordinals)"
+      log "k8s ordinals: ${ords:-<none>}"
       count="$(printf '%s\n' "$ords" | wc -w | tr -d ' ')"
-      [ -z "$count" ] && count=1
+      case "${count:-0}" in ""|0) count=1;; esac
 
       enable_cluster_local "$count"
 
@@ -220,6 +263,7 @@ data:
       log "manager start (ns=${POD_NAMESPACE}, host=${HOSTNAME})"
       wait_up || { log "couch not up"; exit 1; }
       reconcile_once
+      log "leader check: me=$(my_ordinal) leader=$(current_leader_ord || echo '?')"
       while true; do
         sleep 15
         reconcile_once
@@ -269,6 +313,12 @@ rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get","list"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get","list"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get","list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -295,7 +345,7 @@ metadata:
     app: couchdb
 spec:
   clusterIP: None
-  publishNotReadyAddresses: true
+  publishNotReadyAddresses: false
   selector:
     app: couchdb
   ports:
