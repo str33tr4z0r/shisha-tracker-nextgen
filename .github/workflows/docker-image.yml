@@ -6,15 +6,41 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - name: Build the Docker image
-      run: docker build ./backend --file Dockerfile --tag ricardohdc/shisha-tracker-nextgen-backend:$(date +%s) --pull --no-cache
-      
-    - name: Push Image
-      run: docker push ricardohdc/shisha-tracker-nextgen-backend:$(date +%s)
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history and tags
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKER_REGISTRY: ghcr.io
+          GITHUB_REPOSITORY: ${{ github.repository }}
