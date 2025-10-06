@@ -90,7 +90,6 @@ docker_manifests:
     image_templates:
       - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}-amd64"
 
-
 changelog:
   sort: asc
   filters:
