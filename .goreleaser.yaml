@@ -47,7 +47,7 @@ dockers:
   - image_templates:
       - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-amd64"
       - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:amd64{{ end }}"
-    dockerfile: Fronted.goreleaser
+    dockerfile: frontend/Fronted.goreleaser
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
@@ -61,9 +61,9 @@ dockers:
     skip_push: auto
   #Backend 
   - image_templates:
-      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-Backend:{{ .Version }}-amd64"
+      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}-amd64"
       - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:amd64{{ end }}"
-    dockerfile: Backend.goreleaser
+    dockerfile: backend/Backend.goreleaser
     build_flag_templates:
       - "--pull"
       - "--platform=linux/arm64/v8"
