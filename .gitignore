@@ -6,6 +6,9 @@ backend/server
 scripts/deploy_all_microk8s.sh
 
 venv/*
+.venv/*
+venv_scraper
+.venv_scraper/*
 
 scripts/build.sh
 integration-logs/*
