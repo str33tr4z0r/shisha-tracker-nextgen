@@ -21,7 +21,8 @@ builds:
     goos:
       - linux
       - windows
-      - darwin
+    goarch:
+      - amd64
     flags:
       - -tags=production
     id: "shisha-tracker-nextgen-backend" # Add this line to identify the build
