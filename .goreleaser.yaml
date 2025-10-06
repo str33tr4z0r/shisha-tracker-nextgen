@@ -24,8 +24,8 @@ builds:
       - darwin
     flags:
       - -tags=production
-    id: "shisha-tracker-nextgen-frontend" # Add this line to identify the build
-    binary: "shisha-tracker-nextgen-frontend" # Add this line to name the binary
+    id: "shisha-tracker-nextgen" # Add this line to identify the build
+    binary: "shisha-tracker-nextgen" # Add this line to name the binary
 
 archives:
   - formats: ["tar.gz"]
@@ -43,10 +43,11 @@ archives:
         formats: ["zip"]
 
 dockers:
+  #Frontend
   - image_templates:
       - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-amd64"
       - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:amd64{{ end }}"
-    dockerfile: Dockerfile.goreleaser
+    dockerfile: Fronted.goreleaser
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
@@ -58,10 +59,11 @@ dockers:
       - shisha-tracker-nextgen-frontend
     use: buildx
     skip_push: auto
+  #Backend 
   - image_templates:
-      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-arm64v8"
-      - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:arm64v8{{ end }}"
-    dockerfile: Dockerfile.goreleaser
+      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-Backend:{{ .Version }}-amd64"
+      - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:amd64{{ end }}"
+    dockerfile: Backend.goreleaser
     build_flag_templates:
       - "--pull"
       - "--platform=linux/arm64/v8"
@@ -69,9 +71,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.created={{ .Date }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-    goarch: arm64
     ids:
-      - shisha-tracker-nextgen-frontend
+      - shisha-tracker-nextgen-backend
     use: buildx
     skip_push: auto
 
@@ -79,11 +80,16 @@ docker_manifests:
   - name_template: "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}"
     image_templates:
       - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-amd64"
-      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-arm64v8"
+  - name_template: "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}-amd64"
   - name_template: "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:latest{{ end }}"
     image_templates:
       - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-amd64"
-      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-arm64v8"
+  - name_template: "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:latest{{ end }}"
+    image_templates:
+      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}-amd64"
+
 
 changelog:
   sort: asc
