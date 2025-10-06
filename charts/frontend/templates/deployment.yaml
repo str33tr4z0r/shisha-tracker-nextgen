@@ -38,5 +38,13 @@ spec:
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: {{ .Values.nginxConfigMapName | default "shisha-frontend-nginx" }}
       affinity:
         {{- toYaml .Values.affinity | nindent 8 }}

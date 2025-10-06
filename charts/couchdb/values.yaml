@@ -1,17 +1,49 @@
 replicaCount: 1
+
 image:
   repository: couchdb
   tag: "3.2.2"
   pullPolicy: IfNotPresent
+
 service:
   type: ClusterIP
   port: 5984
+
 persistence:
   enabled: true
-  size: 1Gi
+  size: 5Gi
   storageClass: ""
+
 env:
   adminSecretName: shisha-couchdb-admin
+
+serviceAccountName: shisha-couchdb
+
+terminationGracePeriodSeconds: 120
+
+runAsUser: 5984
+runAsGroup: 5984
+fsGroup: 5984
+
+readinessProbe:
+  initialDelaySeconds: 15
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 6
+
+livenessProbe:
+  initialDelaySeconds: 20
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 8
+
+scriptsConfigMapName: couchdb-scripts
+configMapName: couchdb-config
+
+clusterManager:
+  image: curlimages/curl:8.1.0
+  imagePullPolicy: IfNotPresent
+
 resources:
   requests:
     cpu: 100m
@@ -19,5 +51,6 @@ resources:
   limits:
     cpu: 500m
     memory: 1Gi
+
 metrics:
   enabled: false

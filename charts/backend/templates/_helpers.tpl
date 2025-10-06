@@ -1,9 +1,13 @@
 {{- define "shisha-backend.name" -}}
-shisha-backend
+{{- default "shisha-backend" .Values.fullnameOverride -}}
 {{- end -}}
 
 {{- define "shisha-backend.fullname" -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride -}}
+{{- else -}}
 {{- printf "%s-%s" .Release.Name (include "shisha-backend.name" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "shisha-backend.chart" -}}

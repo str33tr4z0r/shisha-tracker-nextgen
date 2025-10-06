@@ -60,7 +60,7 @@ spec:
               value: "{{ .Values.env.storage.mode | default "couchdb" }}"
             - name: COUCHDB_URL
               value: "{{ .Values.env.storage.couchdb.url | default "http://couchdb:5984" }}"
-            - name: COUCHDB_DATABASE
+            - name: COUCHDB_DB
               value: "{{ .Values.env.storage.couchdb.database | default "shisha" }}"
  
             {{- if .Values.env.storage.couchdb.adminSecretName }}

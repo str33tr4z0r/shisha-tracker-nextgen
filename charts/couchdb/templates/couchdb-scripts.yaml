@@ -1,0 +1,228 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.scriptsConfigMapName | default "couchdb-scripts" }}
+  labels:
+    app: {{ include "couchdb.name" . }}
+data:
+  manager.sh: |-
+    #!/bin/sh
+    set -eu
+    LOGPFX="[cluster-manager]"
+    COUCH_HOST="127.0.0.1"
+    COUCH_PORT=5984
+    CLUSTER="/_cluster_setup"
+    MEMBERSHIP="/_membership"
+    HEALTH="/_up"
+    : "${COUCHDB_USER:?need}"
+    : "${COUCHDB_PASSWORD:?need}"
+    : "${HOSTNAME:?need}"
+    : "${POD_NAMESPACE:?need}"
+
+    log(){ echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ') $LOGPFX $*"; }
+
+    curl_local(){
+      m="$1"; p="$2"; d="${3:-}"
+      if [ -n "$d" ]; then
+        curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" -H "Content-Type: application/json" -X "$m" "http://${COUCH_HOST}:${COUCH_PORT}${p}" -d "$d"
+      else
+        curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" -X "$m" "http://${COUCH_HOST}:${COUCH_PORT}${p}"
+      fi
+    }
+    curl_remote(){
+      host="$1"; m="$2"; p="$3"; d="${4:-}"
+      if [ -n "$d" ]; then
+        curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" -H "Content-Type: application/json" -X "$m" "http://${host}:5984${p}" -d "$d"
+      else
+        curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" -X "$m" "http://${host}:5984${p}"
+      fi
+    }
+
+    wait_up(){
+      for i in $(seq 1 120); do
+        if curl_local GET "${HEALTH}" >/dev/null 2>&1; then return 0; fi
+        [ "$i" -gt 10 ] && sleep 2 || sleep 1
+      done
+      return 1
+    }
+
+    fqdn_for_ordinal(){ idx="$1"; echo "couchdb-${idx}.couchdb-headless.${POD_NAMESPACE}.svc.cluster.local"; }
+
+    k8s_list_ordinals(){
+      SA_TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
+      SA_CA_FILE="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      API="https://kubernetes.default.svc"
+      [ -r "$SA_TOKEN_FILE" ] || return 0
+      T=$(cat "$SA_TOKEN_FILE")
+      R=$(curl -sS --cacert "$SA_CA_FILE" -H "Authorization: Bearer $T" \
+           "${API}/api/v1/namespaces/${POD_NAMESPACE}/pods?labelSelector=app=couchdb" || true)
+      echo "$R" | grep -o '"name":[[:space:]]*"couchdb-[0-9]\+"' | sed 's/.*"couchdb-\([0-9]\+\)".*/\1/' | sort -n | tr '\n' ' '
+    }
+
+    enable_cluster_local(){
+      count="$1"
+      payload=$(printf '{"action":"enable_cluster","bind_address":"0.0.0.0","username":"%s","password":"%s","node_count":%s}' \
+        "$COUCHDB_USER" "$COUCHDB_PASSWORD" "$count")
+      log "enable_cluster(local) node_count=${count}"
+      curl_local POST "${CLUSTER}" "$payload" >/dev/null 2>&1 || true
+    }
+    enable_cluster_remote(){
+      host="$1"
+      payload=$(printf '{"action":"enable_cluster","bind_address":"0.0.0.0","username":"%s","password":"%s"}' \
+        "$COUCHDB_USER" "$COUCHDB_PASSWORD")
+      log "enable_cluster(remote) host=${host}"
+      curl_remote "$host" POST "${CLUSTER}" "$payload" >/dev/null 2>&1 || true
+    }
+
+    membership_contains(){
+      node="$1"
+      m="$(curl_local GET "${MEMBERSHIP}" 2>/dev/null || true)"
+      printf '%s' "$m" | grep -F "$node" >/dev/null 2>&1
+    }
+
+    try_add_with_host(){
+      hostval="$1"
+      log "add_node try host=${hostval}"
+      payload=$(printf '{"action":"add_node","host":"%s","port":5984,"username":"%s","password":"%s"}' \
+        "$hostval" "$COUCHDB_USER" "$COUCHDB_PASSWORD")
+      for backoff in 1 2 3 5 8; do
+        body="$(curl_local POST "${CLUSTER}" "$payload" 2>&1 || true)"
+        echo "$body" | grep -qi '"ok"[[:space:]]*:[[:space:]]*true' && { log "add_node ok host=${hostval}"; return 0; }
+        echo "$body" | grep -qi 'already\|exists' && { log "add_node already host=${hostval}"; return 0; }
+        log "add_node retry in ${backoff}s host=${hostval} resp=${body}"
+        sleep "$backoff"
+      done
+      return 1
+    }
+
+    add_node_auto(){
+      ord="$1"
+      fqdn="$(fqdn_for_ordinal "$ord")"
+      node="couchdb@${fqdn}"
+
+      # kurze Up-Wartezeit auf Peer
+      for t in 1 2 3 5; do
+        curl -sS "http://${fqdn}:5984/_up" >/dev/null 2>&1 && break || sleep "$t"
+      done
+
+      # 1) host=<FQDN>
+      try_add_with_host "$fqdn" && membership_contains "$node" && return 0
+
+      # 2) host=couchdb@<FQDN>
+      try_add_with_host "$node" && membership_contains "$node" && return 0
+
+      # 3) host=<IP> (falls resolvbar)
+      ip="$(getent hosts "$fqdn" 2>/dev/null | awk '{print $1}' | head -n1 || true)"
+      if [ -n "$ip" ]; then
+        try_add_with_host "$ip" && membership_contains "$node" && return 0
+      fi
+
+      log "WARN add_node failed for ordinal=${ord} fqdn=${fqdn}"
+      return 1
+    }
+
+    finish_cluster_and_wait(){
+      log "finish_cluster(local)"
+      curl_local POST "${CLUSTER}" '{"action":"finish_cluster"}' >/dev/null 2>&1 || true
+
+      # Warte bis alle bekannten Pods in cluster_nodes sind (max 60s)
+      want="$(k8s_list_ordinals | wc -w | tr -d ' ')"
+      [ -z "$want" ] && want=1
+      log "waiting membership cluster_nodes == ${want}"
+      for i in $(seq 1 30); do
+        m="$(curl_local GET "${MEMBERSHIP}" 2>/dev/null || true)"
+        have="$(printf '%s' "$m" | grep -o '"cluster_nodes":[[:space:]]*\[[^]]*\]' | tr -cd 'c' | wc -c | tr -d ' ' || echo 0)"
+        # Fallback: zähle Einträge grob
+        have_alt="$(printf '%s' "$m" | sed -n 's/.*"cluster_nodes":[[:space:]]*\[\(.*\)\].*/\1/p' | tr -d '" ' | awk -F, '{print NF}' )"
+        [ -n "$have_alt" ] && have="$have_alt"
+        log "membership check: have=${have} want=${want} (i=${i})"
+        [ "$have" -ge "$want" ] && { log "cluster ready"; log "membership: $m"; return 0; }
+        sleep 2
+      done
+      log "WARN membership did not reach desired size"
+      curl_local GET "${MEMBERSHIP}" || true
+    }
+
+    ensure_system_db(){
+      db="$1"
+      r="$(curl_local GET "/${db}" 2>/dev/null || true)"
+      echo "$r" | grep -q '"error"' || { log "system db ok: ${db}"; return 0; }
+      curl_local PUT "/${db}" >/dev/null 2>&1 || true
+      log "system db ensured: ${db}"
+    }
+
+    ensure_app_db(){
+      db="$1"
+      r="$(curl_local GET "/${db}" 2>/dev/null || true)"
+      echo "$r" | grep -q '"error"' || { log "app db ok: ${db}"; return 0; }
+      for backoff in 1 2 3 5 8; do
+        b="$(curl_local PUT "/${db}" 2>&1 || true)"
+        echo "$b" | grep -qi '"ok"[[:space:]]*:[[:space:]]*true' && { log "app db created: ${db}"; return 0; }
+        echo "$b" | grep -qi 'file_exists' && { log "app db exists: ${db}"; return 0; }
+        sleep "$backoff"
+      done
+      log "WARN app db not created: ${db}"
+    }
+
+    reconcile_once(){
+      ensure_system_db "_users"
+      ensure_system_db "_replicator"
+      ensure_app_db "shisha"
+
+      if [ "$HOSTNAME" != "couchdb-0" ]; then
+        return 0
+      fi
+
+      ords="$(k8s_list_ordinals)"
+      count="$(printf '%s\n' "$ords" | wc -w | tr -d ' ')"
+      [ -z "$count" ] && count=1
+
+      enable_cluster_local "$count"
+
+      for o in $ords; do
+        [ "$o" = "0" ] && continue
+        enable_cluster_remote "$(fqdn_for_ordinal "$o")"
+      done
+
+      for o in $ords; do
+        [ "$o" = "0" ] && continue
+        add_node_auto "$o" || true
+      done
+
+      finish_cluster_and_wait
+    }
+
+    main(){
+      log "manager start (ns=${POD_NAMESPACE}, host=${HOSTNAME})"
+      wait_up || { log "couch not up"; exit 1; }
+      reconcile_once
+      while true; do
+        sleep 15
+        reconcile_once
+      done
+    }
+    main
+
+  prestop.sh: |-
+    #!/bin/sh
+    set -eu
+    LOGPFX="[cluster-manager-prestop]"
+    : "${COUCHDB_USER:?need}"
+    : "${COUCHDB_PASSWORD:?need}"
+    : "${HOSTNAME:?need}"
+    : "${POD_NAMESPACE:?need}"
+    COUCH="http://127.0.0.1:5984"
+    NODE="couchdb@${HOSTNAME}.couchdb-headless.${POD_NAMESPACE}.svc.cluster.local"
+    log(){ echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ') $LOGPFX $*"; }
+    remove_node(){
+      payload=$(printf '{"action":"remove_node","name":"%s"}' "$NODE")
+      for backoff in 1 2 3 5; do
+        curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" -H "Content-Type: application/json" \
+          -X POST "${COUCH}/_cluster_setup" -d "$payload" >/dev/null 2>&1 || true
+        m="$(curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" "${COUCH}/_membership" 2>/dev/null || true)"
+        echo "$m" | grep -q "$NODE" || { log "removed ${NODE}"; return 0; }
+        sleep "$backoff"
+      done
+      log "WARN could not confirm removal of ${NODE}"
+    }
+    log "preStop begin for ${NODE}"; remove_node || true; log "preStop end"

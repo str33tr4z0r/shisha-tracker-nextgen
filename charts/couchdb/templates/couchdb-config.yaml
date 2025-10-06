@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMapName | default "couchdb-config" }}
+  labels:
+    app: {{ include "couchdb.name" . }}
+data:
+  00-local.ini: |
+    [chttpd]
+    port = {{ .Values.service.port | default 5984 }}
+    bind_address = 0.0.0.0

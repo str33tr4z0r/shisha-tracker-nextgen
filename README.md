@@ -1,159 +1,119 @@
 # Shisha Tracker — Kurzanleitung
 
 Kurzbeschreibung
-- Shisha Tracker ist eine Webanwendung zum Erfassen, Verwalten und Bewerten von Shisha‑Sessions. Die App besteht aus Frontend und Backend und verwendet CouchDB als Standard‑Speicher für Entwicklung und lokale Setups.
+- Shisha Tracker ist eine Webanwendung zum Erfassen, Verwalten und Bewerten von Shisha‑Sessions. Frontend (Vue) + Backend (Go). CouchDB wird als Standard‑Speicher für Entwicklung verwendet.
 
-Wichtige Hinweise
-- Helm‑spezifische Anweisungen wurden in [`docs/HELM.md`](docs/HELM.md:1) ausgelagert. Verwende Helm nur wenn du Charts/Parameter brauchst.
+Quickstart — Lokale Entwicklung
 
-Detaillierte Reihenfolge für plain‑kubectl k8s‑Manifeste (empfohlen)
-- Alle Befehle sollten im Repository‑Root ausgeführt werden; ersetze <namespace> falls nötig.
+Option A — Docker Compose (Schnellstart)
+- Startet CouchDB, Backend (configured for CouchDB) und Frontend (nginx image).
+- Dateien: [`docker-compose.yml`](docker-compose.yml:1)
 
-1. Namespace
 ```bash
-kubectl apply -f k8s/namespace.yaml
+# Build & start all services (from repository root)
+docker-compose up --build -d
+# Check services
+docker-compose ps
+# Backend health
+curl http://localhost:8080/api/healthz
+# Frontend (nginx)
+curl http://localhost:3000/
 ```
 
-2. (Optional, empfohlen) CouchDB‑Admin Secret
+Option B — Kubernetes / microk8s
+
+Production / Kubernetes
+- Helm Charts: [`charts/backend`](charts/backend/Chart.yaml:1), [`charts/frontend`](charts/frontend/Chart.yaml:1), [`charts/couchdb`](charts/couchdb/Chart.yaml:1)
+- Empfohlene k8s‑Manifeste für CouchDB (StatefulSet): [`k8s/database/couchdb-statefulset.yaml`](k8s/database/couchdb-statefulset.yaml:1)
+- Lightweight single‑node manifest: [`k8s/basic-database/couchdb.yaml`](k8s/basic-database/couchdb.yaml:1)
+
+Secrets & Storage
+- Charts/Manifeste erwarten Secret `shisha-couchdb-admin` mit keys: `COUCHDB_USER`, `COUCHDB_PASSWORD`, `ERLANG_COOKIE` (für Cluster). Beispiel siehe [`k8s/backend/backend.yaml`](k8s/backend/backend.yaml:31).
+
+Feld‑Konsistenz (wichtig)
+- Frontend erwartet `smokedCount` in UI; CouchDB adapter verwendet `smoked` als Feldname. UI normalisiert beide Varianten (siehe [`frontend/src/App.vue`](frontend/src/App.vue:230)). Empfehlung: vereinheitlichen.
+- Ratings: `score` ist integer in Backend (half‑stars×2). Frontend rechnet mit Division durch 2.
+
+Troubleshooting
+- CouchDB Index / nextID Probleme:
+  - Wenn Adapter bei nextID() auf `no_usable_index` stößt, fällt er zurück auf `_all_docs` (langsam). Stelle sicher, dass der Index existiert: Index wird bei Adapter‑Initialisierung angelegt (siehe [`backend/storage/couchdb_adapter.go`](backend/storage/couchdb_adapter.go:117)).
+- Backend startet nicht / env fehlt:
+  - Prüfe `DATABASE_*` oder `COUCHDB_*` Umgebungsvariablen.
+- Nginx frontend zeigt 502:
+  - Prüfe, ob das Backend erreichbar ist (Service/Port) und ob Ingress/ConfigMap korrekt sind (siehe relevante `k8s` Ressourcen).
+
+Backups & Migration
+- CouchDB: sichere Daten mit regelmäßigen DB Dumps (curl & couchdb dump tools) oder nutze replication. Für Dev: einfache approach:
+
 ```bash
-kubectl create secret generic shisha-couchdb-admin -n shisha \
-  --from-literal=username=<username> \
-  --from-literal=password=<password>
+# Export DB to file (example)
+curl -sSf -u "$COUCHDB_USER:$COUCHDB_PASSWORD" "http://localhost:5984/shisha/_all_docs?include_docs=true" -o shisha-all.json
 ```
 
-3. PersistentVolume (Dev only, hostPath)
+All-In-One Kubernetes Copy Past Production Deploy für die Shell
 ```bash
-kubectl apply -f k8s/couchdb-pv.yaml
-```
-Hinweis: bei hostPath sicherstellen Pfad auf Node sauber ist.
 
-4. CouchDB (Service / PVC / Deployment)
-```bash
-kubectl apply -f k8s/couchdb.yaml
-kubectl rollout status deployment/shisha-couchdb -n shisha --timeout=120s
-```
+NAMESPACE=shisha
+echo "First Steps"
+kubectl apply -f k8s/PreStage/namespace.yaml
+kubectl create secret generic shisha-couchdb-admin -n "$NAMESPACE" \
+  --from-literal=username=shisha_admin \
+  --from-literal=password=ichbin1AdminPasswort! \
+  --from-literal=ERLANG_COOKIE="$(head -c 32 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | cut -c1-64)" \
+  --from-literal=COUCHDB_USER=shisha_admin \
+  --from-literal=COUCHDB_PASSWORD=ichbin1AdminPasswort!
 
-5. (Optional) Initial seed via API (empfohlen): shisha-sample-data
-- Das Repo enthält einen einmaligen Job [`k8s/shisha-sample-data.yaml`](k8s/shisha-sample-data.yaml:1), der die Beispiel‑Geschmäcker über das Backend‑API einfügt.
-```bash
-kubectl apply -f k8s/shisha-sample-data.yaml -n shisha
-kubectl logs -l job-name=shisha-sample-data -n shisha --tail=200
-```
-Hinweis: Dieses Job nutzt das Backend‑Service [`k8s/backend.yaml`](k8s/backend.yaml:1) als Ziel; stelle sicher, dass das Backend‑Service erreichbar ist (Cluster‑DNS: shisha-backend-mock:8080 bzw. dein Backend Service).
+kubectl apply -f k8s/PreStage/couchdb-storageclass.yaml -n "$NAMESPACE"
 
-6. Backend (Deployment + Service)
-```bash
-kubectl apply -f k8s/backend.yaml
-kubectl rollout status deployment/shisha-backend-mock -n shisha --timeout=120s
-```
+echo "Database"
+kubectl apply -f k8s/database/couchdb-statefulset.yaml -n "$NAMESPACE"
+kubectl rollout status statefulset/couchdb -n "$NAMESPACE" --timeout=240s
 
-7. Frontend ConfigMap (Nginx) — muss vor Frontend angewendet werden
-```bash
-kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml -n shisha
-```
+echo "Backend"
+kubectl apply -f k8s/backend/backend.yaml -n "$NAMESPACE"
+kubectl rollout status deployment/shisha-backend-mock -n "$NAMESPACE" --timeout=120s
 
-8. Frontend (Deployment + Service)
-```bash
-kubectl apply -f k8s/frontend.yaml -n shisha
-kubectl rollout status deployment/shisha-frontend -n shisha --timeout=120s
-```
+echo "Frontend"
+kubectl apply -f k8s/frontend/shisha-frontend-nginx-configmap.yaml -n "$NAMESPACE"
+kubectl apply -f k8s/frontend/frontend.yaml -n "$NAMESPACE"
+kubectl rollout status deployment shisha-frontend -n "$NAMESPACE" --timeout=120s
+kubectl apply -f k8s/frontend/ingress.yaml -n "$NAMESPACE"
 
-9. HPA / PDBs / Optionales Monitoring
-```bash
-# Fuer richtige funktion bitte folgendes vorher ausfuehren
-# metrics-server installieren (MicroK8s)
-#microk8s enable metrics-server
+echo "scale couchdb"
+kubectl scale statefulset couchdb --replicas=3 -n "$NAMESPACE"
+echo "sleep 40 seconds"
+sleep 40
 
-# Oder: apply upstream manifest (normales K8s)
-#kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+echo "PostStage (optional) - Datenbank mit Daten fütten"
+kubectl apply -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
 
-kubectl apply -f k8s/hpa-backend.yaml
-kubectl apply -f k8s/hpa-frontend.yaml
-kubectl apply -f k8s/pdb-backend.yaml
-kubectl apply -f k8s/pdb-frontend.yaml
-```
+echo "HPA / PDBs / Optionales Monitoring"
+kubectl apply -f k8s/hpa/hpa-backend.yaml -n "$NAMESPACE"
+kubectl apply -f k8s/hpa/hpa-frontend.yaml -n "$NAMESPACE"
+kubectl apply -f k8s/pdb/pdb-backend.yaml -n "$NAMESPACE"
+kubectl apply -f k8s/pdb/pdb-frontend.yaml -n "$NAMESPACE"
+kubectl apply -f k8s/hpa/couchdb-hpa.yaml -n "$NAMESPACE"
+kubectl apply -f k8s/pdb/couchdb-pdb.yaml -n "$NAMESPACE"
 
-10. Externe Erreichbarkeit
+echo 'Final resource check (filtered by name '"$NAMESPACE"')'
+kubectl get all -A | grep "$NAMESPACE" || true
+kubectl get pvc -A | grep "$NAMESPACE" || true
+kubectl get pv | grep "$NAMESPACE" || true
 
-Option A — Ingress (empfohlen, MicroK8s)
-```bash
-# Ingress manifest anwenden (verwaltet Routen für / und /api/*)
-kubectl apply -f k8s/ingress.yaml -n shisha
-
-# MicroK8s nginx-ingress bindet häufig an 127.0.0.1 — für lokalen Zugriff nutze einen Host‑Eintrag:
-echo "127.0.0.1 shisha.local" | sudo tee -a /etc/hosts
-
-# Prüfen (vom Host)
-curl http://shisha.local/api/healthz
-# oder (ohne /etc/hosts)
-curl -H "Host: shisha.local" http://127.0.0.1/api/healthz
-```
-
-Option B — Service ExternalIP (ältere Methode)
-```bash
-kubectl patch svc shisha-frontend -n shisha --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
-```
-
-Option C — Ingress im LAN (MicroK8s + MetalLB)
-```bash
-# MetalLB aktivieren und einen freien IP‑Range im LAN wählen, z.B.:
-microk8s enable metallb:10.0.10.200-10.0.10.210
-
-# Danach erhält der Ingress ggf. eine EXTERNAL‑IP und ist aus dem LAN erreichbar.
-kubectl -n shisha get ingress shisha-ingress -o wide
-```
-
-Troubleshooting — Kurzbefehle
-```bash
-kubectl describe pod <pod-name> -n shisha
-kubectl get events -n shisha --sort-by=.metadata.creationTimestamp | tail -n 50
-```
-
-## All-in-One Copy paste 
-
-```bash
-kubectl apply -f k8s/namespace.yaml
-kubectl create secret generic shisha-couchdb-admin -n shisha \
-  --from-literal=username=ichbineinadmin \
-  --from-literal=password=ichbin1AdminPasswort!
-kubectl apply -f k8s/couchdb-pv.yaml
-kubectl apply -f k8s/couchdb.yaml
-kubectl rollout status deployment/shisha-couchdb -n shisha --timeout=120s
-kubectl apply -f k8s/backend.yaml
-kubectl rollout status deployment/shisha-backend-mock -n shisha --timeout=120s
-kubectl apply -f k8s/shisha-frontend-nginx-configmap.yaml -n shisha
-kubectl apply -f k8s/frontend.yaml -n shisha
-kubectl rollout status deployment/shisha-frontend -n shisha --timeout=120s
-kubectl patch svc shisha-frontend -n shisha --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
-
-#HPA / PDBs / Optionales Monitoring
-kubectl apply -f k8s/hpa-backend.yaml
-kubectl apply -f k8s/hpa-frontend.yaml
-kubectl apply -f k8s/pdb-backend.yaml
-kubectl apply -f k8s/pdb-frontend.yaml
-
-#Sample Daten Optional 
-kubectl apply -f k8s/shisha-sample-data.yaml -n shisha
-kubectl logs -l job-name=shisha-sample-data -n shisha --tail=200
-
-kubectl get statefulset,service,pods,pvc,hpa,pdb,jobs -n shisha -o wide
 
 ```
 
-Lokales Entwickeln & Debugging
-- Mock‑Backend läuft lokal im Compose‑Setup als `backend-mock` auf Port 8081 (siehe [`docker-compose.yml`](docker-compose.yml:1)).
-- Frontend dev‑server verwendet einen Proxy, der `/api` an das Mock‑Backend weiterleitet (siehe [`frontend/vite.config.ts`](frontend/vite.config.ts:12)).
+In Case of Microk8s: ./scripts/deploy_all_microk8s.sh
 
-Hinweise
-- Admin‑Secret Name (plain flow): `shisha-couchdb-admin` (standard in den aktualisierten YAMLs in diesem Repo)
-- Backend liest `COUCHDB_URL`, `COUCHDB_DATABASE`, `COUCHDB_USER`, `COUCHDB_PASSWORD` aus Environment/Secrets (siehe [`k8s/backend.yaml`](k8s/backend.yaml:1)).
-- Für CI/Produktiv‑Setups: Migrationen als CI‑Schritt oder dedizierten Job ausführen und feste Image‑Tags verwenden.
+CI / Deployment Hinweise
+- Verwende feste Image‑Tags in CI (nicht :latest), siehe [`docs/HELM.md`](docs/HELM.md:1).
+- Build & Push Backend image: [`scripts/build_and_push_backend.sh`](scripts/build_and_push_backend.sh:1)
 
-Dateien (wichtige)
-- [`k8s/couchdb.yaml`](k8s/couchdb.yaml:1)
-- [`k8s/couchdb-pv.yaml`](k8s/couchdb-pv.yaml:1)
-- [`k8s/backend.yaml`](k8s/backend.yaml:1)
-- [`k8s/frontend.yaml`](k8s/frontend.yaml:1)
-- [`k8s/shisha-sample-data.yaml`](k8s/shisha-sample-data.yaml:1) (optional seed via API)
+Weitere Hinweise
+- Proxy: Vite dev server leitet `/api` an `http://localhost:8081` (Mock). Für lokale Tests passe `VITE_API_URL` in `.env` an.
+- Wenn du Helm benutzt, setze `env.adminSecretName` in CouchDB Chart values oder erstelle `shisha-couchdb-admin` Secret im Namespace `shisha`.
+
+Kontakt
+- Maintainer: Manuel und Ricardo (siehe Footer im Frontend)
 
 Ende
