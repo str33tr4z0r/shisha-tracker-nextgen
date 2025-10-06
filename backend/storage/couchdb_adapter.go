@@ -144,6 +144,33 @@ func (c *CouchAdapter) ensureIndexes() error {
 	return nil
 }
 
+// Health checks connectivity to the CouchDB instance/cluster.
+// It first tries the CouchDB _up endpoint (if supported) and falls back to a GET /.
+func (c *CouchAdapter) Health() error {
+	// try _up endpoint which is available in many CouchDB setups
+	resp, err := c.doRequest("GET", "_up", nil)
+	if err == nil {
+		defer resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			return nil
+		}
+		// non-200 -> read body for diagnostics and fallthrough to fallback check
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("couchdb _up returned: %s: %s", resp.Status, string(b))
+	}
+	// fallback: attempt simple GET to base DB root
+	resp2, err2 := c.doRequest("GET", "", nil)
+	if err2 != nil {
+		return err2
+	}
+	defer resp2.Body.Close()
+	if resp2.StatusCode == http.StatusOK {
+		return nil
+	}
+	b2, _ := io.ReadAll(resp2.Body)
+	return fmt.Errorf("couchdb root returned: %s: %s", resp2.Status, string(b2))
+}
+
 // internal types for CouchDB docs
 type couchShishaDoc struct {
 	DocID        string       `json:"_id,omitempty"`
@@ -469,4 +496,34 @@ func (c *CouchAdapter) AddSmoked(id uint) error {
 		return fmt.Errorf("AddSmoked failed: %s: %s", resp.Status, string(b))
 	}
 	return nil
+}
+
+// DBInfo returns basic information about the CouchDB instance/cluster.
+// It queries the _membership endpoint and falls back to counting all nodes if necessary.
+func (c *CouchAdapter) DBInfo() (*DBInfo, error) {
+	// try _membership endpoint
+	resp, err := c.doRequest("GET", "_membership", nil)
+	if err != nil {
+		// surface the error so caller knows why DBInfo failed
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("_membership failed: %s: %s", resp.Status, string(b))
+	}
+
+	var body struct {
+		AllNodes     []string `json:"all_nodes"`
+		ClusterNodes []string `json:"cluster_nodes"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		return nil, err
+	}
+
+	nodes := len(body.ClusterNodes)
+	if nodes == 0 {
+		nodes = len(body.AllNodes)
+	}
+	return &DBInfo{IsCluster: nodes > 1, Nodes: nodes}, nil
 }

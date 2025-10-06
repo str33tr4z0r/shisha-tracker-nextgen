@@ -30,14 +30,21 @@ spec:
               service:
                 name: shisha-frontend
                 port:
-                  number: 80 
+                  number: 80
           - path: /api/info
             pathType: Prefix
             backend:
               service:
                 name: shisha-frontend
                 port:
-                  number: 80           
+                  number: 80
+          - path: /api/db-health
+            pathType: Prefix
+            backend:
+              service:
+                name: shisha-backend-mock
+                port:
+                  number: 8080
           - path: /api/healthz
             pathType: Prefix
             backend:
@@ -46,3 +53,48 @@ spec:
                 port:
                   number: 8080
 
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shisha-ingress-health-rewrite
+  namespace: shisha
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /api/db-health/$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /api/health/db(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: shisha-backend-mock
+                port:
+                  number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shisha-ingress-healthz-rewrite
+  namespace: shisha
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /api/healthz/$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /api/healthz/db(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: shisha-backend-mock
+                port:
+                  number: 8080

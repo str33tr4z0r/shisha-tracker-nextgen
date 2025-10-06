@@ -129,3 +129,24 @@ func (g *GormAdapter) AddSmoked(id uint) error {
 	}
 	return nil
 }
+
+// Health checks connectivity to the underlying SQL database.
+func (g *GormAdapter) Health() error {
+	sqlDB, err := g.DB.DB()
+	if err != nil {
+		return err
+	}
+	// Ping the underlying database connection.
+	return sqlDB.Ping()
+}
+
+// DBInfo returns basic information about the SQL storage.
+// For most SQL deployments in this project we cannot reliably detect cluster membership,
+// so return a sensible default (single-node) to keep responses consistent.
+func (g *GormAdapter) DBInfo() (*DBInfo, error) {
+	// Attempt a simple ping first to ensure DB is reachable.
+	if err := g.Health(); err != nil {
+		return nil, err
+	}
+	return &DBInfo{IsCluster: false, Nodes: 1}, nil
+}

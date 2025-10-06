@@ -117,3 +117,31 @@ Kontakt
 - Maintainer: Manuel und Ricardo (siehe Footer im Frontend)
 
 Ende
+
+## DB-Check (Frontend "Check DB" Button)
+
+Was der Button prüft:
+- GET `/api/db-health` — prüft die Erreichbarkeit des Storage-Backends (ruft intern `storage.Health()` auf; bei CouchDB versucht der Adapter zuerst `/_up`, dann ein einfacher GET `/`). Ergebnis steuert die Anzeige "DB: healthy/unhealthy/unknown".
+- GET `/api/db-info` — holt optionale Cluster‑Metadaten wie `{"isCluster": true, "nodes": 3}` (bei CouchDB verwendet der Adapter `/_membership`).
+
+Wichtige Stellen im Code:
+- Frontend: [`frontend/src/App.vue`](frontend/src/App.vue:256) — Funktionen `checkDBHealth()`, `fetchDBInfo()` und `refreshDBStatus()` (Button ruft `refreshDBStatus()` auf).
+- Backend: [`backend/main.go`](backend/main.go:123) — Handler für `/api/db-health`; [`backend/main.go`](backend/main.go:166) — Handler für `/api/db-info`.
+- Storage‑Adapter:
+  - CouchDB: [`backend/storage/couchdb_adapter.go`](backend/storage/couchdb_adapter.go:149) — `Health()` und `DBInfo()` (fragt `_up` bzw. `_membership`).
+  - GORM/SQL: [`backend/storage/gorm_adapter.go`](backend/storage/gorm_adapter.go:133) — `Health()` und einfache `DBInfo()`-Implementierung.
+
+Kurz: Der Button prüft zuerst Health, danach Cluster‑Info und speichert beides lokal in der UI (`dbHealthy` und `runtimeInfo.dbInfo`).
+
+Schnelltest (lokal, Port‑Forward zum Ingress):
+```bash
+# Port‑forward zum Ingress‑Controller (Anpassen falls Pod-Name anders)
+kubectl -n ingress port-forward pod/nginx-ingress-microk8s-controller-vwcbb 8081:80
+
+# dann im anderen Terminal:
+curl -i http://localhost:8081/api/db-health
+curl -i http://localhost:8081/api/db-info
+```
+
+Hinweis:
+- Für `/api/db-info` bzw. `/api/db-health` muss das Backend neu gebaut/deployt sein (neue Handler/Adapter-Methoden wurden hinzugefügt). Wenn die Endpunkte über Ingress aufgerufen werden sollen, stellen Sie sicher, dass die Ingress‑Regeln die Pfade an den Backend‑Service weiterleiten (siehe [`k8s/frontend/ingress.yaml`](k8s/frontend/ingress.yaml:1)).

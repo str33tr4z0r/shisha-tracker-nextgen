@@ -30,6 +30,12 @@ type Shisha struct {
 	Comments     []Comment    `json:"comments,omitempty"`
 }
 
+// DBInfo represents basic information about the configured database/backend.
+type DBInfo struct {
+	IsCluster bool `json:"isCluster"`
+	Nodes     int  `json:"nodes,omitempty"`
+}
+
 // Storage interface abstracts data operations used by the server handlers.
 type Storage interface {
 	ListShishas() ([]Shisha, error)
@@ -41,4 +47,8 @@ type Storage interface {
 	AddComment(id uint, user, message string) error
 	// Increment smoked counter for shisha with given id.
 	AddSmoked(id uint) error
+	// Health checks connectivity to the underlying storage (e.g. DB or CouchDB cluster).
+	Health() error
+	// DBInfo returns information about the storage backend (cluster membership, node count, ...).
+	DBInfo() (*DBInfo, error)
 }

@@ -25,15 +25,18 @@
       </header>
 
       <section class="mb-6">
-        <form @submit.prevent="createShisha" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input v-model="newShisha.name" placeholder="Name" class="p-2 border rounded" />
-          <input v-model="newShisha.flavor" placeholder="Geschmack" class="p-2 border rounded" />
-          <input v-model="newShisha.manufacturer" placeholder="Hersteller" class="p-2 border rounded col-span-2" />
-          <div class="col-span-2 flex gap-2">
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Erstellen</button>
-            <button type="button" class="bg-gray-200 px-4 py-2 rounded" @click="load()">Refresh</button>
-          </div>
-        </form>
+        <div class="border border-black p-4 rounded">
+          <h3 class="text-lg font-semibold mb-2">Tabak Hinzufügen</h3>
+          <form @submit.prevent="createShisha" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input v-model="newShisha.name" placeholder="Name" class="p-2 border rounded" />
+            <input v-model="newShisha.flavor" placeholder="Geschmack" class="p-2 border rounded" />
+            <input v-model="newShisha.manufacturer" placeholder="Hersteller" class="p-2 border rounded col-span-2" />
+            <div class="col-span-2 flex gap-2">
+              <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Erstellen</button>
+              <button type="button" class="bg-gray-200 px-4 py-2 rounded" @click="load()">Refresh</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       <section>
@@ -55,12 +58,22 @@
           <li v-for="s in sortedShishas" :key="s.id" :class="['p-4 rounded shadow', isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900']">
             <div class="flex justify-between items-start">
               <div>
-                <h2 class="font-medium text-lg">{{ s.name }}</h2>
-                <p :class="['text-sm', isDark ? 'text-gray-300' : 'text-gray-600']">Geschmack: {{ s.flavor }}</p>
-                <p :class="['text-sm', isDark ? 'text-gray-300' : 'text-gray-600']">Hersteller: {{ s.manufacturer.name }}</p>
+                <div v-if="!editing[s.id]">
+                  <h2 class="font-medium text-lg">{{ s.name }}</h2>
+                  <p :class="['text-sm', isDark ? 'text-gray-300' : 'text-gray-600']">Geschmack: {{ s.flavor }}</p>
+                  <p :class="['text-sm', isDark ? 'text-gray-300' : 'text-gray-600']">Hersteller: {{ s.manufacturer.name }}</p>
+                </div>
+                <div v-else class="space-y-2">
+                  <input v-model="editBuffer[s.id].name" class="p-2 border rounded w-full" />
+                  <input v-model="editBuffer[s.id].flavor" class="p-2 border rounded w-full" />
+                  <input v-model="editBuffer[s.id].manufacturer" class="p-2 border rounded w-full" />
+                </div>
               </div>
               <div class="text-sm component-muted flex items-center gap-3">
                 <span>{{ s.ratings?.length || 0 }} Bewertungen</span>
+                <button v-if="!editing[s.id]" @click="startEdit(s)" class="bg-green-500 p-1 border rounded text-white">Bearbeiten</button>
+                <button v-else @click="saveEdit(s.id)" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Speichern</button>
+                <button v-if="editing[s.id]" @click="cancelEdit(s.id)" class="p-1 border rounded text-sm">Abbrechen</button>
                 <button @click="markSmoked(s.id)" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm">
                   Geraucht ({{ s.smokedCount || 0 }})
                 </button>
@@ -135,13 +148,11 @@
 
       <footer class="mt-6">
         <div :class="['max-w-4xl mx-auto text-center mb-1', isDark ? 'text-gray-300 font-semibold text-sm' : 'text-gray-600 font-semibold text-sm']">
-          Pod: {{ runtimeInfo.pod || 'local' }} — Host: {{ (runtimeInfo.hostname || '').slice(0,12) }}
+          Pod: {{ runtimeInfo.pod || 'local' }}
         </div>
-
-        <div :class="['max-w-4xl mx-auto text-center mb-1 text-sm', isDark ? 'text-gray-300' : 'text-gray-600']">
-          <div><strong>Backend Container:</strong> {{ (backendContainerID || runtimeInfo.container_id || runtimeInfo.hostname || '').slice ? ( (backendContainerID || runtimeInfo.container_id || runtimeInfo.hostname || '').slice(0,12) ) : (backendContainerID || runtimeInfo.container_id || runtimeInfo.hostname || '') }}</div>
-        </div>
-
+ 
+        <!-- DB status and Check DB button removed -->
+ 
         <div
           :class="['max-w-4xl mx-auto text-center text-sm', isDark ? 'footer-link footer-glow' : 'text-gray-500 opacity-80']"
           :role="isDark ? 'link' : undefined"
@@ -177,8 +188,102 @@ const commentText = ref<Record<number, string>>({})
 const commentUser = ref<Record<number, string>>({})
 const isDark = ref<boolean>(false)
 const searchQuery = ref<string>('')
-const runtimeInfo = ref<{ pod?: string; hostname?: string; container_id?: string }>({})
+// info endpoint now returns only pod
+const runtimeInfo = ref<{ pod?: string }>({})
 const backendContainerID = ref<string>('')
+
+// inline-edit helpers
+const editing = ref<Record<number, boolean>>({})
+const editBuffer = ref<Record<number, { name: string; flavor: string; manufacturer: string }>>({})
+// DB cluster health state: true=healthy, false=unhealthy, null=unknown
+const dbHealthy = ref<boolean | null>(null)
+
+// start editing a shisha (populate edit buffer)
+function startEdit(s: Shisha) {
+  editing.value[s.id] = true
+  editBuffer.value[s.id] = {
+    name: s.name || '',
+    flavor: s.flavor || '',
+    manufacturer: s.manufacturer?.name || ''
+  }
+}
+function cancelEdit(id: number) {
+  editing.value[id] = false
+  delete editBuffer.value[id]
+}
+async function saveEdit(id: number) {
+  const buf = editBuffer.value[id]
+  if (!buf) return
+  const idx = shishas.value.findIndex(s => s.id === id)
+  if (idx < 0) {
+    cancelEdit(id)
+    return
+  }
+  const orig = shishas.value[idx]
+  const payload = {
+    name: buf.name,
+    flavor: buf.flavor,
+    manufacturer: { id: orig.manufacturer?.id || 0, name: buf.manufacturer },
+    ratings: orig.ratings || [],
+    comments: orig.comments || [],
+    // preserve smokedCount if present
+    smokedCount: (orig as any).smokedCount ?? (orig as any).smoked ?? 0
+  }
+  try {
+    const res = await fetch(`${API}/shishas/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    if (res.ok) {
+      const updated = await res.json()
+      shishas.value[idx] = { ...shishas.value[idx], ...updated } as any
+      cancelEdit(id)
+    } else {
+      console.error('update failed', await res.text())
+      alert('Fehler beim Aktualisieren des Tabaks.')
+    }
+  } catch (err) {
+    console.error('update error', err)
+    alert('Fehler beim Aktualisieren des Tabaks.')
+  }
+}
+
+// check DB cluster health via API
+async function checkDBHealth() {
+  try {
+    const r = await fetch(`${API}/db-health`)
+    if (!r.ok) {
+      dbHealthy.value = false
+      return
+    }
+    const body = await r.json()
+    dbHealthy.value = !!body?.healthy
+  } catch (e) {
+    console.warn('db-health check failed', e)
+    dbHealthy.value = false
+  }
+}
+
+// fetch DB cluster info via new endpoint
+async function fetchDBInfo() {
+  try {
+    const r = await fetch(`${API}/db-info`)
+    if (!r.ok) return null
+    return await r.json()
+  } catch {
+    return null
+  }
+}
+
+// helper to refresh both health and cluster info (used by UI)
+async function refreshDBStatus() {
+  await checkDBHealth()
+  const info = await fetchDBInfo()
+  if (info && typeof info.isCluster !== 'undefined') {
+    ;(runtimeInfo.value as any).dbInfo = info
+  }
+}
 
 const filteredShishas = computed(() => {
   const q = (searchQuery.value || '').toLowerCase().trim()

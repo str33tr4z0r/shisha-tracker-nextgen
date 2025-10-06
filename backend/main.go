@@ -116,8 +116,13 @@ func main() {
 		api.GET("/healthz", healthHandler)
 		api.GET("/ready", readyHandler)
 		api.GET("/metrics", metricsHandler)
+		// returns only pod name (used by UI)
 		api.GET("/info", infoHandler)
 		api.GET("/container-id", containerIDHandler)
+		// DB / cluster health endpoint
+		api.GET("/db-health", dbHealthHandler)
+		// DB info (cluster membership)
+		api.GET("/db-info", dbInfoHandler)
 
 		api.GET("/shishas", listShishas)
 		api.POST("/shishas", createShisha)
@@ -151,28 +156,45 @@ func metricsHandler(c *gin.Context) {
 }
 
 func infoHandler(c *gin.Context) {
-	// prefer POD_NAME (set via Downward API in Kubernetes), fallback to hostname (container id)
+	// Only return the pod name (frontend expects "Pod: ...")
 	pod := os.Getenv("POD_NAME")
-	hostname, _ := os.Hostname()
 	if pod == "" {
+		hostname, _ := os.Hostname()
 		pod = hostname
 	}
+	c.JSON(http.StatusOK, gin.H{"pod": pod})
+}
 
-	// Try to read container id from /proc/self/hostname (works in many container runtimes).
-	// Fall back to os.Hostname() if reading fails.
-	containerID := ""
-	if b, err := os.ReadFile("/proc/self/hostname"); err == nil {
-		containerID = strings.TrimSpace(string(b))
+// dbHealthHandler reports health of the configured storage backend (e.g. CouchDB cluster or SQL DB).
+func dbHealthHandler(c *gin.Context) {
+	if storageEngine == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"healthy": false, "error": "storage engine not initialized"})
+		return
 	}
-	if containerID == "" {
-		containerID = hostname
+	if err := storageEngine.Health(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"healthy": false, "error": err.Error()})
+		return
 	}
+	c.JSON(http.StatusOK, gin.H{"healthy": true})
+}
 
-	c.JSON(http.StatusOK, gin.H{
-		"pod":          pod,
-		"hostname":     hostname,
-		"container_id": containerID,
-	})
+// dbInfoHandler returns storage/backend info such as cluster membership and node count.
+func dbInfoHandler(c *gin.Context) {
+	if storageEngine == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "storage engine not initialized"})
+		return
+	}
+	info, err := storageEngine.DBInfo()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// info may be nil for adapters that don't support it; handle defensively
+	if info == nil {
+		c.JSON(http.StatusOK, gin.H{"isCluster": false})
+		return
+	}
+	c.JSON(http.StatusOK, info)
 }
 
 func containerIDHandler(c *gin.Context) {
