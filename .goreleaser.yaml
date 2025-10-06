@@ -43,7 +43,7 @@ archives:
         formats: ["zip"]
 
 dockers:
-  #Frontend
+  #Frontend 
   - image_templates:
       - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-amd64"
       - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:amd64{{ end }}"
