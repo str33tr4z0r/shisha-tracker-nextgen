@@ -1,10 +1,6 @@
 name: Backend Build and Release
 
-on:
-  push:
-    paths:
-      - "backend/**"
-
+on: push
 
 permissions:
   contents: write

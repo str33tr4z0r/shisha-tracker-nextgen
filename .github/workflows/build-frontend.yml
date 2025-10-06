@@ -1,9 +1,6 @@
 name: Frontend Build and Release
 
-on:
-  push:
-    paths:
-      - "frontend/**"
+on: push
 
 
 permissions:
