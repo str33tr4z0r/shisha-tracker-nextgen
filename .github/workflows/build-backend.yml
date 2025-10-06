@@ -2,7 +2,8 @@ name: Backend Build and Release
 
 on:
   push:
-    branches: [ main ]
+    tags:
+      - '*'   # z.B. v1.2.3
 
 
 permissions:
