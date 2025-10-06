@@ -1,9 +1,9 @@
-name: Docker Image CI
+name: Backend Build and Release
 
 on:
   push:
     tags:
-      - "*"
+      - "backend/*"
 
 
 permissions:
