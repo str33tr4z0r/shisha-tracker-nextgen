@@ -37,8 +37,22 @@
       </section>
 
       <section>
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-sm font-semibold">Anzahl Tabaks: {{ filteredShishas.length }}</div>
+          <div class="flex items-center gap-2">
+            <label class="text-sm">Sortieren:</label>
+            <select v-model="sortKey" class="p-1 border rounded text-sm">
+              <option value="name">Name</option>
+              <option value="rating">Bewertung</option>
+              <option value="smoked">Geraucht</option>
+            </select>
+            <button @click="sortDir = sortDir === 'asc' ? 'desc' : 'asc'" class="p-1 border rounded text-sm">
+              {{ sortDir === 'asc' ? '↑' : '↓' }}
+            </button>
+          </div>
+        </div>
         <ul class="grid gap-4">
-          <li v-for="s in filteredShishas" :key="s.id" :class="['p-4 rounded shadow', isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900']">
+          <li v-for="s in sortedShishas" :key="s.id" :class="['p-4 rounded shadow', isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900']">
             <div class="flex justify-between items-start">
               <div>
                 <h2 class="font-medium text-lg">{{ s.name }}</h2>
@@ -175,6 +189,33 @@ const filteredShishas = computed(() => {
     const manu = (s.manufacturer?.name || '').toLowerCase()
     return name.includes(q) || flavor.includes(q) || manu.includes(q)
   })
+})
+
+const sortKey = ref<'name'|'rating'|'smoked'>('name')
+const sortDir = ref<'asc'|'desc'>('asc')
+
+const sortedShishas = computed(() => {
+  const arr = [...filteredShishas.value]
+  arr.sort((a: Shisha, b: Shisha) => {
+    if (sortKey.value === 'name') {
+      const va = (a.name || '').toLowerCase()
+      const vb = (b.name || '').toLowerCase()
+      if (va < vb) return sortDir.value === 'asc' ? -1 : 1
+      if (va > vb) return sortDir.value === 'asc' ? 1 : -1
+      return 0
+    }
+    if (sortKey.value === 'rating') {
+      const avg = (r?: Rating[]) => (r && r.length) ? (r.reduce((x,y)=> x + (y.score||0),0) / r.length) / 2 : 0
+      const va = avg(a.ratings)
+      const vb = avg(b.ratings)
+      return sortDir.value === 'asc' ? (va - vb) : (vb - va)
+    }
+    // smoked
+    const sa = a.smokedCount || 0
+    const sb = b.smokedCount || 0
+    return sortDir.value === 'asc' ? (sa - sb) : (sb - sa)
+  })
+  return arr
 })
 
 function flavorEmoji(flavor?: string) {

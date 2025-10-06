@@ -3,7 +3,7 @@ replicaCount: 3
 image:
   repository: ricardohdc/shisha-tracker-nextgen-frontend
   tag: "latest"
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 imagePullSecrets:
   - name: regcred
 service:
