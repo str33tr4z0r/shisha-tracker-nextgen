@@ -1,0 +1,20 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Build the Docker image
+      run: docker build ./backend --file Dockerfile --tag ricardohdc/shisha-tracker-nextgen-backend:$(date +%s) --pull --no-cache
+      
+    - name: Push Image
+      run: docker push ricardohdc/shisha-tracker-nextgen-backend:$(date +%s)
