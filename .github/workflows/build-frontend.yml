@@ -1,6 +1,8 @@
 name: Frontend Build and Release
 
-on: push
+on:
+  push:
+    branches: [ main ]
 
 
 permissions:
