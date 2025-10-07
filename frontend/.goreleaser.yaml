@@ -4,7 +4,7 @@ project_name: shisha-tracker-nextgen-frontend
 builds:
   - id: noop
     main: ./__noop__/main.go
-    goos: [ linux ]     # genau 1 Target, schnell
+    goos: [ linux ]     # nur 1 Target, schnell
     goarch: [ amd64 ]
     ldflags:
       - -s -w
