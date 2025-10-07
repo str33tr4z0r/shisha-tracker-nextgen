@@ -1,4 +1,4 @@
-ame: Backend Build and Release
+name: Backend Build and Release
 
 on:
   push:
