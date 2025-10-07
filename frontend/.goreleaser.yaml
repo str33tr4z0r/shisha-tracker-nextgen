@@ -1,8 +1,7 @@
-# frontend/.goreleaser.yaml
 version: 2
 project_name: shisha-tracker-nextgen-frontend
 
-builds: []                 # keine Go-Binaries
+builds: []
 dist: dist-release
 
 before:
@@ -13,13 +12,12 @@ before:
 archives:
   - id: frontend-dist
     meta: true
-    formats: ["zip"]       # oder ["tar.gz"]
+    formats: ["zip"]
     name_template: "{{ .ProjectName }}_{{ .Version }}"
     files:
       - dist/**/*
     wrap_in_directory: true
 
-# Neue Docker-API (entkoppelt von Go-Builds)
 dockers_v2:
   - images:
       - ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend
@@ -35,8 +33,8 @@ dockers_v2:
       org.opencontainers.image.created: "{{ .Date }}"
       org.opencontainers.image.revision: "{{ .FullCommit }}"
       org.opencontainers.image.source: "https://github.com/str33tr4z0r/shisha-tracker-nextgen"
-    build_flags:
-      - "--pull"
+    # build_args: {}   # <- nur falls du ARGs brauchst
+    # flags: []        # <- nur falls du wirklich buildx-Flags im Format --flag=value brauchst
 
 changelog:
   sort: asc
