@@ -42,6 +42,14 @@ jobs:
           args: check --config .goreleaser.yaml
           workdir: frontend
 
+      - name: Show effective config path
+        run: |
+          echo "pwd: $(pwd)"
+          ls -la
+          echo "-----"
+          cat .goreleaser.yaml | sed -n '1,120p'
+        working-directory: frontend
+
       - name: Run GoReleaser (Frontend)
         uses: goreleaser/goreleaser-action@v6
         with:

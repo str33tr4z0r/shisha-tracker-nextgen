@@ -1,7 +1,14 @@
 version: 2
 project_name: shisha-tracker-nextgen-frontend
 
-builds: []
+# HARTES Abschalten der Go-Builds
+builds:
+  - id: no-go-build
+    # irgendein Fake-Main, damit nichts gebaut werden kann
+    main: ./__no_go_main__.go
+    goos: []        # keine Targets -> es wird nichts gebaut
+    goarch: []      # dito
+
 dist: dist-release
 
 before:
@@ -33,8 +40,6 @@ dockers_v2:
       org.opencontainers.image.created: "{{ .Date }}"
       org.opencontainers.image.revision: "{{ .FullCommit }}"
       org.opencontainers.image.source: "https://github.com/str33tr4z0r/shisha-tracker-nextgen"
-    # build_args: {}   # <- nur falls du ARGs brauchst
-    # flags: []        # <- nur falls du wirklich buildx-Flags im Format --flag=value brauchst
 
 changelog:
   sort: asc
