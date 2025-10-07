@@ -1,53 +1,42 @@
 # frontend/.goreleaser.yaml
 version: 2
-
 project_name: shisha-tracker-nextgen-frontend
 
-# WICHTIG: keine Go-Builds
-builds: []
-
-# Artefakte von GoReleaser landen hier
+builds: []                 # keine Go-Binaries
 dist: dist-release
 
-# Vue-Build sauber innerhalb von GoReleaser (kein "dirty git" Problem)
 before:
   hooks:
     - npm ci
     - npm run build
 
-# Meta-Archiv: packt NUR Dateien, keine OS/Arch Templates!
 archives:
   - id: frontend-dist
     meta: true
-    formats: ["zip"]                       # oder ["tar.gz"]
+    formats: ["zip"]       # oder ["tar.gz"]
     name_template: "{{ .ProjectName }}_{{ .Version }}"
     files:
       - dist/**/*
     wrap_in_directory: true
 
-dockers:
-  - image_templates:
-      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-amd64"
-      - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:amd64{{ end }}"
-    dockerfile: Frontend.goreleaser        # relativ zu frontend/
-    build_flag_templates:
+# Neue Docker-API (entkoppelt von Go-Builds)
+dockers_v2:
+  - images:
+      - ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend
+    tags:
+      - "{{ .Version }}"
+      - "{{ if not .IsSnapshot }}latest{{ end }}"
+    platforms:
+      - linux/amd64
+    dockerfile: Frontend.goreleaser
+    labels:
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.created: "{{ .Date }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.source: "https://github.com/str33tr4z0r/shisha-tracker-nextgen"
+    build_flags:
       - "--pull"
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.source=https://github.com/str33tr4z0r/shisha-tracker-nextgen"
-    use: buildx
-    skip_push: auto                        # bei Tag-Push: true → push; Snapshot: skip
-
-docker_manifests:
-  - name_template: "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}"
-    image_templates:
-      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-amd64"
-  - name_template: "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:latest{{ end }}"
-    image_templates:
-      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-amd64"
 
 changelog:
   sort: asc
