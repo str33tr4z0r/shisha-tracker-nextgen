@@ -18,3 +18,9 @@ node_modules
 frontend/node_modules
 # pnpm lock (if present)
 frontend/pnpm-lock.yaml
+node_modules
+dist
+.git
+.gitignore
+npm-debug.log*
+*.local

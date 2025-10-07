@@ -3,36 +3,31 @@ name: Frontend Build and Release
 on:
   push:
     tags:
-      - '*'   # z.B. v1.2.3
-
+      - 'v*'     # löst bei v1.2.3 usw. aus
 
 permissions:
   contents: write
   packages: write
 
 jobs:
-  build:
+  release-frontend:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.24"
-
-      - name: Checkout repository
+      - name: Checkout repository (mit Tags)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history and tags
+          fetch-depth: 0
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      # Node nur fürs Vue-Build; die Docker-Stages laufen in GoReleaser separat
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-      # Removed host-side pnpm install and dependency installation.
-      # The frontend Dockerfile runs `npm ci`/`npm install` during image build,
-      # so installing node modules on the runner creates changes in the workspace
-      # that make git appear "dirty" to GoReleaser.
-      # If you prefer installing on the runner, run it inside a clean temp dir
-      # or ensure you `git clean -ffdx frontend` before goreleaser runs.
+      # OPTIONAL: schnell checken, ob die config valide ist (hilft bei Debug)
+      - name: Validate GoReleaser config
+        run: goreleaser check --config .goreleaser.yaml
+        working-directory: frontend
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -41,15 +36,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run GoReleaser
+      - name: Set up QEMU (für buildx)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Run GoReleaser (Frontend)
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean
+          # WICHTIG: wir laufen im frontend/ Ordner und nutzen seine Config
+          args: release --clean --config .goreleaser.yaml
           workdir: frontend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCKER_REGISTRY: ghcr.io
           GITHUB_REPOSITORY: ${{ github.repository }}
-
