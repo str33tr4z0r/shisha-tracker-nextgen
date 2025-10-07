@@ -8,11 +8,13 @@
 
 version: 2
 
+# keine Go-Builds
+builds: []
+
 dist: binary
 
 archives:
   - formats: ["tar.gz"]
-    # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -20,13 +22,11 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
     format_overrides:
       - goos: windows
         formats: ["zip"]
 
 dockers:
-  #Frontend 
   - image_templates:
       - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-amd64"
       - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:amd64{{ end }}"
