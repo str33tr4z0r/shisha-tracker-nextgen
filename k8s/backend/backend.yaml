@@ -26,7 +26,7 @@ spec:
                     app: shisha-backend-mock
       containers:
         - name: backend-mock
-          image: ricardohdc/shisha-tracker-nextgen-backend:latest
+          image: ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:latest
           imagePullPolicy: Always
           env:
             - name: STORAGE
