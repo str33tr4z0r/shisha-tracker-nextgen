@@ -1,36 +1,35 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
-
-# The lines below are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/need to use them.
-# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
-
+# frontend/.goreleaser.yaml
 version: 2
 
-# keine Go-Builds
+project_name: shisha-tracker-nextgen-frontend
+
+# WICHTIG: keine Go-Builds
 builds: []
 
-dist: binary
+# Artefakte von GoReleaser landen hier
+dist: dist-release
 
+# Vue-Build sauber innerhalb von GoReleaser (kein "dirty git" Problem)
+before:
+  hooks:
+    - npm ci
+    - npm run build
+
+# Meta-Archiv: packt NUR Dateien, keine OS/Arch Templates!
 archives:
-  - formats: ["tar.gz"]
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    format_overrides:
-      - goos: windows
-        formats: ["zip"]
+  - id: frontend-dist
+    meta: true
+    formats: ["zip"]                       # oder ["tar.gz"]
+    name_template: "{{ .ProjectName }}_{{ .Version }}"
+    files:
+      - dist/**/*
+    wrap_in_directory: true
 
 dockers:
   - image_templates:
       - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}-amd64"
       - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:amd64{{ end }}"
-    dockerfile: Frontend.goreleaser
+    dockerfile: Frontend.goreleaser        # relativ zu frontend/
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
@@ -38,10 +37,9 @@ dockers:
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.created={{ .Date }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-    ids:
-      - shisha-tracker-nextgen-frontend
+      - "--label=org.opencontainers.image.source=https://github.com/str33tr4z0r/shisha-tracker-nextgen"
     use: buildx
-    skip_push: auto
+    skip_push: auto                        # bei Tag-Push: true → push; Snapshot: skip
 
 docker_manifests:
   - name_template: "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:{{ .Version }}"
