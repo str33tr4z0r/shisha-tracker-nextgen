@@ -1,21 +1,24 @@
-FROM golang:1.20-alpine AS builder
-WORKDIR /src/backend
-RUN apk add --no-cache git build-base
+#FROM golang:1.20-alpine AS builder
+#WORKDIR /src/backend
+#RUN apk add --no-cache git build-base
 # When building with context ./backend we copy files relative to that context.
 # Copy go.mod first for caching, then copy sources so go can resolve module dependencies
-COPY go.mod ./
-COPY go.sum ./
-COPY . ./
+#COPY go.mod ./
+#COPY go.sum ./
+#COPY . ./
 # Generate go.sum and download dependencies now that sources are present
-RUN go mod tidy
+#RUN go mod tidy
 # Vendor dependencies inside the builder and force the build to use the vendor folder
-RUN go mod vendor
-ENV GOFLAGS=-mod=vendor
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/server .
+#RUN go mod vendor
+#ENV GOFLAGS=-mod=vendor
+#RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/server .
  
-FROM alpine:3.18
-RUN apk add --no-cache ca-certificates wget
-COPY --from=builder /app/server /usr/local/bin/server
+
+FROM alpine:latest
+# Install CA certificates for HTTPS
+RUN apk --no-cache add ca-certificates
+# Copy the pre-built binary from GoReleaser
+COPY shisha-tracker-nextgen-backend /
 EXPOSE 8080
 ENV PORT=8080
 # create non-root user with UID 1000 and ensure binary is executable by that user
@@ -23,3 +26,14 @@ RUN adduser -D -u 1000 app && chown app:app /usr/local/bin/server
 USER app
 HEALTHCHECK --interval=10s --timeout=3s --retries=3 CMD wget -qO- http://localhost:${PORT}/api/healthz || exit 1
 ENTRYPOINT ["/usr/local/bin/server"]
+
+#FROM alpine:3.18
+#RUN apk add --no-cache ca-certificates wget
+#COPY --from=builder /app/server /usr/local/bin/server
+#EXPOSE 8080
+#ENV PORT=8080
+# create non-root user with UID 1000 and ensure binary is executable by that user
+#RUN adduser -D -u 1000 app && chown app:app /usr/local/bin/server
+#USER app
+#HEALTHCHECK --interval=10s --timeout=3s --retries=3 CMD wget -qO- http://localhost:${PORT}/api/healthz || exit 1
+#ENTRYPOINT ["/usr/local/bin/server"]
