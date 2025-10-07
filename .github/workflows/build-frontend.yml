@@ -61,7 +61,7 @@ jobs:
         with:
           context: ./frontend
           file: ./frontend/Frontend.Dockerfile    # dein Dockerfile für das Frontend
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/shisha-tracker-nextgen-frontend:${{ github.ref_name }}

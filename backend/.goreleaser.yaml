@@ -1,41 +1,55 @@
 # backend/.goreleaser.yaml
 version: 2
 
-# dist (Ausgabeordner) → Standard "dist" ist ok
-# dist: dist
-
 before:
   hooks:
     - go mod tidy
 
 builds:
+  # Linux-Builds für Docker (amd64 + arm64)
   - id: shisha-tracker-nextgen-backend
-    main: .                # main.go liegt im backend-Root
-    binary: shisha-tracker-nextgen-backend  # <<— muss zu deinem Dockerfile passen
+    main: .
+    binary: shisha-tracker-nextgen-backend
     env:
       - CGO_ENABLED=0
-    goos: [linux, windows]
-    goarch: [amd64]
+    goos: [ linux ]
+    goarch: [ amd64, arm64 ]   # <— ARM64 hinzufügen!
     flags:
       - -tags=production
     ldflags:
       - -s -w
-      - -X main.commit={{.FullCommit}}
-      - -X main.date={{.Date}}
-      - -X main.version={{.Version}}
+      - -X main.commit={{ .FullCommit }}
+      - -X main.date={{ .Date }}
+      - -X main.version={{ .Version }}
+
+  # (Optional) Windows-Binaries als Release-Assets
+  # Auskommentieren, wenn du keine Windows-Exe brauchst.
+  - id: shisha-tracker-nextgen-backend-windows
+    main: .
+    binary: shisha-tracker-nextgen-backend
+    env:
+      - CGO_ENABLED=0
+    goos: [ windows ]
+    goarch: [ amd64 ]
+    flags:
+      - -tags=production
+    ldflags:
+      - -s -w
+      - -X main.commit={{ .FullCommit }}
+      - -X main.date={{ .Date }}
+      - -X main.version={{ .Version }}
 
 archives:
   - id: backend-archives
     formats: ["tar.gz"]
-    # Keine OS/Arch im Namen nötig? Geschmackssache—hier belasse ich's simpel:
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    # Windows per zip:
     format_overrides:
       - goos: windows
         formats: ["zip"]
 
 dockers:
-  - ids: ["shisha-tracker-nextgen-backend"]  # this build id
+  # amd64-Image aus dem linux/amd64 Build
+  - ids: ["shisha-tracker-nextgen-backend"]
     image_templates:
       - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}-amd64"
       - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:amd64{{ end }}"
@@ -51,13 +65,34 @@ dockers:
     use: buildx
     skip_push: auto
 
+  # arm64-Image aus dem linux/arm64 Build
+  - ids: ["shisha-tracker-nextgen-backend"]
+    image_templates:
+      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}-arm64"
+      - "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:arm64{{ end }}"
+    dockerfile: Backend.goreleaser
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.source=https://github.com/str33tr4z0r/shisha-tracker-nextgen"
+    use: buildx
+    skip_push: auto
+
 docker_manifests:
+  # Ein Manifest pro Tag-Variante, jeweils mit beiden Arch-Images
   - name_template: "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}"
     image_templates:
       - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}-amd64"
+      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}-arm64"
+
   - name_template: "{{ if not .IsSnapshot }}ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:latest{{ end }}"
     image_templates:
-      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:{{ .Version }}-amd64"
+      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:amd64"
+      - "ghcr.io/str33tr4z0r/shisha-tracker-nextgen-backend:arm64"
 
 changelog:
   sort: asc
