@@ -54,7 +54,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"
-          args: release --clean --config .goreleaser.yaml --skip=build
+          args: release --clean --config .goreleaser.yaml
           workdir: frontend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
