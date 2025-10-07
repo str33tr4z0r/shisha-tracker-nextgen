@@ -27,12 +27,12 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      - name: Install dependencies
-        run: pnpm install
-        working-directory: frontend
+      # Removed host-side pnpm install and dependency installation.
+      # The frontend Dockerfile runs `npm ci`/`npm install` during image build,
+      # so installing node modules on the runner creates changes in the workspace
+      # that make git appear "dirty" to GoReleaser.
+      # If you prefer installing on the runner, run it inside a clean temp dir
+      # or ensure you `git clean -ffdx frontend` before goreleaser runs.
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3

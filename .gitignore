@@ -12,3 +12,9 @@ venv_scraper
 
 scripts/build.sh
 integration-logs/*
+
+# Node modules (ignore both root and frontend installs)
+node_modules
+frontend/node_modules
+# pnpm lock (if present)
+frontend/pnpm-lock.yaml

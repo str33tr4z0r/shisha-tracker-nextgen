@@ -12,7 +12,7 @@ dist: binary
 
 before:
   hooks:
-    - pnpm run build:client
+    - pnpm run build
 
 archives:
   - formats: ["tar.gz"]
