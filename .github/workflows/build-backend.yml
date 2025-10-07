@@ -21,7 +21,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'     # oder deine reale Version
+          go-version: '1.22'
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -33,15 +33,19 @@ jobs:
       - name: Set up QEMU (für buildx)
         uses: docker/setup-qemu-action@v3
 
-      - name: Validate GoReleaser config
-        run: goreleaser check --config .goreleaser.yaml
-        working-directory: backend
-
+      # ✅ Check via goreleaser-action (nicht via `run:`)
       - name: Validate GoReleaser config (Backend)
         uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"
           args: check --config .goreleaser.yaml
+          workdir: backend
+
+      - name: Run GoReleaser (Backend)
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean --config .goreleaser.yaml
           workdir: backend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
