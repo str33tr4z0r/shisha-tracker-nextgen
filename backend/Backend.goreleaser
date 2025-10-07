@@ -13,7 +13,6 @@
 #ENV GOFLAGS=-mod=vendor
 #RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/server .
  
-
 FROM alpine:latest
 # Install CA certificates for HTTPS
 RUN apk --no-cache add ca-certificates
