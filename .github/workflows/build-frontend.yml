@@ -39,13 +39,11 @@ jobs:
       - name: Set up QEMU (für buildx)
         uses: docker/setup-qemu-action@v3
 
-      - name: Run GoReleaser (Frontend)
+      - name: Validate GoReleaser config (Frontend)
         uses: goreleaser/goreleaser-action@v6
         with:
-          distribution: goreleaser
           version: "~> v2"
-          # WICHTIG: wir laufen im frontend/ Ordner und nutzen seine Config
-          args: release --clean --config .goreleaser.yaml
+          args: check --config .goreleaser.yaml
           workdir: frontend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

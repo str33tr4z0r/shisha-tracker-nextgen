@@ -37,12 +37,11 @@ jobs:
         run: goreleaser check --config .goreleaser.yaml
         working-directory: backend
 
-      - name: Run GoReleaser (Backend)
+      - name: Validate GoReleaser config (Backend)
         uses: goreleaser/goreleaser-action@v6
         with:
-          distribution: goreleaser
           version: "~> v2"
-          args: release --clean --config .goreleaser.yaml
+          args: check --config .goreleaser.yaml
           workdir: backend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
