@@ -1,13 +1,13 @@
 version: 2
 project_name: shisha-tracker-nextgen-frontend
 
-# HARTES Abschalten der Go-Builds
 builds:
-  - id: no-go-build
-    # irgendein Fake-Main, damit nichts gebaut werden kann
-    main: ./__no_go_main__.go
-    goos: []        # keine Targets -> es wird nichts gebaut
-    goarch: []      # dito
+  - id: noop
+    main: ./__noop__/main.go
+    goos: [ linux ]     # genau 1 Target, schnell
+    goarch: [ amd64 ]
+    ldflags:
+      - -s -w
 
 dist: dist-release
 
