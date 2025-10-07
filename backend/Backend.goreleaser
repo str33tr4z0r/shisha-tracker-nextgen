@@ -21,8 +21,8 @@ COPY shisha-tracker-nextgen-backend /
 EXPOSE 8080
 ENV PORT=8080
 # create non-root user with UID 1000 and ensure binary is executable by that user
-RUN adduser -D -u 1000 app && chown app:app /usr/local/bin/server
 USER app
+RUN adduser -D -u 1000 app && chown app:app /usr/local/bin/server
 HEALTHCHECK --interval=10s --timeout=3s --retries=3 CMD wget -qO- http://localhost:${PORT}/api/healthz || exit 1
 ENTRYPOINT ["/usr/local/bin/server"]
 
