@@ -4,7 +4,7 @@ metadata:
   name: couchdb-storage-class
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
-provisioner: microk8s.io/hostpath
+provisioner: rancher.io/local-path
 volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Delete
 # Hinweis: 'no-provisioner' bedeutet, dass PVs manuell erstellt werden müssen.
