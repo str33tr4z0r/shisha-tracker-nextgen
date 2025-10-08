@@ -1,5 +1,7 @@
 # Shisha Tracker — Kurzanleitung
 
+# ACHTUNG: Aktuell noch auf microk8s ausgelegt !
+
 Kurzbeschreibung
 - Shisha Tracker ist eine Webanwendung zum Erfassen, Verwalten und Bewerten von Shisha‑Sessions. Frontend (Vue) + Backend (Go). CouchDB wird als Standard‑Speicher für Entwicklung verwendet.
 
