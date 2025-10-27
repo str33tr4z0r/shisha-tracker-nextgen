@@ -79,7 +79,7 @@ run kubectl apply -f k8s/pdb/couchdb-pdb.yaml -n "$NAMESPACE"
 
 
 #PostStage (optional)
-run kubectl apply -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
 
 # 9) Final checks
 echo 'Final resource check (filtered by name '"$NAMESPACE"')'
