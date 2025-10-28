@@ -14,8 +14,8 @@
 {"name": "Da Vinci Red Glory", "flavor": "Wassermelone Chill", "manufacturer": {"name": "Da"}}
 {"name": "Dschinni Da Bomb", "flavor": "Amaretto Zitronenkuchen", "manufacturer": {"name": "Dschinni"}}
 {"name": "Hookain White Caek", "flavor": "Karamell Popcorn Cheescake", "manufacturer": {"name": "Hookain"}}
-{"name": "Must H Pina Rings", "flavor": "Ananas", "manufacturer": {"name": "Must"}}
-{"name": "Must H Tabak Unicorn", "flavor": "Marshmallow Maischips", "manufacturer": {"name": "Must H"}}
+{"name": "Musthave Pina Rings", "flavor": "Ananas", "manufacturer": {"name": "Musthave"}}
+{"name": "Musthave Tabak Unicorn", "flavor": "Marshmallow Maischips", "manufacturer": {"name": "Musthave"}}
 {"name": "Ocean Tabak Koka Darkblend", "flavor": "Cola", "manufacturer": {"name": "Ocean"}}
 {"name": "O's Tobacco African Queen", "flavor": "Fruchtmix mit Waldbeeren,Trauben", "manufacturer": {"name": "O's"}}
 {"name": "Aino Dark Tobacco Lapina", "flavor": "Ananas", "manufacturer": {"name": "Aino Dark"}}
@@ -28,12 +28,12 @@
 {"name": "Aqua Mentha Red Balls", "flavor": "Kirsche", "manufacturer": {"name": "Aqua"}}
 {"name": "Banger 3 Mal Im Leben", "flavor": "Maracuja Mango Ananas", "manufacturer": {"name": "Banger"}}
 {"name": "Da Vinci King Iamir", "flavor": "Kiwi Kaktusfeige", "manufacturer": {"name": "Da"}}
-{"name": "Da Vinci Moloko", "flavor": "Moloko,Holunder,Citrus,Ingwer DA VINCI TOBACCO ist mehr als nur ein Tabak,es ist eine Einladung,in die faszinierende Welt des Shisharauchens einzutauchen Bestellen Sie jetzt,lassen Sie sich von den reichhaltigen,vielfältigen Aromen verführen Geschmack: Zitrone Holunder Ingwer", "manufacturer": {"name": "Da"}}
+{"name": "Da Vinci Moloko", "flavor": "Moloko,Holunder,Citrus,Ingwer", "manufacturer": {"name": "Da"}}
 {"name": "Da Vinci Yellow Glory", "flavor": "Maracuja Mango", "manufacturer": {"name": "Da"}}
 {"name": "FogYourLaw Dark White Caek Alman", "flavor": "Zitrone Kuchen", "manufacturer": {"name": "FogYourLaw"}}
 {"name": "Holster Zero Lee Punch", "flavor": "Zitrone", "manufacturer": {"name": "Holster"}}
 {"name": "Holster !ce Kaktuz", "flavor": "Ice Kaktuseis", "manufacturer": {"name": "Holster"}}
-{"name": "Must H Caribbean Drum", "flavor": "Rum", "manufacturer": {"name": "Must"}}
+{"name": "Musthave Caribbean Drum", "flavor": "Rum", "manufacturer": {"name": "Musthave"}}
 {"name": "Musthave Milric", "flavor": "Milch", "manufacturer": {"name": "Musthave"}}
 {"name": "NameLess #40 Black Nana", "flavor": "Traube Minze", "manufacturer": {"name": "NameLess"}}
 {"name": "Nargilem Tobacco Black", "flavor": "Beerenmix,Traube", "manufacturer": {"name": "Nargilem"}}
@@ -41,7 +41,7 @@
 {"name": "Aino Dark Conud Shake", "flavor": "Milch Kokusnüsse Kokos", "manufacturer": {"name": "Aino"}}
 {"name": "Aino Tobacco Ballin", "flavor": "Granatapfel Orange Cranberry", "manufacturer": {"name": "Aino"}}
 {"name": "Aino Tobacco Strong Don App", "flavor": "Doppelapfel", "manufacturer": {"name": "Aino"}}
-{"name": "Aino Tobacco The Great Raspy", "flavor": "1 zu 1 nach echter,frischer Himbeere Angenehm kühlende Note für ein erfrischendes Raucherlebnis Hochwertige Zutaten für ein intensives Aroma Wenn du ein Liebhaber von fruchtig-süßen Shisha-Aromen bist,dann wirst du The Great Raspy lieben Dieser Tabak bietet ein authentisches Geschmackserlebnis,das an eine frisch gepflückte Himbeere erinnert,für unvergessliche Shisha-Momente sorgt Geschmack: Himbeere", "manufacturer": {"name": "Aino"}}
+{"name": "Aino Tobacco The Great Raspy", "flavor": "Himbeere", "manufacturer": {"name": "Aino"}}
 {"name": "Al Massiva Bruderherz", "flavor": "Drachenfrucht", "manufacturer": {"name": "Al"}}
 {"name": "Al Massiva Sommer in Beirut", "flavor": "Wassermelone Himbeere", "manufacturer": {"name": "Al"}}
 {"name": "Al Waha T&M", "flavor": "Traube,Minze", "manufacturer": {"name": "Al"}}
@@ -57,7 +57,7 @@
 {"name": "FogYourLaw Dark Cinema Roll", "flavor": "Zimt", "manufacturer": {"name": "FogYourLaw"}}
 {"name": "Holster Zero Pitacho", "flavor": "Pistazie Creme", "manufacturer": {"name": "Holster"}}
 {"name": "True Passion Okolom", "flavor": "Holunderblüte, Limette", "manufacturer": {"name": "True Passion"}}
-{"name": "187 Tabak #040 Hamburg", "flavor": "Saftige Waldbeeren – der perfekte Mix aus süßen,frischen Aromen Hohe Qualität: Hergestellt aus hochwertigen Zutaten für einen dichten,aromatischen Rauch Beliebt in der Shisha-Community: Der 187 Tabak hat sich durch seine intensiven Aromen,hervorragende Raucheigenschaften schnell einen festen Platz in der Shisha-Szene erobert Perfekt für intensive Rauchsessions: Genieße jeden Zug mit einem dichten,aromatischen Rauch,einem unverwechselbaren Geschmack Hintergrund von 187 Tabak Der 187 Tabak wurde 2013 in der Nähe von Frankfurt gegründet,ist eng mit der berühmten Rap-Gruppe 187 Strassenbande verbunden Gegründet von den Deutschrappern Bonez MC,Gzuz,hat sich der Tabak aufgrund seiner unverwechselbaren Geschmackskombinationen,exzellenten Qualität schnell in der Shisha-Szene etabliert Details: Geschmack: Waldbeeren", "manufacturer": {"name": "187"}}
+{"name": "187 Tabak #040 Hamburg", "flavor": "Saftige Waldbeeren", "manufacturer": {"name": "187"}}
 {"name": "Aino Tobacco Lady Mammalade", "flavor": "Kirsche Himbeere Gojibeere", "manufacturer": {"name": "Aino"}}
 {"name": "Aino Tobacco Le Monyze", "flavor": "Ice Zitrone", "manufacturer": {"name": "Aino"}}
 {"name": "Aino Tobacco Strong Oha", "flavor": "Ice,Guave", "manufacturer": {"name": "Aino"}}
@@ -74,8 +74,8 @@
 {"name": "Hookain Purple Lean", "flavor": "Traube Minze", "manufacturer": {"name": "Hookain"}}
 {"name": "Nargilem Tobacco White", "flavor": "Zitronenkuchen", "manufacturer": {"name": "Nargilem"}}
 {"name": "O's Tobacco Bonnie ´n Clyde", "flavor": "Ice Grüner Apfel", "manufacturer": {"name": "O's"}}
-{"name": "True Passion Cinderella", "flavor": "Wassermelone Honigmelone Maracuja", "manufacturer": {"name": "True"}}
-{"name": "True Passion Okolom Classic", "flavor": "Limette Holunder Limonade", "manufacturer": {"name": "True"}}
+{"name": "True Passion Cinderella", "flavor": "Wassermelone Honigmelone Maracuja", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Okolom Classic", "flavor": "Limette Holunder Limonade", "manufacturer": {"name": "True Passion"}}
 {"name": "7 Days C. Peach", "flavor": "Pfirsich, Ice", "manufacturer": {"name": "7 Days"}}
 {"name": "Aino Great Match", "flavor": "Grapefruit Physalis", "manufacturer": {"name": "Aino"}}
 {"name": "Aino Tobacco Don App", "flavor": "Doppelapfel,Anis", "manufacturer": {"name": "Aino"}}
@@ -84,7 +84,7 @@
 {"name": "Al Massiva Handgemacht & Illegal", "flavor": "Ananas Kiwi", "manufacturer": {"name": "Al"}}
 {"name": "Al Massiva Löwenherz", "flavor": "Pfirsich Drachenfrucht Himbeere", "manufacturer": {"name": "Al"}}
 {"name": "Al Massiva Skylines", "flavor": "Grapefruit, Limette, Zitrone", "manufacturer": {"name": "Al Massiva"}}
-{"name": "Al Massvia Pink King", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al"}}
+{"name": "Al Massvia Pink King", "flavor": "", "manufacturer": {"name": "Al"}}
 {"name": "Blackburn Tobacco Famous Apl", "flavor": "Grüner Apfel,Ice", "manufacturer": {"name": "Blackburn"}}
 {"name": "Blackburn Tobacco Pinch Killer", "flavor": "Pfirsich,Walderdbeere", "manufacturer": {"name": "Blackburn"}}
 {"name": "Blackburn Tobaco Mln Halls", "flavor": "Melone,Ice", "manufacturer": {"name": "Blackburn"}}
@@ -93,7 +93,7 @@
 {"name": "Musthave Patch", "flavor": "Pfirsich", "manufacturer": {"name": "Musthave"}}
 {"name": "Musthave Pynkman", "flavor": "Erdbeere Grapefruit Himbeere", "manufacturer": {"name": "Musthave"}}
 {"name": "187 Tabak AMG Schwarze Traube", "flavor": "Schwarze Traube", "manufacturer": {"name": "187"}}
-{"name": "Aino Tobacco Oha", "flavor": "Exotische brasilianische Guave (Feijoa) – fruchtig,süß,säuerlich Einzigartiges Aromaprofil – wie eine Mischung aus Ananas,Erdbeere,Zitrone,Guave Perfekt für alle,die fruchtige,exotische Tabaksorten bevorzugen Hergestellt aus hochwertigem Virginia-Tabak für intensiven Rauchgenuss Erlebe ein außergewöhnliches Geschmackserlebnis mit Aino Tobacco OHA,lass dich von der faszinierenden Note der Feijoa verzaubern Tauche ein in die exotische Welt dieser seltenen Frucht,genieße deinen Shisha-Moment in vollen Zügen", "manufacturer": {"name": "Aino"}}
+{"name": "Aino Tobacco Oha", "flavor": "Exotische brasilianische Guave (Feijoa)", "manufacturer": {"name": "Aino"}}
 {"name": "Al Massiva Black Lebanese", "flavor": "Traube,Minze", "manufacturer": {"name": "Al"}}
 {"name": "Al Massiva Blut gegen Blut", "flavor": "Zitrone, Drachenfrucht", "manufacturer": {"name": "Al Massiva"}}
 {"name": "Aqua Mentha Bluebr", "flavor": "Blaubeere", "manufacturer": {"name": "Aqua"}}
@@ -106,11 +106,11 @@
 {"name": "Dschinni Pstachio", "flavor": "Vanille Pistazie", "manufacturer": {"name": "Dschinni"}}
 {"name": "Dschinni Water Frsh", "flavor": "Wassermelone, Minze", "manufacturer": {"name": "Dschinni"}}
 {"name": "Holster Quwi Punch", "flavor": "Ice Kiwi", "manufacturer": {"name": "Holster"}}
-{"name": "Must H Tabak Jungle Jus", "flavor": "Maracuja Ananas", "manufacturer": {"name": "Must H"}}
+{"name": "Musthave Tabak Jungle Jus", "flavor": "Maracuja Ananas", "manufacturer": {"name": "Musthave"}}
 {"name": "True Passion Le Chill", "flavor": "Zitrone, Limette, Ice", "manufacturer": {"name": "True Passion"}}
-{"name": "187 Tabak Beach Vibez", "flavor": "Süße Himbeere trifft auf erfrischende Limette – ein Geschmackserlebnis,das dich in Urlaubsstimmung versetzt Hohe Qualität: Hergestellt aus hochwertigen Zutaten für einen dichten,aromatischen Rauch Beliebt in der Shisha-Community: Der 187 Tabak hat sich durch seine intensiven Aromen,hervorragende Raucheigenschaften schnell einen festen Platz in der Shisha-Szene erobert Perfekt für intensive Rauchsessions: Genieße jeden Zug mit einem dichten,aromatischen Rauch,einem unverwechselbaren Geschmack Hintergrund von 187 Tabak Der 187 Tabak wurde 2013 in der Nähe von Frankfurt gegründet,ist eng mit der berühmten Rap-Gruppe 187 Strassenbande verbunden Gegründet von den Deutschrappern Bonez MC,Gzuz,hat sich der Tabak aufgrund seiner unverwechselbaren Geschmackskombinationen,exzellenten Qualität schnell in der Shisha-Szene etabliert Details: Geschmack: Himbeere,Limette", "manufacturer": {"name": "187"}}
+{"name": "187 Tabak Beach Vibez", "flavor": "Himbeere,Limette", "manufacturer": {"name": "187"}}
 {"name": "7 Days Classic Bobs Papa", "flavor": "Orange Zitrone Limette Maracuja Grapefruit", "manufacturer": {"name": "7"}}
-{"name": "Aino Tobacco G.O.A.T. - The Greatest Of All Time", "flavor": "Minze – authentisch,erfrischend Traube – süß,leicht säuerlich,nostalgisch Details:", "manufacturer": {"name": "Aino"}}
+{"name": "Aino Tobacco G.O.A.T. - The Greatest Of All Time", "flavor": "Minze", "manufacturer": {"name": "Aino"}}
 {"name": "Al Massiva 5 Palm", "flavor": "Erdbeere Blaubeere Maracuja Mango Blaue Beeren", "manufacturer": {"name": "Al"}}
 {"name": "Al Massiva Blue Beast", "flavor": "Ananas, Brombeere, Blaubeere", "manufacturer": {"name": "Al Massiva"}}
 {"name": "Al Massiva Nightkiller", "flavor": "Johannisbeere Brombeere", "manufacturer": {"name": "Al"}}
@@ -125,7 +125,7 @@
 {"name": "Hookain Angry Green Dragon", "flavor": "Birne Apfel", "manufacturer": {"name": "Hookain"}}
 {"name": "Musthave Pistace P!E", "flavor": "Pistazie Himbeere", "manufacturer": {"name": "Musthave"}}
 {"name": "Aino Tobacco Great Match", "flavor": "Grapefruit,Physalis", "manufacturer": {"name": "Aino"}}
-{"name": "Aino Tobacco Massai", "flavor": "Früchtemix – fruchtig,intensiv,vielschichtig Details:", "manufacturer": {"name": "Aino"}}
+{"name": "Aino Tobacco Massai", "flavor": "Früchtemix", "manufacturer": {"name": "Aino"}}
 {"name": "Aino Tobacco Royal Rumble", "flavor": "Kirsche Granatapfel Icebonbon", "manufacturer": {"name": "Aino"}}
 {"name": "Al Fakher Yellow", "flavor": "Zitrone", "manufacturer": {"name": "Al"}}
 {"name": "ByCandy Sweet Wonder", "flavor": "Traube Erdbeere Sauer", "manufacturer": {"name": "ByCandy"}}
@@ -138,22 +138,22 @@
 {"name": "Holster Mr. John", "flavor": "Pfirsich Zitrone Ananas", "manufacturer": {"name": "Holster"}}
 {"name": "Holster !ce Finger", "flavor": "Orange Limette Himbeere", "manufacturer": {"name": "Holster"}}
 {"name": "O's Tobacco Kaktus King", "flavor": "Kaktusfeige, Ice", "manufacturer": {"name": "O's Tobacco"}}
-{"name": "Serbetli Emon Ke", "flavor": "Exotische Früchte mit süßer,frischer Note Rauchfertig: Direkt genussbereit ohne zusätzliche Vorbereitung Lang anhaltender Genuss: Intensiver Geschmack,dichter Rauch Hochwertige Qualität: Serbetli steht für Premium-Tabak,außergewöhnliche Aromen Produktdetails", "manufacturer": {"name": "Serbetli"}}
+{"name": "Serbetli Emon Ke", "flavor": "Exotische Früchte", "manufacturer": {"name": "Serbetli"}}
 {"name": "187 Tabak Happy Cactuz", "flavor": "Kaktusfeige, Zitrone, Ice", "manufacturer": {"name": "187 Strassenbande"}}
 {"name": "187 Tabak Ma Panty", "flavor": "Pfirsich, Maracuja, Zitrone", "manufacturer": {"name": "187 Strassenbande"}}
 {"name": "7 Days C.Death", "flavor": "Cola, Zitrone, Menthol", "manufacturer": {"name": "7 Days"}}
-{"name": "Aino Tobacco Caribbean Blue", "flavor": "Blaubeere Kokusnüsse Kokos Blaue Beeren", "manufacturer": {"name": "Aino"}}
-{"name": "Al Fakher Crystal Yellow", "flavor": "Zitrone,Minze", "manufacturer": {"name": "Al"}}
-{"name": "Al Massiva Wenn Der Mond", "flavor": "Honigmelone Mango", "manufacturer": {"name": "Al"}}
-{"name": "Al Waha Lazourdi", "flavor": "Zimt Kaugummi", "manufacturer": {"name": "Al"}}
+{"name": "Aino Tobacco Caribbean Blue", "flavor": "Blaubeere Kokusnüsse", "manufacturer": {"name": "Aino"}}
+{"name": "Al Fakher Crystal Yellow", "flavor": "Zitrone,Minze", "manufacturer": {"name": "Al Fakher"}}
+{"name": "Al Massiva Wenn Der Mond", "flavor": "Honigmelone Mango", "manufacturer": {"name": "Al Massiva"}}
+{"name": "Al Waha Lazourdi", "flavor": "Zimt Kaugummi", "manufacturer": {"name": "Al Waha"}}
 {"name": "Banger Regionalliga After Game", "flavor": "Blaubeere Kiwi", "manufacturer": {"name": "Banger"}}
 {"name": "Blackburn Tobacco Ic Babi", "flavor": "Ice,Grapefruit,Beerenmix", "manufacturer": {"name": "Blackburn"}}
 {"name": "Blackburn Tobacco Raserry", "flavor": "Himbeere", "manufacturer": {"name": "Blackburn"}}
 {"name": "ByCandy Sweet Wonder Green Edition", "flavor": "Grüner Apfel, Limette, süß", "manufacturer": {"name": "ByCandy"}}
 {"name": "Capital Bra Smoke Huba Cola", "flavor": "Vanille Cola", "manufacturer": {"name": "Capital"}}
 {"name": "Cataleya Huracan", "flavor": "Passionsfrucht, Limette, Mango", "manufacturer": {"name": "Cataleya"}}
-{"name": "Da Vinci Holiday Trip", "flavor": "Granatapfel Erdbeere Kaktusfeige", "manufacturer": {"name": "Da"}}
-{"name": "Holster Watermill Punch", "flavor": "Bonbon,Eis Geschmack: Frisch,kalt,süß", "manufacturer": {"name": "Holster"}}
+{"name": "Da Vinci Holiday Trip", "flavor": "Granatapfel Erdbeere Kaktusfeige", "manufacturer": {"name": "Da Vinci"}}
+{"name": "Holster Watermill Punch", "flavor": "Bonbon,Eis", "manufacturer": {"name": "Holster"}}
 {"name": "Hookain Cttn Cndy", "flavor": "Wassermelone Blaubeere Mango Zuckerwatte Blaue Beeren", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Green Lean", "flavor": "Ice Zitrone Limette", "manufacturer": {"name": "Hookain"}}
 {"name": "O's African King", "flavor": "Früchtemix", "manufacturer": {"name": "O's"}}
@@ -161,17 +161,17 @@
 {"name": "187 Tabak Juicy Puzzy", "flavor": "Maracuja, Mango, Ice", "manufacturer": {"name": "187 Strassenbande"}}
 {"name": "187 Tabak Pille", "flavor": "Creme Früchtemix", "manufacturer": {"name": "187"}}
 {"name": "187 Tabak Voodoo King", "flavor": "Waldbeeren, Blaubeere, Traube, Anis", "manufacturer": {"name": "187 Strassenbande"}}
-{"name": "7 Days Classic Cold Peah", "flavor": "Menthol Pfirsich", "manufacturer": {"name": "7"}}
+{"name": "7 Days Classic Cold Peah", "flavor": "Menthol Pfirsich", "manufacturer": {"name": "7 Days"}}
 {"name": "7 Days Vanilla Cream", "flavor": "Vanille, Sahne", "manufacturer": {"name": "7 Days"}}
 {"name": "Adalya Lady Killer", "flavor": "Wassermelone Minze Mango Beerenmix", "manufacturer": {"name": "Adalya"}}
 {"name": "Aino Bad Rule White", "flavor": "Blaubeere Energydrink Blaue Beeren", "manufacturer": {"name": "Aino"}}
 {"name": "FogYourLaw Bubblenciaga", "flavor": "Kaugummi", "manufacturer": {"name": "FogYourLaw"}}
 {"name": "Holster Bloody Punch", "flavor": "Blutorange Grapefruit Gewürzmischung", "manufacturer": {"name": "Holster"}}
-{"name": "Holster Peery Punch", "flavor": "Saftige,süße Birnen mit intensiver,fruchtiger Note Tabak: Fein geschnittener Virginia-Tabak Packungsgröße: 25g – Perfekt für unterwegs oder zum Ausprobieren neuer Sorten Herkunft: Hergestellt in Deutschland Warum Holster Peery Punch? Der Holster Peery Punch überzeugt durch die Kombination aus hochwertigem Virginia-Tabak,dem intensiven Geschmack von Birnen Diese erfrischende Kreation ist perfekt für alle Shisha-Fans,die sich nach einem fruchtigen,süßen Geschmack sehnen Holster ist bekannt für seine extrem hohe Rauchdichte,seine Fähigkeit,Geschmacksnoten meisterhaft in einem Tabak zu vereinen Holster – Qualität,Innovation Die", "manufacturer": {"name": "Holster"}}
+{"name": "Holster Peery Punch", "flavor": "Saftige,süße Birnen", "manufacturer": {"name": "Holster"}}
 {"name": "Holster Zero Miss Joosy", "flavor": "Erdbeere Himbeere", "manufacturer": {"name": "Holster"}}
 {"name": "Hookain Laoz", "flavor": "Kirsche Ice Blaubeere", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Wiwi", "flavor": "Wassermelone, Kaugummi", "manufacturer": {"name": "Hookain"}}
-{"name": "Must H Space Flavour", "flavor": "Maracuja Mango Litschi", "manufacturer": {"name": "Must"}}
+{"name": "Musthave Space Flavour", "flavor": "Maracuja Mango Litschi", "manufacturer": {"name": "Musthave"}}
 {"name": "O's Bonnie ´n Clyde", "flavor": "Ice Grüner Apfel Artikel", "manufacturer": {"name": "O's"}}
 {"name": "Revoshi Me Cantare Cassia", "flavor": "Zimt, süß-würzig", "manufacturer": {"name": "Revoshi"}}
 {"name": "Revoshi P App", "flavor": "Grüner Apfel, Menthol", "manufacturer": {"name": "Revoshi"}}
@@ -202,14 +202,14 @@
 {"name": "Hookain Dubai Stachio", "flavor": "Pistazie, Milch, Vanille", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain KaffaYayo", "flavor": "Vanille Mandel Kokos Raffaelo", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Punani", "flavor": "Orange Maracuja Mango Ananas", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain Red Dragon", "flavor": "Pfirsich,Erdbeere mit einer intensiven sauren Note Tabak: Hochwertiger Virginia-Tabak im feinsten Phunnel-Schnitt Packungsgröße: 200g – Ideal für längeren Genuss Herkunft: Hergestellt nach höchsten Standards in Deutschland Warum HOOKAiN Angry Red Dragon? HOOKAiN Angry Red Dragon überzeugt nicht nur durch seine einzigartige Kombination aus fruchtigen,sauren Aromen,sondern auch durch das kreative Packaging,das ihn von anderen Tabaken abhebt Der Tabak erinnert an eine bekannte Süßigkeit,sorgt mit seinem feinen Phunnel-Schnitt für ein besonders intensives,geschmacksexplosives Raucherlebnis HOOKAiN – Qualität,die begeistert Bei HOOKAiN setzen wir auf höchste Qualitätsstandards Unser Tabak wird in mehreren Durchgängen streng kontrolliert,wir verwenden nur natürliche Aromen sowie handverlesenen Virginia-Tabak Das Resultat ist ein Tabak,der nicht nur durch seinen intensiven Geschmack,sondern auch durch seine erstklassige Rauchdichte überzeugt Das HOOKAiN Sortiment Das HOOKAiN Sortiment bietet eine große Auswahl an leckeren Aromen,von klassischen Sorten wie Traube-Minze,Kirsche bis hin zu ausgefallenen,innovativen Kreationen wie dem Kaugummi-Tabak “Bubblenciaga” Entdecke neue Geschmackserlebnisse,erweitere deine Geschmacksknospen mit den einzigartigen Aromen von HOOKAiN Entdecke auch die anderen leckeren Sorten,finde deinen neuen Favoriten Geschmack: Pfirsich Erdbeere", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain Red Dragon", "flavor": "Pfirsich,Erdbeere", "manufacturer": {"name": "Hookain"}}
 {"name": "Jookah Kool Kola", "flavor": "Cola, Ice", "manufacturer": {"name": "Jookah"}}
 {"name": "Maridan Tingle Tangle", "flavor": "Maracuja, Limette, Grapefruit", "manufacturer": {"name": "Maridan"}}
-{"name": "Must H Koko Dream", "flavor": "Intensive Kokosnuss mit cremiger Milch", "manufacturer": {"name": "Must"}}
+{"name": "Musthave Koko Dream", "flavor": "Intensive Kokosnuss mit cremiger Milch", "manufacturer": {"name": "Musthave"}}
 {"name": "Musthave Leime", "flavor": "Zitrone Limette", "manufacturer": {"name": "Musthave"}}
 {"name": "NameLess #105 Big Red", "flavor": "Kaugummi, Zimt (Big Red Flavor)", "manufacturer": {"name": "NameLess"}}
 {"name": "030 Blaues Wunder 20", "flavor": "Ice Blaubeere", "manufacturer": {"name": "030"}}
-{"name": "030 Blickfang 19", "flavor": "Honigmelone,Maracuja Achtung: Kein Verkauf von Tabak an Personen unter 18 Jahren Geschmack: Honigmelone Maracuja", "manufacturer": {"name": "030"}}
+{"name": "030 Blickfang 19", "flavor": "Honigmelone,Maracuja", "manufacturer": {"name": "030"}}
 {"name": "030 Einzigartig 62", "flavor": "Minze Limette", "manufacturer": {"name": "030"}}
 {"name": "030 Grün Rund 36", "flavor": "Traube Minze", "manufacturer": {"name": "030"}}
 {"name": "030 Kopfkino 44", "flavor": "Cola Zucker", "manufacturer": {"name": "030"}}
@@ -221,7 +221,7 @@
 {"name": "187 Tabak #026 - flying Hirsch", "flavor": "Energydrink Kräuterlikör", "manufacturer": {"name": "187"}}
 {"name": "O's African Queen", "flavor": "Früchtemix", "manufacturer": {"name": "O's"}}
 {"name": "Serbetli Ic Bird", "flavor": "Ice Zitrone Kiwi", "manufacturer": {"name": "Serbetli"}}
-{"name": "Serbetli Ic Pin", "flavor": "Exotische Ananas trifft auf eine erfrischende Ice-Komponente Premium Virginia-Tabak: Hochwertiger Tabak sorgt für dichten Rauch,langanhaltendes Aroma Optimale Feuchtigkeit: Perfekt für gleichmäßige Verbrennung,intensives Raucherlebnis Einfaches Handling: Direkt rauchfertig,kompatibel mit allen Shisha-Köpfen Produktdetails Geschmacksrichtung: Tropische Ananas mit Ice-Finish Mischungsverhältnis: Ideal für gleichmäßige Rauchentwicklung", "manufacturer": {"name": "Serbetli"}}
+{"name": "Serbetli Ic Pin", "flavor": "Exotische Ananas", "manufacturer": {"name": "Serbetli"}}
 {"name": "Serbetli Imliceblerry", "flavor": "Limette Blaubeere Litschi Blaue Beeren", "manufacturer": {"name": "Serbetli"}}
 {"name": "Serbetli Rotana", "flavor": "Blaubeere Mango Guave Blaue Beeren", "manufacturer": {"name": "Serbetli"}}
 {"name": "Serbetli Stra Shark", "flavor": "Erdbeere Früchtemix", "manufacturer": {"name": "Serbetli"}}
@@ -262,7 +262,7 @@
 {"name": "187 Tabak Yakuza", "flavor": "Minze Holunder Physalis Yuzufrucht", "manufacturer": {"name": "187"}}
 {"name": "187 Tabak Zafari", "flavor": "Zitrone Grapefruit Ananas Drachenfrucht", "manufacturer": {"name": "187"}}
 {"name": "27er Tobacco Black Kaktus", "flavor": "Brombeere Kaktusfeige", "manufacturer": {"name": "27er"}}
-{"name": "27er Tobacco Blue Dragon", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "27er"}}
+{"name": "27er Tobacco Blue Dragon", "flavor": "", "manufacturer": {"name": "27er"}}
 {"name": "27er Tobacco KiGa", "flavor": "Kirsche Granatapfel", "manufacturer": {"name": "27er"}}
 {"name": "7 Days Classic C.Cherr", "flavor": "Menthol Kirsche", "manufacturer": {"name": "7"}}
 {"name": "7 Days Classic Cold Blue", "flavor": "Menthol Blaubeere", "manufacturer": {"name": "7"}}
@@ -321,7 +321,7 @@
 {"name": "Al Fakher Crystal Grapio", "flavor": "Traube,Menthol", "manufacturer": {"name": "Al Fakher"}}
 {"name": "Al Fakher Double Kick", "flavor": "Doppelapfel", "manufacturer": {"name": "Al Fakher"}}
 {"name": "Al Fakher Garpio", "flavor": "Traube", "manufacturer": {"name": "Al Fakher"}}
-{"name": "Al Fakher Mint", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Fakher"}}
+{"name": "Al Fakher Mint", "flavor": "", "manufacturer": {"name": "Al Fakher"}}
 {"name": "Al Fakher Red Smash", "flavor": "Wassermelone", "manufacturer": {"name": "Al Fakher"}}
 {"name": "Al Fakher White Flash", "flavor": "Minze Zitrone", "manufacturer": {"name": "Al Fakher"}}
 {"name": "Al Massiva Ana Bahebak", "flavor": "Apfel Zucker Paradiesapfel", "manufacturer": {"name": "Al Massiva"}}
@@ -331,36 +331,36 @@
 {"name": "Al Massiva Nasib", "flavor": "Zitronenkuchen", "manufacturer": {"name": "Al Massiva"}}
 {"name": "Al Waha Africano Ki", "flavor": "Kiwi", "manufacturer": {"name": "Al Waha"}}
 {"name": "Al Waha Black Grap", "flavor": "Dunkle Traube", "manufacturer": {"name": "Al Waha"}}
-{"name": "Al Waha Blue Min", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Waha"}}
+{"name": "Al Waha Blue Min", "flavor": "", "manufacturer": {"name": "Al Waha"}}
 {"name": "Al Waha Fresh Black", "flavor": "Menthol Kirsche Cola", "manufacturer": {"name": "Al Waha"}}
-{"name": "Al Waha G-M-M", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Waha"}}
+{"name": "Al Waha G-M-M", "flavor": "", "manufacturer": {"name": "Al Waha"}}
 {"name": "Al Waha GRM", "flavor": "Traube Minze", "manufacturer": {"name": "Al Waha"}}
-{"name": "Al Waha G.R.M", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Waha"}}
-{"name": "Al Waha Green 1", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Waha"}}
-{"name": "Al Waha Gum", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Waha"}}
-{"name": "Al Waha I Love 69", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Waha"}}
-{"name": "Al Waha L-M-M", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Waha"}}
-{"name": "Al Waha Memories", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Waha"}}
+{"name": "Al Waha G.R.M", "flavor": "", "manufacturer": {"name": "Al Waha"}}
+{"name": "Al Waha Green 1", "flavor": "", "manufacturer": {"name": "Al Waha"}}
+{"name": "Al Waha Gum", "flavor": "", "manufacturer": {"name": "Al Waha"}}
+{"name": "Al Waha I Love 69", "flavor": "", "manufacturer": {"name": "Al Waha"}}
+{"name": "Al Waha L-M-M", "flavor": "", "manufacturer": {"name": "Al Waha"}}
+{"name": "Al Waha Memories", "flavor": "", "manufacturer": {"name": "Al Waha"}}
 {"name": "Al Waha Orang Min", "flavor": "Minze Orange", "manufacturer": {"name": "Al Waha"}}
 {"name": "Al Waha Two App", "flavor": "Doppelapfel", "manufacturer": {"name": "Al Waha"}}
 {"name": "Al Wazir Tobacco Happy Buddha", "flavor": "Maracuja Mandarine", "manufacturer": {"name": "Al Wazir"}}
 {"name": "Al Wazir Tobacco No.1 Double Apl", "flavor": "Doppelapfel mit Anis & Lakritz", "manufacturer": {"name": "Al Wazir"}}
 {"name": "Al Wazir Tobacco No.32 Yellowsunshine", "flavor": "Zitrone, Limette, Yuzu", "manufacturer": {"name": "Al Wazir"}}
-{"name": "Al Wazir Tobacco No.52 Chilla Villa", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Wazir"}}
-{"name": "Al Wazir Tobacco No.9 Mistery Land", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Al Wazir"}}
+{"name": "Al Wazir Tobacco No.52 Chilla Villa", "flavor": "", "manufacturer": {"name": "Al Wazir"}}
+{"name": "Al Wazir Tobacco No.9 Mistery Land", "flavor": "", "manufacturer": {"name": "Al Wazir"}}
 {"name": "Aqua Menhta LEOBR", "flavor": "Zitrone Himbeere", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Menhta TPCAL Gawa", "flavor": "Minze Energydrink Guave", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Apache", "flavor": "Wassermelone Erdbeere", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Babbel + Shot", "flavor": "Minze Kaugummi Spearmint", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Blue Eyes", "flavor": "Brombeere", "manufacturer": {"name": "Aqua"}}
-{"name": "Aqua Mentha Cactus Splash", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Aqua"}}
+{"name": "Aqua Mentha Cactus Splash", "flavor": "", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Colours", "flavor": "Traube Kirsche Erdbeere Grapefruit Passionsfrucht", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Crazy Chief", "flavor": "Pfirsich", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Eighteen", "flavor": "Früchtemix", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Fanex", "flavor": "Pfirsich Minze Orange Zitrone Maracuja Beerenmix", "manufacturer": {"name": "Aqua"}}
-{"name": "Aqua Mentha Golden Leo", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Aqua"}}
+{"name": "Aqua Mentha Golden Leo", "flavor": "", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Green Pery", "flavor": "Birne", "manufacturer": {"name": "Aqua"}}
-{"name": "Aqua Mentha Green Snake", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Aqua"}}
+{"name": "Aqua Mentha Green Snake", "flavor": "", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Kamasutra", "flavor": "Traube Kirsche Minze Rote Beeren", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Lokko", "flavor": "Orange Zitrone Holunder Ingwer", "manufacturer": {"name": "Aqua"}}
 {"name": "Aqua Mentha Red & Green", "flavor": "Grüner Apfel Roter Apfel", "manufacturer": {"name": "Aqua"}}
@@ -436,7 +436,7 @@
 {"name": "Chaos Baby Noah", "flavor": "Blaubeere, Himbeere, Ice", "manufacturer": {"name": "Chaos"}}
 {"name": "Chaos Cucumbra", "flavor": "Minze Gurke", "manufacturer": {"name": "Chaos"}}
 {"name": "Chaos Destiny", "flavor": "Waldbeeren, Vanille", "manufacturer": {"name": "Chaos"}}
-{"name": "Chaos Foreplay", "flavor": "Menthol,Sternfrucht,Limette,Zitrone Shisha,Wasserpfeife Eine Shisha ist eine Wasserpeife dessen Ursprung in Indien,Persien liegt Vor langer Zeit bestand ihr Material unter anderem aus Bambus Heute hat die Shisha so wie wir sie kennen bereits viele Veränderungen,Innovationen hinter sich,so wurde Bambus durch diverse hochwertigere Materialien ersetzt wie z B Edelstahl oder Messing Mittlerweile gibt es sie in unzähligen Variationen,sie ist international beliebt Doch wie funktioniert eigentlich eine Shisha? Durch die Kohle die auf dem entsprechenden Aufsatz liegt,wird der darin enthaltende Tabak erhitzt Der Rauch wird in der Bowl,welches ein Gefäß das mit Wasser befüllt ist,gefiltert Somit entsteht dann der genüssliche Rauch den man ein-,auspustet,woraus besteht eine Shisha? Sie wird durch viele Bestandteile zusam", "manufacturer": {"name": "Chaos"}}
+{"name": "Chaos Foreplay", "flavor": "Menthol,Sternfrucht,Limette,Zitrone", "manufacturer": {"name": "Chaos"}}
 {"name": "Chaos Iceplosion", "flavor": "Ice Icebonbon", "manufacturer": {"name": "Chaos"}}
 {"name": "Chaos Mangana", "flavor": "Mango Ananas", "manufacturer": {"name": "Chaos"}}
 {"name": "Chaos Medusa", "flavor": "Traube Minze Blaubeere", "manufacturer": {"name": "Chaos"}}
@@ -506,10 +506,10 @@
 {"name": "Fadi Tobaggo C. rry", "flavor": "Kirsche Caprisonne", "manufacturer": {"name": "Fadi"}}
 {"name": "Fadi Tobaggo Capri O", "flavor": "Orange Caprisonne", "manufacturer": {"name": "Fadi"}}
 {"name": "Fadi Tobaggo Crazy Love", "flavor": "Wassermelone Honigmelone Maracuja Guave", "manufacturer": {"name": "Fadi"}}
-{"name": "Fadi Tobaggo Green Drops", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Fadi"}}
+{"name": "Fadi Tobaggo Green Drops", "flavor": "", "manufacturer": {"name": "Fadi"}}
 {"name": "Fadi Tobaggo Purple Drops", "flavor": "Acai Beeren Energydrink", "manufacturer": {"name": "Fadi"}}
 {"name": "Fadi Tobaggo Spirit Bomb", "flavor": "Blaubeere Karamell Cheescake", "manufacturer": {"name": "Fadi"}}
-{"name": "Fadi Tobaggo White Drops", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Fadi"}}
+{"name": "Fadi Tobaggo White Drops", "flavor": "", "manufacturer": {"name": "Fadi"}}
 {"name": "Fadi Tobaggo White Goku", "flavor": "Traube Minze Johannisbeere", "manufacturer": {"name": "Fadi"}}
 {"name": "FogYourLaw Blue Mind", "flavor": "Minze Blaubeere Blaue Beeren", "manufacturer": {"name": "FogYourLaw"}}
 {"name": "FogYourLaw Dark Laoz", "flavor": "Menthol Kirsche Blaubeere", "manufacturer": {"name": "FogYourLaw"}}
@@ -526,8 +526,8 @@
 {"name": "FYL Molasse Funtasia Orange", "flavor": "Ice Orange Limonade", "manufacturer": {"name": "FYL"}}
 {"name": "FYL Molasse Ice Kaktus", "flavor": "Ice Kaktusfeige Kaktuseis", "manufacturer": {"name": "FYL"}}
 {"name": "FYL Molasse Kaugummi Minze", "flavor": "Minze Kaugummi", "manufacturer": {"name": "FYL"}}
-{"name": "FYL Molasse Lemon Ice", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "FYL"}}
-{"name": "FYL Molasse Mango Maracuja Ice", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "FYL"}}
+{"name": "FYL Molasse Lemon Ice", "flavor": "", "manufacturer": {"name": "FYL"}}
+{"name": "FYL Molasse Mango Maracuja Ice", "flavor": "", "manufacturer": {"name": "FYL"}}
 {"name": "FYL Molasse Marokkanische Minze", "flavor": "Ice Minze", "manufacturer": {"name": "FYL"}}
 {"name": "FYL Molasse Original Cola", "flavor": "Cola", "manufacturer": {"name": "FYL"}}
 {"name": "FYL Molasse Pfirsich Ananas", "flavor": "Pfirsich Ananas", "manufacturer": {"name": "FYL"}}
@@ -565,7 +565,7 @@
 {"name": "Holster Unicorn", "flavor": "Milch Früchtemix Cerealien", "manufacturer": {"name": "Holster"}}
 {"name": "Holster Wild Punch", "flavor": "Ice Waldbeerenmix", "manufacturer": {"name": "Holster"}}
 {"name": "Holster Winter Edition", "flavor": "Butterkeks", "manufacturer": {"name": "Holster"}}
-{"name": "Holster Yellow Punch", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Holster"}}
+{"name": "Holster Yellow Punch", "flavor": "", "manufacturer": {"name": "Holster"}}
 {"name": "Holster Zero Bloody Punch", "flavor": "Blutorange Grapefruit", "manufacturer": {"name": "Holster"}}
 {"name": "Holster Zero Blue Punch", "flavor": "Blaubeere Blaue Beeren", "manufacturer": {"name": "Holster"}}
 {"name": "Holster Zero GRP 2.0", "flavor": "Traube Minze", "manufacturer": {"name": "Holster"}}
@@ -578,10 +578,10 @@
 {"name": "Hookain Anders", "flavor": "Zitrone Mango Grapefruit", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Angry Piç Dragon", "flavor": "Pfirsich Aprikose", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Asphalt Manta Erotik", "flavor": "Pfirsich Orange Maracuja Fanta", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain Base für Fog Your Life Rohtabak", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain Base für Fog Your Life Rohtabak", "flavor": "", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain BertEhre", "flavor": "Erdbeere Grapefruit", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain Beyond Menhtol+", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain Beyond Mint+", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain Beyond Menhtol+", "flavor": "", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain Beyond Mint+", "flavor": "", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Big Black Barries", "flavor": "Traube Ice Minze Beerenmix", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Bubblenciaga", "flavor": "Kaugummi", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Cactopus", "flavor": "Erdbeere Kaktuseis", "manufacturer": {"name": "Hookain"}}
@@ -593,20 +593,20 @@
 {"name": "Hookain inTens!fy American Pei", "flavor": "köstliche Apfelkuchen,Zimt", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Aspahlt Manta", "flavor": "Fanta Exotic", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Bärlean", "flavor": "köstliche schw", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain inTens!fy Big Black Barries", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain inTens!fy Bubblenciaga", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain inTens!fy Big Black Barries", "flavor": "", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain inTens!fy Bubblenciaga", "flavor": "", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Cactopus", "flavor": "köstliche Kaktus,Erdbeere,Vanille", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Cherry Zkittlez", "flavor": "köstliche Kirsche,Drachenfrucht,Pfefferminze,Menthol", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Code in Love", "flavor": "köstliche Kaktus,Pfirsich,Vanille,Wassermelone", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Fellatio", "flavor": "köstliche Honigmelone,Wassermelone,Maracuja,Wildbeeren", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Green Crack", "flavor": "köstliche Limette,Zitrone,kubanische Minze", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain inTens!fy Green Lean", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain inTens!fy Jizzy Pia", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain inTens!fy Kaffayayo", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain inTens!fy Green Lean", "flavor": "", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain inTens!fy Jizzy Pia", "flavor": "", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain inTens!fy Kaffayayo", "flavor": "", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Kivi King", "flavor": "köstliche Kiwi,Limette,Minze", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Laoz", "flavor": "köstliche Kirsche,Blaubeere,Ice", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Lemenciaga", "flavor": "köstliche Zitrone,Grüner Tee,Minze,Menthol", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain inTens!fy Papa Ya Mongo", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain inTens!fy Papa Ya Mongo", "flavor": "", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Pic Skittlez", "flavor": "köstliche Pfirsich,Aprikose,Minze", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Punani", "flavor": "köstliche Mango,Maracuja,Orange,Ananas,Minze", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy Soleiro Spliff", "flavor": "köstliche Maracuja,Orange,Vanille-Eis", "manufacturer": {"name": "Hookain"}}
@@ -616,9 +616,9 @@
 {"name": "Hookain Kaffa Yayo", "flavor": "Vanille Mandel Kokos", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Kivi King", "flavor": "Minze Limette Kiwi", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Lemenciaga", "flavor": "Menthol Minze Zitrone Grüner Tee", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain MellionAir", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain MellionAir", "flavor": "", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Mongo Loco", "flavor": "Mango Grapefruit Energydrink", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain Nature Base für Fog Your Life Molasse", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain Nature Base für Fog Your Life Molasse", "flavor": "", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Orang!na", "flavor": "Orange Limonade Mandarine", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Papa Ya Mongo", "flavor": "Ice Mango Papaya", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Pic Skittlez", "flavor": "Pfirsich Eistee", "manufacturer": {"name": "Hookain"}}
@@ -628,7 +628,7 @@
 {"name": "Hookain Spiced Lean", "flavor": "Limette Schwarzer Tee", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Sweety", "flavor": "Menthol Ice Cranberry Himbeere", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain inTens!fy White Caek", "flavor": "köstliche Cheescake,Vanille,Karamell,Popcorn", "manufacturer": {"name": "Hookain"}}
-{"name": "Hookain inTens!fy Zenta Schox", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "Hookain"}}
+{"name": "Hookain inTens!fy Zenta Schox", "flavor": "", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain sM!NT", "flavor": "Eukalyptus", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain Vantanaz", "flavor": "Ananas Fanta", "manufacturer": {"name": "Hookain"}}
 {"name": "Hookain White Brown", "flavor": "Creme Kaffee", "manufacturer": {"name": "Hookain"}}
@@ -699,9 +699,9 @@
 {"name": "Moe's Tobacco Exotic Sun", "flavor": "Mango", "manufacturer": {"name": "Moe's"}}
 {"name": "Moe's Tobacco Pink King", "flavor": "Himbeere", "manufacturer": {"name": "Moe's"}}
 {"name": "Moe's Tobacco Wild Green", "flavor": "Maracuja Kiwi", "manufacturer": {"name": "Moe's"}}
-{"name": "Must H Black Brrs", "flavor": "Brombeere", "manufacturer": {"name": "Must"}}
-{"name": "Must H Forest Brrs", "flavor": "Waldbeerenmix", "manufacturer": {"name": "Must"}}
-{"name": "Must H Pinkman", "flavor": "Erdbeere Grapefruit Himbeere", "manufacturer": {"name": "Must"}}
+{"name": "Musthave Black Brrs", "flavor": "Brombeere", "manufacturer": {"name": "Musthave"}}
+{"name": "Musthave Forest Brrs", "flavor": "Waldbeerenmix", "manufacturer": {"name": "Musthave"}}
+{"name": "Musthave Pinkman", "flavor": "Erdbeere Grapefruit Himbeere", "manufacturer": {"name": "Musthave"}}
 {"name": "Musthave Forest Berri", "flavor": "Brombeere Waldbeerenmix", "manufacturer": {"name": "Musthave"}}
 {"name": "Musthave India", "flavor": "Gewürzmischung Tee", "manufacturer": {"name": "Musthave"}}
 {"name": "Musthave Kwi Smooth", "flavor": "Kiwi Apfel Pfefferminze", "manufacturer": {"name": "Musthave"}}
@@ -710,9 +710,9 @@
 {"name": "Musthave Pynapl", "flavor": "Ananas", "manufacturer": {"name": "Musthave"}}
 {"name": "Musthave Raspi", "flavor": "Himbeere", "manufacturer": {"name": "Musthave"}}
 {"name": "Musthave Straw Lych", "flavor": "Erdbeere Litschi", "manufacturer": {"name": "Musthave"}}
-{"name": "NameLess #101 Black Chai", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "NameLess"}}
-{"name": "NameLess #106 Dark City Lights", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "NameLess"}}
-{"name": "NameLess #111 Dragon Blood", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "NameLess"}}
+{"name": "NameLess #101 Black Chai", "flavor": "", "manufacturer": {"name": "NameLess"}}
+{"name": "NameLess #106 Dark City Lights", "flavor": "", "manufacturer": {"name": "NameLess"}}
+{"name": "NameLess #111 Dragon Blood", "flavor": "", "manufacturer": {"name": "NameLess"}}
 {"name": "NameLess #112 Red Artic", "flavor": "Rote Früchte, Beerenmix, Menthol", "manufacturer": {"name": "NameLess"}}
 {"name": "NameLess #113 Moon Light", "flavor": "Honigmelone Granatapfel", "manufacturer": {"name": "NameLess"}}
 {"name": "NameLess #115 Californication", "flavor": "Maracuja, Mango, Limette", "manufacturer": {"name": "NameLess"}}
@@ -720,8 +720,8 @@
 {"name": "NameLess #40 Black Nana + Shot", "flavor": "Minze Dunkle Traube", "manufacturer": {"name": "NameLess"}}
 {"name": "NameLess #40 Black Nana ohne shot", "flavor": "Traube Minze Dunkle Traube", "manufacturer": {"name": "NameLess"}}
 {"name": "Nargilem Tobacco Green", "flavor": "Minze Limette", "manufacturer": {"name": "Nargilem"}}
-{"name": "O´s African Queen", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "O´s"}}
-{"name": "O´s Bonnie ´n Clyde", "flavor": "Von klassisch über fruchtig bis hin zu ausgefallenen Aromen haben wir die", "manufacturer": {"name": "O´s"}}
+{"name": "O´s African Queen", "flavor": "", "manufacturer": {"name": "O´s"}}
+{"name": "O´s Bonnie ´n Clyde", "flavor": "", "manufacturer": {"name": "O´s"}}
 {"name": "O´s Casanova", "flavor": "Wassermelone Honigmelone Beerenmix", "manufacturer": {"name": "O´s"}}
 {"name": "Ocean Hookah Tobacco Fus!on", "flavor": "Kirsche Zitrone Mandel Amaretto", "manufacturer": {"name": "Ocean Hookah"}}
 {"name": "Ocean Hookah Tobacco Ka!f", "flavor": "Ice Zitrone Limette Zucker", "manufacturer": {"name": "Ocean Hookah"}}
@@ -797,24 +797,24 @@
 {"name": "Start Now Pinkonade", "flavor": "Zitrone, Himbeere, Limette", "manufacturer": {"name": "Start Now"}}
 {"name": "Start Now Tobacco Green Mind", "flavor": "Minze", "manufacturer": {"name": "Start Now"}}
 {"name": "True Passion Artic Line", "flavor": "Limette, Menthol, Ice", "manufacturer": {"name": "True Passion"}}
-{"name": "True Passion Ginga Black", "flavor": "Orange Ingwer", "manufacturer": {"name": "True"}}
-{"name": "True Passion La Mantarina", "flavor": "Holunder Limonade Mandarine", "manufacturer": {"name": "True"}}
-{"name": "True Passion Lawan + Shot", "flavor": "Pfirsich Orange Limette Maracuja", "manufacturer": {"name": "True"}}
-{"name": "True Passion Le Cak", "flavor": "Vanille Zitrone", "manufacturer": {"name": "True"}}
-{"name": "True Passion Okolom Cranbrry", "flavor": "Limette Holunder Cranberry", "manufacturer": {"name": "True"}}
+{"name": "True Passion Ginga Black", "flavor": "Orange Ingwer", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion La Mantarina", "flavor": "Holunder Limonade Mandarine", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Lawan + Shot", "flavor": "Pfirsich Orange Limette Maracuja", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Le Cak", "flavor": "Vanille Zitrone", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Okolom Cranbrry", "flavor": "Limette Holunder Cranberry", "manufacturer": {"name": "True Passion"}}
 {"name": "True Passion Okolom Gold", "flavor": "Holunderblüte, Limette, Ice", "manufacturer": {"name": "True Passion"}}
-{"name": "True Passion Okolom White", "flavor": "Limette Holunder Cocos", "manufacturer": {"name": "True"}}
-{"name": "True Passion Rainbow", "flavor": "Früchtemix", "manufacturer": {"name": "True"}}
-{"name": "True Passion Ringle Rangle", "flavor": "Limette Maracuja Grapefruit", "manufacturer": {"name": "True"}}
-{"name": "True Passion Shuggy Bra + Shot", "flavor": "Melone Maracuja Mango Guave", "manufacturer": {"name": "True"}}
-{"name": "True Passion Slushy PeaMi", "flavor": "Menthol Ice Pfirsich", "manufacturer": {"name": "True"}}
-{"name": "True Passion Spy´ce On Ch@iii", "flavor": "Chai Tee Gewürzmischung", "manufacturer": {"name": "True"}}
-{"name": "True Passion Vaja Blue", "flavor": "Traube Blaubeere", "manufacturer": {"name": "True"}}
+{"name": "True Passion Okolom White", "flavor": "Limette Holunder Cocos", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Rainbow", "flavor": "Früchtemix", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Ringle Rangle", "flavor": "Limette Maracuja Grapefruit", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Shuggy Bra + Shot", "flavor": "Melone Maracuja Mango Guave", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Slushy PeaMi", "flavor": "Menthol Ice Pfirsich", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Spy´ce On Ch@iii", "flavor": "Chai Tee Gewürzmischung", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Vaja Blue", "flavor": "Traube Blaubeere", "manufacturer": {"name": "True Passion"}}
 {"name": "True Passion Vampire Nights", "flavor": "Blaubeere, Himbeere, Menthol", "manufacturer": {"name": "True Passion"}}
-{"name": "True Passion WaMe Chill", "flavor": "Wassermelone Ice Minze", "manufacturer": {"name": "True"}}
-{"name": "True Passion Wild B Chill", "flavor": "Minze Erdbeere Himbeere Brombeere", "manufacturer": {"name": "True"}}
-{"name": "Twenty 4 Seven HABIBO Nation", "flavor": "Kirsche Minze Blaubeere", "manufacturer": {"name": "Twenty"}}
-{"name": "Twenty 4 Seven lutsch FI#@ER", "flavor": "Zitrone Himbeere", "manufacturer": {"name": "Twenty"}}
+{"name": "True Passion WaMe Chill", "flavor": "Wassermelone Ice Minze", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion Wild B Chill", "flavor": "Minze Erdbeere Himbeere Brombeere", "manufacturer": {"name": "True Passion"}}
+{"name": "Twenty 4 Seven HABIBO Nation", "flavor": "Kirsche Minze Blaubeere", "manufacturer": {"name": "Twenty 4"}}
+{"name": "Twenty 4 Seven lutsch FI#@ER", "flavor": "Zitrone Himbeere", "manufacturer": {"name": "Twenty 4"}}
 {"name": "Vidavi Braaa", "flavor": "Zitrone Blaubeere", "manufacturer": {"name": "Vidavi"}}
 {"name": "Vidavi Bubble Butt", "flavor": "Wassermelone Ice", "manufacturer": {"name": "Vidavi"}}
 {"name": "Vidavi Cheebaa", "flavor": "Kirsche Banane", "manufacturer": {"name": "Vidavi"}}
@@ -945,7 +945,7 @@
 {"name": "Holster Joker", "flavor": "Beerenmix, Kaugummi, Ice", "manufacturer": {"name": "Holster"}}
 {"name": "Hookain Lmn Tngo", "flavor": "Zitrone, Mango", "manufacturer": {"name": "Hookain"}}
 {"name": "Zomo Strong Mint", "flavor": "Starke Minze", "manufacturer": {"name": "Zomo"}}
-{"name": "187 Strassenbande Shisha Tabak - 040 Hamburg", "flavor": "Beerenmix", "manufacturer": {"name": "187 Strassenbande Shisha"}}
+{"name": "187 Strassenbande Tabak - 040 Hamburg", "flavor": "Beerenmix", "manufacturer": {"name": "187 Strassenbande"}}
 {"name": "Al Massiva Shisha Tabak - Sommer in Beirut", "flavor": "Zitrone Wassermelone Himbeere", "manufacturer": {"name": "Al Massiva Shisha"}}
 {"name": "Aqua Mentha Shisha Tabak - CACTUS SPLASH", "flavor": "Kaktusfeige", "manufacturer": {"name": "Aqua Mentha Shisha"}}
 {"name": "Holster Shisha Tabak - Wild Punch", "flavor": "Waldbeere", "manufacturer": {"name": "Holster Shisha"}}
@@ -982,8 +982,7 @@
 {"name": "Holster Shisha Tabak - Quwi Punch", "flavor": "Kiwi", "manufacturer": {"name": "Holster Shisha"}}
 {"name": "Holster Shisha Tabak - Watermill Punch", "flavor": "Wassermelone,Ice", "manufacturer": {"name": "Holster Shisha"}}
 {"name": "Holster Shisha Tabak - Winter Edition", "flavor": "Butterkeks", "manufacturer": {"name": "Holster Shisha"}}
-{"name": "Nameless Shisha Tabak - Black Nana #40", "flavor": "Genieße die perfekte Balance zwischen der fruchtigen Süße schwarzer Trauben,der kühlen Frische von Minze. Premium-Qualität : Hergestellt aus hochwertigen Tabakblättern,die sorgfältig ausgewählt,verarbeitet wurden. Langanhaltender Rauchgenuss : Dank der optimalen Feuchtigkeit des Tabaks erhältst du einen dichten,langanhaltenden Rauch. Ideal für alle Anlässe Ob gesellige Abende mit Freunden oder entspannte Momente alleine – Black Nana ist die perfekte Wahl für jeden Shisha-Liebhaber. Lass dich von diesem exquisiten Geschmackserlebnis verführen,erlebe Shisha-Rauchen auf einem neuen Niveau. Produktdetails", "manufacturer": {"name": "Nameless Shisha"}}
-{"name": "Nameless Shisha Tabak - #40 Black Nana", "flavor": "Traube,Minze Hinweis: Das Angebot besteht aus folgendem Set: 10 x Black Nana 20g = 200g Was für ein Geschmack ist Black Nana? Black Nana Shisha Tabak ist ein köstlicher Tabak mit einem intensiven Geschmack von dunkler Traube,einer erfrischenden Note von Minze. Der Geschmack ist angenehm süß,fruchtig,während die Minze für eine belebende Frische sorgt. Dieser Tabak ist perfekt für alle,die einen kräftigen,dennoch erfrischenden Geschmack suchen. Wie viel", "manufacturer": {"name": "Nameless Shisha"}}
+{"name": "Nameless Shisha Tabak - Black Nana #40", "flavor": "süße schwarzer Trauben, Minze", "manufacturer": {"name": "Nameless Shisha"}}
 {"name": "O's Shisha Tabak - African King", "flavor": "Früchtemix", "manufacturer": {"name": "O's Shisha"}}
 {"name": "O's Shisha Tabak - African Queen", "flavor": "Früchtemix", "manufacturer": {"name": "O's Shisha"}}
 {"name": "Shades Shisha Tabak - Rasporn", "flavor": "Himbeere", "manufacturer": {"name": "Shades Shisha"}}
@@ -993,7 +992,7 @@
 {"name": "Argileh Shisha Tabak - Laymont Mnt", "flavor": "Zitrone Minze", "manufacturer": {"name": "Argileh Shisha"}}
 {"name": "True Passion Shisha Tabak - Cinderella", "flavor": "Maracuja Wassermelone Mango Beerenmix Honigmelone", "manufacturer": {"name": "True Passion Shisha"}}
 {"name": "True Passion Shisha Tabak - Okolom", "flavor": "Zitrone Holunder Ingwer", "manufacturer": {"name": "True Passion Shisha"}}
-{"name": "True Passion - Okolom Blue", "flavor": "Blaubeere,Limette,Holunder,Limonade", "manufacturer": {"name": "True"}}
+{"name": "True Passion - Okolom Blue", "flavor": "Blaubeere,Limette,Holunder,Limonade", "manufacturer": {"name": "True Passion"}}
 {"name": "187 Strassenbande Shisha Tabak – I Love Hamburg", "flavor": "Wassermelone Himbeere Blaubeere Erdbeere Honigmelone Johannisbeere", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "187 Strassenbande Shisha Tabak - Pink Mellow", "flavor": "Grapefruit Wassermelone Limette", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "7 Days Shisha Tabak - C. Peah", "flavor": "", "manufacturer": {"name": "7 Days Shisha"}}
@@ -1042,15 +1041,15 @@
 {"name": "True Passion Shisha Tabak - Okolom CB10", "flavor": "Holunder Ingwer Cranberry", "manufacturer": {"name": "True Passion Shisha"}}
 {"name": "True Passion Shisha Tabak - Okolom Jo-Jo", "flavor": "Limette Minze Holunder Johanisbeere", "manufacturer": {"name": "True Passion Shisha"}}
 {"name": "True Passion Shisha Tabak - Okolom Red", "flavor": "Holunder,Minze,Limette,Erdbeere", "manufacturer": {"name": "True Passion Shisha"}}
-{"name": "True Passion Shisha Tabak - Slushy WaMe", "flavor": "Wassermelone,Ice Shisha,Wasserpfeife Eine Shisha ist eine Wasserpeife dessen Ursprung in Indien,Persien liegt. Vor langer Zeit bestand ihr Material unter anderem aus Bambus. Heute hat die Shisha so wie wir sie kennen bereits viele Veränderungen,Innovationen hinter sich,so wurde Bambus durch diverse hochwertigere Materialien ersetzt wie z. B. Edelstahl oder Messing. Mittlerweile gibt es sie in unzähligen Variationen,sie ist international beliebt. Doch wie funktioniert eigentlich eine Shisha? Durch die Kohle die auf dem entsprechenden Aufsatz liegt,wird der darin enthaltende Tabak erhitzt. Der Rauch wird in der Bowl,welches ein Gefäß das mit Wasser befüllt ist,gefiltert. Somit entsteht dann der genüssliche Rauch den man ein- und auspustet.,woraus besteht eine Shisha? Sie wird durch viele Bestandteile zusam", "manufacturer": {"name": "True Passion Shisha"}}
+{"name": "True Passion Shisha Tabak - Slushy WaMe", "flavor": "Wassermelone,Ice", "manufacturer": {"name": "True Passion Shisha"}}
 {"name": "187 Strassenbande Shisha Tabak - Beach Vibes", "flavor": "Himbeere Zitrusmix", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "187 Strassenbande Shisha Tabak – Juicy Puzzy", "flavor": "Blaubeere Minze Limonade Honig", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "187 Strassenbande Shisha Tabak - #009 Wild Beast", "flavor": "Waldbeeren Beerenmix Tee", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "7 Days Shisha Tabak - C. Blue", "flavor": "", "manufacturer": {"name": "7 Days Shisha"}}
 {"name": "7 Days Shisha Tabak - C. Cherr", "flavor": "Kirsche Ice", "manufacturer": {"name": "7 Days Shisha"}}
 {"name": "Al-Fakher Shisha Tabak - Big Blue", "flavor": "Blaubeere", "manufacturer": {"name": "Al-Fakher Shisha"}}
-{"name": "Adalya Shisha Tabak - Lady Killer", "flavor": "Melone,Mango,Beerenmix Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
-{"name": "Adalya Shisha Tabak - Mng Tango Ice", "flavor": "Ice,Mango,Maracuja,Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Lady Killer", "flavor": "Melone,Mango,Beerenmix ", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Mng Tango Ice", "flavor": "Ice,Mango,Maracuja,", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "AINO Shisha Tabak - Bad Rule White", "flavor": "Blaubeere Energy Kokusnuss", "manufacturer": {"name": "AINO Shisha"}}
 {"name": "AINO Shisha Tabak - Fruit Squad", "flavor": "Wassermelone Limette Johannisbeere", "manufacturer": {"name": "AINO Shisha"}}
 {"name": "AINO Shisha Tabak - Lady Mammalade", "flavor": "Kirsche Heidelbeere", "manufacturer": {"name": "AINO Shisha"}}
@@ -1069,7 +1068,7 @@
 {"name": "Banger Tobacco Shisha Tabak - Happy Birthday", "flavor": "Zitrone,Exotische Früchte", "manufacturer": {"name": "Banger"}}
 {"name": "Dschinni Shisha Tabak - Pe Ar Frsh", "flavor": "Eis Birne", "manufacturer": {"name": "Dschinni Shisha"}}
 {"name": "Holster Shisha Tabak - Mr. John", "flavor": "Ananas,Zitrone", "manufacturer": {"name": "Holster Shisha"}}
-{"name": "HOOKAIN Shisha Tabak - Bubblenciaga", "flavor": "Kaugummi (süß) Shisha,Wasserpfeife Eine Shisha ist eine Wasserpfeife dessen Ursprung in Indien,Persien liegt. Vor langer Zeit bestand ihr Material unter anderem aus Bambus. Heute hat die Shisha so wie wir sie kennen bereits viele Veränderungen,Innovationen hinter sich,so wurde Bambus durch diverse hochwertigere Materialien ersetzt wie z. B. Edelstahl oder Messing. Mittlerweile gibt es sie in unzähligen Variationen und sie ist international beliebt. Doch wie funktioniert eigentlich eine Shisha? Durch die Kohle die auf dem entsprechenden Aufsatz liegt,wird der darin enthaltende Tabak erhitzt. Der Rauch wird in der Bowl,welches ein Gefäß das mit Wasser befüllt ist,gefiltert. Somit entsteht dann der genüssliche Rauch den man ein- und auspustet.,woraus besteht eine Shisha? Sie wird durch viele Bestandteile zusam", "manufacturer": {"name": "HOOKAIN Shisha"}}
+{"name": "HOOKAIN Shisha Tabak - Bubblenciaga", "flavor": "Kaugummi (süß)", "manufacturer": {"name": "HOOKAIN Shisha"}}
 {"name": "HOOKAIN Shisha Tabak - Zenta Schox", "flavor": "Limette,Zitrone", "manufacturer": {"name": "HOOKAIN Shisha"}}
 {"name": "HOOKAIN Shisha Tabak - Fellatio", "flavor": "Maracuja Wassermelone Waldbeere Honigmelone", "manufacturer": {"name": "HOOKAIN Shisha"}}
 {"name": "HOOKAIN Shisha Tabak - Kaffa Yayo", "flavor": "Kokosnuss,Mandeln,Milch", "manufacturer": {"name": "HOOKAIN Shisha"}}
@@ -1083,7 +1082,7 @@
 {"name": "Argileh Shisha Tabak - Chapo Piks", "flavor": "Kaktusfeige,Eis", "manufacturer": {"name": "Argileh Shisha"}}
 {"name": "Argileh Shisha Tabak - OG & M", "flavor": "Minze Orange", "manufacturer": {"name": "Argileh Shisha"}}
 {"name": "Maridan Shisha Tabak - Tingle Tangle Breeze", "flavor": "Grapefruit,Maracuja,Limette,Minze", "manufacturer": {"name": "Maridan Shisha"}}
-{"name": "Maridan Shisha Tabak - Tingle Tangle Tropical", "flavor": "Grapefruit,Maracuja,Limette,tropische Früchte Geschmack: Maracuja Limette Grapefruit Versand", "manufacturer": {"name": "Maridan Shisha"}}
+{"name": "Maridan Shisha Tabak - Tingle Tangle Tropical", "flavor": "Maracuja Limette Grapefruit", "manufacturer": {"name": "Maridan Shisha"}}
 {"name": "True Passion Shisha Tabak - Okolom Gold", "flavor": "Holunder,Zitrone,Limette,Birne", "manufacturer": {"name": "True Passion Shisha"}}
 {"name": "True Passion Shisha Tabak - Co Crush", "flavor": "Holunder Ingwer Cola Cranberry", "manufacturer": {"name": "True Passion Shisha"}}
 {"name": "True Passion Shisha Tabak - oKaKola", "flavor": "Limette Holunder Ingwer Cola Cranberry", "manufacturer": {"name": "True Passion Shisha"}}
@@ -1094,7 +1093,7 @@
 {"name": "True Passion Shisha Tabak - Vampire Nights", "flavor": "Grapefruit Blutorange", "manufacturer": {"name": "True Passion Shisha"}}
 {"name": "True Passion Shisha Tabak - Wame", "flavor": "Wassermelone Eis", "manufacturer": {"name": "True Passion Shisha"}}
 {"name": "187 Strassenbande Shisha Tabak - Quelle", "flavor": "Traube,Minze", "manufacturer": {"name": "187 Strassenbande Shisha"}}
-{"name": "187 Strassenbande - #015 Red Light District", "flavor": "KiBa ( Kirsche,Banane ),Menthol Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Mango,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "187"}}
+{"name": "187 Strassenbande - #015 Red Light District", "flavor": "KiBa ( Kirsche,Banane ),Menthol", "manufacturer": {"name": "187"}}
 {"name": "187 Strassenbande Shisha Tabak - Happy Cactuz", "flavor": "Limette,Kaktusfeige,Maracuja", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "7 Days Shisha Tabak - C. Lim", "flavor": "Limette,Ice", "manufacturer": {"name": "7 Days Shisha"}}
 {"name": "7 Days Shisha Tabak - C. Melo", "flavor": "Eis Wassermelone", "manufacturer": {"name": "7 Days Shisha"}}
@@ -1102,12 +1101,12 @@
 {"name": "HOOKAIN Shisha Tabak - Spiced Lean", "flavor": "Limette Kirsche Blaubeere Schwarzer Tee Zitrone", "manufacturer": {"name": "HOOKAIN Shisha"}}
 {"name": "Whitecloud / Capital Bra Smoke - 365 Tage", "flavor": "Kaktusfeige", "manufacturer": {"name": "Whitecloud"}}
 {"name": "AAMOZA Shisha Tabak - TM", "flavor": "Traube Minze", "manufacturer": {"name": "AAMOZA Shisha"}}
-{"name": "Adalya Shisha Tabak - Berlin Nights", "flavor": "Pfirsich Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Mango,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
-{"name": "Adalya Shisha Tabak - Double Yellow", "flavor": "Wassermelone,Honigmelone Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,türkischer Kaugummi (Falim),Ananas,Mango,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
-{"name": "Adalya Shisha Tabak - Ice Lie on the Rocks", "flavor": "Limette Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Mango,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
-{"name": "Adalya Shisha Tabak - Mng Tango", "flavor": "Mango,Maracuja Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
-{"name": "Adalya Shisha Tabak - Straw Bana Ice", "flavor": "Erdbeere,Banane Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Mango,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
-{"name": "Adalya Shisha Tabak - Tynky Wynky", "flavor": "Grapefruit,Maracuja,Limette Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Mango,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Berlin Nights", "flavor": "Pfirsich ", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Double Yellow", "flavor": "Wassermelone,Honigmelone", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Ice Lie on the Rocks", "flavor": "Limette ", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Mng Tango", "flavor": "Mango,Maracuja ", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Straw Bana Ice", "flavor": "Erdbeere,Banane ", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Tynky Wynky", "flavor": "Grapefruit,Maracuja,Limette ", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "AINO Shisha Tabak - Red Ice", "flavor": "Ice Johannisbeere", "manufacturer": {"name": "AINO Shisha"}}
 {"name": "AINO Shisha Tabak - The Great Raspy", "flavor": "Himbeere", "manufacturer": {"name": "AINO Shisha"}}
 {"name": "Al-Fakher Shisha Tabak - Fuchsia", "flavor": "Himbeere", "manufacturer": {"name": "Al-Fakher Shisha"}}
@@ -1125,8 +1124,8 @@
 {"name": "HOOKAIN Shisha Tabak - Green Lean", "flavor": "Limette,Zitrone", "manufacturer": {"name": "HOOKAIN Shisha"}}
 {"name": "HOOKAIN - Soleiro Spliff", "flavor": "Maracuja Vanille Mango", "manufacturer": {"name": "HOOKAIN"}}
 {"name": "Jookah Shisha Tabak - Frosty Kakty", "flavor": "Eis Kaktusfeige", "manufacturer": {"name": "Jookah Shisha"}}
-{"name": "Maridan Shisha Tabak - Kola", "flavor": "Cola Geschmack: Cola Versand", "manufacturer": {"name": "Maridan Shisha"}}
-{"name": "Maridan Shisha Tabak - Kauzi", "flavor": "Kaugummi,Zimt Geschmack: Kaugummi Zimt Versand", "manufacturer": {"name": "Maridan Shisha"}}
+{"name": "Maridan Shisha Tabak - Kola", "flavor": "Cola", "manufacturer": {"name": "Maridan Shisha"}}
+{"name": "Maridan Shisha Tabak - Kauzi", "flavor": "Kaugummi,Zimt", "manufacturer": {"name": "Maridan Shisha"}}
 {"name": "Maridan Shisha Tabak - Taube Mieze", "flavor": "", "manufacturer": {"name": "Maridan Shisha"}}
 {"name": "Ocean Shisha Tabak - Azzure", "flavor": "Blaubeere", "manufacturer": {"name": "Ocean Shisha"}}
 {"name": "Ocean Shisha Tabak - Kaif", "flavor": "Limette Ice Zitrone", "manufacturer": {"name": "Ocean Shisha"}}
@@ -1139,10 +1138,10 @@
 {"name": "187 Strassenbande Shisha Tabak – I Scream Pistacio", "flavor": "", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "Argileh Shisha Tabak - 2App Babylon", "flavor": "Doppelapfel,Anis", "manufacturer": {"name": "Argileh Shisha"}}
 {"name": "Maridan Shisha Tabak - Tingle Tangle Purple", "flavor": "Maracuja Limette Beerenmix", "manufacturer": {"name": "Maridan Shisha"}}
-{"name": "True Passion - Love Story", "flavor": "Blaubeere,Erdbeere,Brombeere,Himbeere", "manufacturer": {"name": "True"}}
+{"name": "True Passion - Love Story", "flavor": "Blaubeere,Erdbeere,Brombeere,Himbeere", "manufacturer": {"name": "True Passion"}}
 {"name": "True Passion Shisha Tabak - Okolom White", "flavor": "Holunder,Limette,Kokosnuss Geschmack: Holunder Ingwer Kokosnuss Zitrone Versand", "manufacturer": {"name": "True Passion Shisha"}}
-{"name": "True Passion - Pista Wave", "flavor": "Blaubeere,Erdbeere,Brombeere,Himbeere", "manufacturer": {"name": "True"}}
-{"name": "True Passion - Rainbow", "flavor": "Blaubeere,Erdbeere,Brombeere,Himbeere", "manufacturer": {"name": "True"}}
+{"name": "True Passion - Pista Wave", "flavor": "Blaubeere,Erdbeere,Brombeere,Himbeere", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion - Rainbow", "flavor": "Blaubeere,Erdbeere,Brombeere,Himbeere", "manufacturer": {"name": "True Passion"}}
 {"name": "187 Strassenbande Shisha Tabak - Sparkling Ize-T", "flavor": "Minze Zitrone Menthol", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "187 Strassenbande Shisha Tabak – Sparkling Peaz", "flavor": "Zitrone Minze Menthol", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "187 Strassenbande Shisha Tabak - Voodoo King", "flavor": "Fruchtmix", "manufacturer": {"name": "187 Strassenbande Shisha"}}
@@ -1151,14 +1150,14 @@
 {"name": "7 Days Shisha Tabak - Green Slip", "flavor": "Minze", "manufacturer": {"name": "7 Days Shisha"}}
 {"name": "Adalya Shisha Tabak - Punk Man", "flavor": "Roter Beerenmix,Erdbeere", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "HOOKAIN - Dubai Stachio", "flavor": "", "manufacturer": {"name": "HOOKAIN"}}
-{"name": "Adalya Shisha Tabak - Blue Ice +", "flavor": "Blaubeere Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Mango,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
-{"name": "Adalya Shisha Tabak - Cindys", "flavor": "Beeren,Mango,Maracuja,Wassermelone,Honigmelone Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,türkischer Kaugummi (Falim),Ananas,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
-{"name": "Adalya Shisha Tabak - Green Leon Cool", "flavor": "Limette Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Mango,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Blue Ice +", "flavor": "Blaubeere ", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Cindys", "flavor": "Beeren,Mango,Maracuja,Wassermelone,Honigmelone", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Green Leon Cool", "flavor": "Limette ", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "Adalya Shisha Tabak - Hawaii", "flavor": "Mango Ananas Versand", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "Adalya Shisha Tabak - Ice Boni", "flavor": "Bonbon Versand", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "Adalya Shisha Tabak - Ice Pyc", "flavor": "Pfirsich Geschmack: Pfirsich Versand", "manufacturer": {"name": "Adalya Shisha"}}
-{"name": "Adalya Shisha Tabak - The Two App", "flavor": "intensiver Doppelapfel Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Mango,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
-{"name": "Adalya Shisha Tabak - Waterlon", "flavor": "Wassermelone Shisha,Wasserpfeife Eine Shisha ist eine Wasserpeife dessen Ursprung in Indien,Persien liegt. Vor langer Zeit bestand ihr Material unter anderem aus Bambus. Heute hat die Shisha so wie wir sie kennen bereits viele Veränderungen,Innovationen hinter sich,so wurde Bambus durch diverse hochwertigere Materialien ersetzt wie z. B. Edelstahl oder Messing. Mittlerweile gibt es sie in unzähligen Variationen,sie ist international beliebt. Doch wie funktioniert eigentlich eine Shisha? Durch die Kohle die auf dem entsprechenden Aufsatz liegt,wird der darin enthaltende Tabak erhitzt. Der Rauch wird in der Bowl,welches ein Gefäß das mit Wasser befüllt ist,gefiltert. Somit entsteht dann der genüssliche Rauch den man ein- und auspustet.,woraus besteht eine Shisha? Sie wird durch viele Bestandteile zusam", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - The Two App", "flavor": "intensiver Doppelapfel ", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Adalya Shisha Tabak - Waterlon", "flavor": "Wassermelone", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "Adalya Shisha Tabak - Waterlon Cool", "flavor": "Wassermelone Geschmack: Wassermelone Minze Versand", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "AINO Shisha Tabak - Kwi Lover", "flavor": "Himbeere", "manufacturer": {"name": "AINO Shisha"}}
 {"name": "AINO Shisha Tabak - Le Monyze", "flavor": "Minze Zitrone", "manufacturer": {"name": "AINO Shisha"}}
@@ -1181,23 +1180,23 @@
 {"name": "Ocean Shisha Tabak - Cerie", "flavor": "Kirsche Ice", "manufacturer": {"name": "Ocean Shisha"}}
 {"name": "Ocean Shisha Tabak - Orenj", "flavor": "Orange Ice", "manufacturer": {"name": "Ocean Shisha"}}
 {"name": "Ocean Shisha Tabak - Koka", "flavor": "Cola Kracher", "manufacturer": {"name": "Ocean Shisha"}}
-{"name": "Shades - Kwickie", "flavor": "Kiwi Shisha,Wasserpfeife Eine Shisha ist eine Wasserpfeife dessen Ursprung in Indien,Persien liegt. Vor langer Zeit bestand ihr Material unter anderem aus Bambus. Heute hat die Shisha so wie wir sie kennen bereits viele Veränderungen,Innovationen hinter sich,so wurde Bambus durch diverse hochwertigere Materialien ersetzt wie z. B. Edelstahl oder Messing. Mittlerweile gibt es sie in unzähligen Variationen,sie ist international beliebt. Doch wie funktioniert eigentlich eine Shisha? Durch die Kohle die auf dem entsprechenden Aufsatz liegt,wird der darin enthaltende Tabak erhitzt. Der Rauch wird in der Bowl,welches ein Gefäß das mit Wasser befüllt ist,gefiltert. Somit entsteht dann der genüssliche Rauch den man ein- und auspustet.,woraus besteht eine Shisha? Sie wird durch viele Bestandteile zusam", "manufacturer": {"name": "Shades"}}
+{"name": "Shades - Kwickie", "flavor": "Kiwi", "manufacturer": {"name": "Shades"}}
 {"name": "Social Smoke Shisha Tabak - Twisted", "flavor": "", "manufacturer": {"name": "Social Smoke Shisha"}}
 {"name": "Stral Shisha Tabak - Basil Barry", "flavor": "Basil Berry (Beerenmix mit Basilikum)", "manufacturer": {"name": "Stral Shisha"}}
 {"name": "Stral Shisha Tabak200g - Black min", "flavor": "Black Min (kräftige Minze mit dunkler,aromatischer Note)", "manufacturer": {"name": "Stral"}}
 {"name": "Stral Shisha Tabak - Orang Tik Tak", "flavor": "Orange mit Minz-,Mentholnote", "manufacturer": {"name": "Stral Shisha"}}
 {"name": "Stral Shisha Tabak - Red Cherri", "flavor": "Kirsche", "manufacturer": {"name": "Stral Shisha"}}
-{"name": "True Passion - Alaska Blue", "flavor": "Blaubeere,Eis Shisha,Wasserpfeife Eine Shisha ist eine Wasserpeife dessen Ursprung in Indien,Persien liegt. Vor langer Zeit bestand ihr Material unter anderem aus Bambus. Heute hat die Shisha so wie wir sie kennen bereits viele Veränderungen,Innovationen hinter sich,so wurde Bambus durch diverse hochwertigere Materialien ersetzt wie z. B. Edelstahl oder Messing. Mittlerweile gibt es sie in unzähligen Variationen,sie ist international beliebt. Doch wie funktioniert eigentlich eine Shisha? Durch die Kohle die auf dem entsprechenden Aufsatz liegt,wird der darin enthaltende Tabak erhitzt. Der Rauch wird in der Bowl,welches ein Gefäß das mit Wasser befüllt ist,gefiltert. Somit entsteht dann der genüssliche Rauch den man ein- und auspustet.,woraus besteht eine Shisha? Sie wird durch viele Bestandteile zusam", "manufacturer": {"name": "True"}}
-{"name": "True Passion - Blue X", "flavor": "Blaubeere Shisha,Wasserpfeife Eine Shisha ist eine Wasserpeife dessen Ursprung in Indien,Persien liegt. Vor langer Zeit bestand ihr Material unter anderem aus Bambus. Heute hat die Shisha so wie wir sie kennen bereits viele Veränderungen,Innovationen hinter sich,so wurde Bambus durch diverse hochwertigere Materialien ersetzt wie z. B. Edelstahl oder Messing. Mittlerweile gibt es sie in unzähligen Variationen,sie ist international beliebt. Doch wie funktioniert eigentlich eine Shisha? Durch die Kohle die auf dem entsprechenden Aufsatz liegt,wird der darin enthaltende Tabak erhitzt. Der Rauch wird in der Bowl,welches ein Gefäß das mit Wasser befüllt ist,gefiltert. Somit entsteht dann der genüssliche Rauch den man ein- und auspustet.,woraus besteht eine Shisha? Sie wird durch viele Bestandteile zusam", "manufacturer": {"name": "True"}}
+{"name": "True Passion - Alaska Blue", "flavor": "Blaubeere,Eis ", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion - Blue X", "flavor": "Blaubeere ", "manufacturer": {"name": "True Passion"}}
 {"name": "True Passion Shisha Tabak - Red Ice", "flavor": "Ice rote Beerenmix", "manufacturer": {"name": "True Passion Shisha"}}
-{"name": "True Passion - Water Twist", "flavor": "Blaubeere,Erdbeere,Brombeere,Himbeere", "manufacturer": {"name": "True"}}
-{"name": "True Passion - Wild Water", "flavor": "Ingwer Limette Holunder Orange Drachenfrucht Cola Cranberry", "manufacturer": {"name": "True"}}
+{"name": "True Passion - Water Twist", "flavor": "Blaubeere,Erdbeere,Brombeere,Himbeere", "manufacturer": {"name": "True Passion"}}
+{"name": "True Passion - Wild Water", "flavor": "Ingwer Limette Holunder Orange Drachenfrucht Cola Cranberry", "manufacturer": {"name": "True Passion"}}
 {"name": "187 Strassenbande Shisha Tabak – FCK TUZ", "flavor": "Kaktusfeige,Ice", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "187 Strassenbande Shisha Tabak – Old School Bang", "flavor": "Doppelapfel Anis", "manufacturer": {"name": "187 Strassenbande Shisha"}}
 {"name": "7 Days Shisha Tabak - C. Death", "flavor": "Eis Menthol", "manufacturer": {"name": "7 Days Shisha"}}
-{"name": "Fumari Shisha Tabak - Maison Bleu", "flavor": "Blaubeer Muffin Shisha,Wasserpfeife Eine Shisha ist eine Wasserpeife dessen Ursprung in Indien,Persien liegt. Vor langer Zeit bestand ihr Material unter anderem aus Bambus. Heute hat die Shisha so wie wir sie kennen bereits viele Veränderungen,Innovationen hinter sich,so wurde Bambus durch diverse hochwertigere Materialien ersetzt wie z. B. Edelstahl oder Messing. Mittlerweile gibt es sie in unzähligen Variationen,sie ist international beliebt. Doch wie funktioniert eigentlich eine Shisha? Durch die Kohle die auf dem entsprechenden Aufsatz liegt,wird der darin enthaltende Tabak erhitzt. Der Rauch wird in der Bowl,welches ein Gefäß das mit Wasser befüllt ist,gefiltert. Somit entsteht dann der genüssliche Rauch den man ein- und auspustet.,woraus besteht eine Shisha? Sie wird durch viele Bestandteile zusam", "manufacturer": {"name": "Fumari Shisha"}}
-{"name": "Fumari Shisha Tabak - Sorrentocello", "flavor": "Limone Shisha,Wasserpfeife Eine Shisha ist eine Wasserpeife dessen Ursprung in Indien,Persien liegt. Vor langer Zeit bestand ihr Material unter anderem aus Bambus. Heute hat die Shisha so wie wir sie kennen bereits viele Veränderungen,Innovationen hinter sich,so wurde Bambus durch diverse hochwertigere Materialien ersetzt wie z. B. Edelstahl oder Messing. Mittlerweile gibt es sie in unzähligen Variationen,sie ist international beliebt. Doch wie funktioniert eigentlich eine Shisha? Durch die Kohle die auf dem entsprechenden Aufsatz liegt,wird der darin enthaltende Tabak erhitzt. Der Rauch wird in der Bowl,welches ein Gefäß das mit Wasser befüllt ist,gefiltert. Somit entsteht dann der genüssliche Rauch den man ein- und auspustet.,woraus besteht eine Shisha? Sie wird durch viele Bestandteile zusam", "manufacturer": {"name": "Fumari Shisha"}}
-{"name": "Adalya Shisha Tabak - Blue Dragon", "flavor": "Drachenfrucht,Blaubeere Shisha-Tabak Das wohl wichtigste Merkmal für Shisha-Tabak ist,dass es sich um feuchten Tabak handelt. Dieser besteht aus Rohtabak,Glycerin,verschiedenen Aromen. In dieser Zusammensetzung ist der Shisha-Tabak vor allem im europäischen Raum äußerst beliebt. Es gibt unzählige,ausgefallene Geschmacksrichtungen. Der ursprüngliche Shisha-Tabak,wie wir ihn noch in arabischen Ländern finden,ist nicht aromatisiert,deutlich stärker,als der Aromatisierte. Allerdings sind es die kreativen,leckeren Aromen,die den Shisha-Tabak so beliebt machen. Die bekannteste,Geschmacksrichtung ist Doppelapfel,ein Tradi-Tabak,der auch meist in einer Tradi-Shisha geraucht wird. Weitere beliebte Sorten sind Traube-Minze,Kaugummi,Pfirsisch,Wassermelone,türkischer Kaugummi (Falim),Ananas,Mango,Beeren . Die Geschmacksvielfalt kennt keine Grenzen,so entstehen auch Geschmacksrichtungen wie Zitronenkuchen,Eis-Bonbon . Bekannte Tabak-", "manufacturer": {"name": "Adalya Shisha"}}
+{"name": "Fumari Shisha Tabak - Maison Bleu", "flavor": "Blaubeer Muffin ", "manufacturer": {"name": "Fumari Shisha"}}
+{"name": "Fumari Shisha Tabak - Sorrentocello", "flavor": "Limone ", "manufacturer": {"name": "Fumari Shisha"}}
+{"name": "Adalya Shisha Tabak - Blue Dragon", "flavor": "Drachenfrucht,Blaubeere ", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "Adalya Shisha Tabak - Code Dragon", "flavor": "Cola Versand", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "Adalya Shisha Tabak - Ice Kaktü", "flavor": "Kaktusfeige Versand", "manufacturer": {"name": "Adalya Shisha"}}
 {"name": "AINO Shisha Tabak - Cearo", "flavor": "Cola Birne", "manufacturer": {"name": "AINO Shisha"}}
