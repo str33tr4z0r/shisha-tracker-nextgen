@@ -49,7 +49,7 @@ run kubectl delete -f k8s/NKP/backend/backend.yaml -n "$NAMESPACE" --ignore-not-
 
 # 3) Delete CouchDB StatefulSet, Deployments & Services (by manifest and by label)
 # Delete manifest-driven resources (if present)
-run kubectl delete -f k8s/NKP/NKP/database/couchdb-statefulset.yaml -n "$NAMESPACE" --ignore-not-found
+run kubectl delete -f k8s/NKP/database/couchdb-statefulset.yaml -n "$NAMESPACE" --ignore-not-found
 #run kubectl delete -f k8s/NKP/database/couchdb-service.yaml -n "$NAMESPACE" --ignore-not-found
 #run kubectl delete -f k8s/NKP/database/couchdb-headless.yaml -n "$NAMESPACE" --ignore-not-found
 run kubectl delete -f k8s/NKP/basic-database/couchdb.yaml -n "$NAMESPACE" --ignore-not-found || true
