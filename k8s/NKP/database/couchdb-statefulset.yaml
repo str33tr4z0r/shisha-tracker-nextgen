@@ -1,0 +1,595 @@
+# =====================================================================
+# CouchDB Cluster: run & scale
+# Namespace: shisha
+# =====================================================================
+
+# ------------------------------------------------------------
+# (Optional) Basis-ConfigMap für /opt/couchdb/etc/local.d
+# ------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: couchdb-config
+  namespace: shisha
+data:
+  00-local.ini: |
+    [chttpd]
+    port = 5984
+    bind_address = 0.0.0.0
+
+---
+# ------------------------------------------------------------
+# Cluster-Manager Skripte (mit Remote enable_cluster)
+# ------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: couchdb-scripts
+  namespace: shisha
+  labels:
+    app: couchdb
+data:
+  manager.sh: |
+    #!/bin/sh
+    set -eu
+    LOGPFX="[cluster-manager]"
+    COUCH_HOST="127.0.0.1"
+    COUCH_PORT=5984
+    CLUSTER="/_cluster_setup"
+    MEMBERSHIP="/_membership"
+    HEALTH="/_up"
+    : "${COUCHDB_USER:?need}"
+    : "${COUCHDB_PASSWORD:?need}"
+    : "${HOSTNAME:?need}"
+    : "${POD_NAMESPACE:?need}"
+
+    log(){ echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ') $LOGPFX $*"; }
+
+    curl_local(){
+      m="$1"; p="$2"; d="${3:-}"
+      if [ -n "$d" ]; then
+        curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" -H "Content-Type: application/json" -X "$m" "http://${COUCH_HOST}:${COUCH_PORT}${p}" -d "$d"
+      else
+        curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" -X "$m" "http://${COUCH_HOST}:${COUCH_PORT}${p}"
+      fi
+    }
+    curl_remote(){
+      host="$1"; m="$2"; p="$3"; d="${4:-}"
+      if [ -n "$d" ]; then
+        curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" -H "Content-Type: application/json" -X "$m" "http://${host}:5984${p}" -d "$d"
+      else
+        curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" -X "$m" "http://${host}:5984${p}"
+      fi
+    }
+
+    wait_up(){
+      for i in $(seq 1 120); do
+        if curl_local GET "${HEALTH}" >/dev/null 2>&1; then return 0; fi
+        [ "$i" -gt 10 ] && sleep 2 || sleep 1
+      done
+      return 1
+    }
+
+    fqdn_for_ordinal(){ idx="$1"; echo "couchdb-${idx}.couchdb-headless.${POD_NAMESPACE}.svc.cluster.local"; }
+
+    k8s_list_ordinals(){
+      SA_TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
+      SA_CA_FILE="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      API="https://kubernetes.default.svc"
+      [ -r "$SA_TOKEN_FILE" ] || { echo ""; return 0; }
+      T=$(cat "$SA_TOKEN_FILE")
+
+      # 1) EndpointSlices (discovery.k8s.io/v1)
+      R_es="$(curl -sS --cacert "$SA_CA_FILE" -H "Authorization: Bearer $T" \
+            "${API}/apis/discovery.k8s.io/v1/namespaces/${POD_NAMESPACE}/endpointslices?labelSelector=kubernetes.io/service-name=couchdb-headless" || true)"
+      ords_es="$(printf '%s' "$R_es" | grep -o 'couchdb-[0-9]\+' | sed 's/.*-\([0-9]\+\)$/\1/' | sort -n | uniq | tr '\n' ' ')"
+      [ -n "$ords_es" ] && { echo "$ords_es"; return 0; }
+
+      # 2) Fallback: Endpoints (v1)
+      R_ep="$(curl -sS --cacert "$SA_CA_FILE" -H "Authorization: Bearer $T" \
+            "${API}/api/v1/namespaces/${POD_NAMESPACE}/endpoints/couchdb-headless" || true)"
+      ords_ep="$(printf '%s' "$R_ep" | grep -o 'couchdb-[0-9]\+' | sed 's/.*-\([0-9]\+\)$/\1/' | sort -n | uniq | tr '\n' ' ')"
+      [ -n "$ords_ep" ] && { echo "$ords_ep"; return 0; }
+
+      # 3) Fallback: Pods (v1)
+      R_pods="$(curl -sS --cacert "$SA_CA_FILE" -H "Authorization: Bearer $T" \
+              "${API}/api/v1/namespaces/${POD_NAMESPACE}/pods?labelSelector=app=couchdb" || true)"
+      ords_pods="$(printf '%s' "$R_pods" | grep -o 'couchdb-[0-9]\+' | sed 's/.*-\([0-9]\+\)$/\1/' | sort -n | uniq | tr '\n' ' ')"
+      echo "$ords_pods"
+    }
+
+
+
+    enable_cluster_local(){
+      count="$1"
+      payload=$(printf '{"action":"enable_cluster","bind_address":"0.0.0.0","username":"%s","password":"%s","node_count":%s}' \
+        "$COUCHDB_USER" "$COUCHDB_PASSWORD" "$count")
+      log "enable_cluster(local) node_count=${count}"
+      curl_local POST "${CLUSTER}" "$payload" >/dev/null 2>&1 || true
+    }
+    enable_cluster_remote(){
+      host="$1"
+      payload=$(printf '{"action":"enable_cluster","bind_address":"0.0.0.0","username":"%s","password":"%s"}' \
+        "$COUCHDB_USER" "$COUCHDB_PASSWORD")
+      log "enable_cluster(remote) host=${host}"
+      curl_remote "$host" POST "${CLUSTER}" "$payload" >/dev/null 2>&1 || true
+    }
+
+    membership_contains(){
+      node="$1"
+      m="$(curl_local GET "${MEMBERSHIP}" 2>/dev/null || true)"
+      printf '%s' "$m" | grep -F "$node" >/dev/null 2>&1
+    }
+
+    try_add_with_host(){
+      hostval="$1"
+      log "add_node try host=${hostval}"
+      payload=$(printf '{"action":"add_node","host":"%s","port":5984,"username":"%s","password":"%s"}' \
+        "$hostval" "$COUCHDB_USER" "$COUCHDB_PASSWORD")
+      for backoff in 1 2 3 5 8; do
+        body="$(curl_local POST "${CLUSTER}" "$payload" 2>&1 || true)"
+        echo "$body" | grep -qi '"ok"[[:space:]]*:[[:space:]]*true' && { log "add_node ok host=${hostval}"; return 0; }
+        echo "$body" | grep -qi 'already\|exists' && { log "add_node already host=${hostval}"; return 0; }
+        log "add_node retry in ${backoff}s host=${hostval} resp=${body}"
+        sleep "$backoff"
+      done
+      return 1
+    }
+
+    add_node_auto(){
+      ord="$1"
+      fqdn="$(fqdn_for_ordinal "$ord")"
+      node="couchdb@${fqdn}"
+
+      # kurze Up-Wartezeit auf Peer
+      for t in 1 2 3 5; do
+        curl -sS "http://${fqdn}:5984/_up" >/dev/null 2>&1 && break || sleep "$t"
+      done
+
+      # 1) host=<FQDN>
+      try_add_with_host "$fqdn" && membership_contains "$node" && return 0
+
+      # 2) host=couchdb@<FQDN>
+      try_add_with_host "$node" && membership_contains "$node" && return 0
+
+      # 3) host=<IP> (falls resolvbar)
+      ip="$(getent hosts "$fqdn" 2>/dev/null | awk '{print $1}' | head -n1 || true)"
+      if [ -n "$ip" ]; then
+        try_add_with_host "$ip" && membership_contains "$node" && return 0
+      fi
+
+      log "WARN add_node failed for ordinal=${ord} fqdn=${fqdn}"
+      return 1
+    }
+
+    finish_cluster_and_wait(){
+      log "finish_cluster(local)"
+      curl_local POST "${CLUSTER}" '{"action":"finish_cluster"}' >/dev/null 2>&1 || true
+
+      # Warte bis alle bekannten Pods in cluster_nodes sind (max 60s)
+      want="$(k8s_list_ordinals | wc -w | tr -d ' ')"
+      case "${want:-0}" in ""|0) want=1;; esac
+
+      log "waiting membership cluster_nodes == ${want}"
+      for i in $(seq 1 30); do
+        m="$(curl_local GET "${MEMBERSHIP}" 2>/dev/null || true)"
+        have="$(printf '%s' "$m" | grep -o '"cluster_nodes":[[:space:]]*\[[^]]*\]' | tr -cd 'c' | wc -c | tr -d ' ' || echo 0)"
+        # Fallback: zähle Einträge grob
+        have_alt="$(printf '%s' "$m" | sed -n 's/.*"cluster_nodes":[[:space:]]*\[\(.*\)\].*/\1/p' | tr -d '" ' | awk -F, '{print NF}' )"
+        [ -n "$have_alt" ] && have="$have_alt"
+        log "membership check: have=${have} want=${want} (i=${i})"
+        [ "$have" -ge "$want" ] && { log "cluster ready"; log "membership: $m"; return 0; }
+        sleep 2
+      done
+      log "WARN membership did not reach desired size"
+      curl_local GET "${MEMBERSHIP}" || true
+    }
+
+    ensure_system_db(){
+      db="$1"
+      r="$(curl_local GET "/${db}" 2>/dev/null || true)"
+      echo "$r" | grep -q '"error"' || { log "system db ok: ${db}"; return 0; }
+      curl_local PUT "/${db}" >/dev/null 2>&1 || true
+      log "system db ensured: ${db}"
+    }
+
+    ensure_app_db(){
+      db="$1"
+      r="$(curl_local GET "/${db}" 2>/dev/null || true)"
+      echo "$r" | grep -q '"error"' || { log "app db ok: ${db}"; return 0; }
+      for backoff in 1 2 3 5 8; do
+        b="$(curl_local PUT "/${db}" 2>&1 || true)"
+        echo "$b" | grep -qi '"ok"[[:space:]]*:[[:space:]]*true' && { log "app db created: ${db}"; return 0; }
+        echo "$b" | grep -qi 'file_exists' && { log "app db exists: ${db}"; return 0; }
+        sleep "$backoff"
+      done
+      log "WARN app db not created: ${db}"
+    }
+
+    my_ordinal(){ echo "${HOSTNAME##*-}"; }
+
+    current_leader_ord(){
+      ords="$(k8s_list_ordinals)"
+      log "k8s ordinals: ${ords:-<none>}"
+      # erstes (kleinstes) Element aus der sortierten Liste
+      for o in $ords; do echo "$o"; break; done
+    }
+
+    i_am_leader(){
+      me="$(my_ordinal)"
+      ords="$(k8s_list_ordinals)"
+      # Bootstrap-Fallback: wenn Discovery leer, lass couchdb-0 führen
+      if [ -z "$ords" ]; then
+        [ "$me" = "0" ] && return 0 || return 1
+      fi
+      # Leader = kleinstes Ready-Ordinal
+      for o in $ords; do
+        [ "$o" = "$me" ] && return 0 || break
+      done
+      return 1
+    }
+
+
+    reconcile_once(){
+      ensure_system_db "_users"
+      ensure_system_db "_replicator"
+      ensure_app_db "shisha"
+
+      if ! i_am_leader; then
+        return 0
+      fi
+
+      ords="$(k8s_list_ordinals)"
+      log "k8s ordinals: ${ords:-<none>}"
+      count="$(printf '%s\n' "$ords" | wc -w | tr -d ' ')"
+      case "${count:-0}" in ""|0) count=1;; esac
+
+      enable_cluster_local "$count"
+
+      for o in $ords; do
+        [ "$o" = "0" ] && continue
+        enable_cluster_remote "$(fqdn_for_ordinal "$o")"
+      done
+
+      for o in $ords; do
+        [ "$o" = "0" ] && continue
+        add_node_auto "$o" || true
+      done
+
+      finish_cluster_and_wait
+    }
+
+    main(){
+      log "manager start (ns=${POD_NAMESPACE}, host=${HOSTNAME})"
+      wait_up || { log "couch not up"; exit 1; }
+      reconcile_once
+      log "leader check: me=$(my_ordinal) leader=$(current_leader_ord || echo '?')"
+      while true; do
+        sleep 15
+        reconcile_once
+      done
+    }
+    main
+
+  prestop.sh: |
+    #!/bin/sh
+    set -eu
+    LOGPFX="[cluster-manager-prestop]"
+    : "${COUCHDB_USER:?need}"
+    : "${COUCHDB_PASSWORD:?need}"
+    : "${HOSTNAME:?need}"
+    : "${POD_NAMESPACE:?need}"
+    COUCH="http://127.0.0.1:5984"
+    NODE="couchdb@${HOSTNAME}.couchdb-headless.${POD_NAMESPACE}.svc.cluster.local"
+    log(){ echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ') $LOGPFX $*"; }
+    remove_node(){
+      payload=$(printf '{"action":"remove_node","name":"%s"}' "$NODE")
+      for backoff in 1 2 3 5; do
+        curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" -H "Content-Type: application/json" \
+          -X POST "${COUCH}/_cluster_setup" -d "$payload" >/dev/null 2>&1 || true
+        m="$(curl -sS -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" "${COUCH}/_membership" 2>/dev/null || true)"
+        echo "$m" | grep -q "$NODE" || { log "removed ${NODE}"; return 0; }
+        sleep "$backoff"
+      done
+      log "WARN could not confirm removal of ${NODE}"
+    }
+    log "preStop begin for ${NODE}"; remove_node || true; log "preStop end"
+
+
+---
+# RBAC
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: couchdb-sa
+  namespace: shisha
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: couchdb-sidecar-role
+  namespace: shisha
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get","list"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get","list"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get","list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: couchdb-sidecar-rb
+  namespace: shisha
+subjects:
+  - kind: ServiceAccount
+    name: couchdb-sa
+    namespace: shisha
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: couchdb-sidecar-role
+
+---
+# Headless Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: couchdb-headless
+  namespace: shisha
+  labels:
+    app: couchdb
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: false
+  selector:
+    app: couchdb
+  ports:
+    - { name: http,        port: 5984, targetPort: 5984 }
+    - { name: epmd,        port: 4369, targetPort: 4369 }
+    - { name: erlang-9100, port: 9100, targetPort: 9100 }
+    - { name: erlang-9101, port: 9101, targetPort: 9101 }
+    - { name: erlang-9102, port: 9102, targetPort: 9102 }
+    - { name: erlang-9103, port: 9103, targetPort: 9103 }
+    - { name: erlang-9104, port: 9104, targetPort: 9104 }
+    - { name: erlang-9105, port: 9105, targetPort: 9105 }
+
+---
+# StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: couchdb
+  namespace: shisha
+  labels:
+    app: couchdb
+spec:
+  serviceName: couchdb-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: couchdb
+  template:
+    metadata:
+      labels:
+        app: couchdb
+    spec:
+      serviceAccountName: couchdb-sa
+      terminationGracePeriodSeconds: 120
+      securityContext:
+        runAsUser: 5984
+        runAsGroup: 5984
+        fsGroup: 5984
+        fsGroupChangePolicy: OnRootMismatch
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app: couchdb
+
+      initContainers:
+        - name: init-cookie
+          image: busybox:1.36
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -eu
+              mkdir -p /cookie
+              cp /secret/.erlang.cookie /cookie/.erlang.cookie
+              chown 5984:5984 /cookie/.erlang.cookie
+              chmod 400 /cookie/.erlang.cookie
+          volumeMounts:
+            - name: erlang-cookie-secret
+              mountPath: /secret
+              readOnly: true
+            - name: erlang-cookie-file
+              mountPath: /cookie
+
+        - name: init-admins
+          image: busybox:1.36
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          command: ["/bin/sh","-c"]
+          env:
+            - name: COUCHDB_USER
+              valueFrom: { secretKeyRef: { name: shisha-couchdb-admin, key: COUCHDB_USER } }
+            - name: COUCHDB_PASSWORD
+              valueFrom: { secretKeyRef: { name: shisha-couchdb-admin, key: COUCHDB_PASSWORD } }
+          args:
+            - |
+              set -eu
+              mkdir -p /locald
+              # Admins-INI in extra local.d-Volume schreiben (kein Verzeichnis-Mount überschreiben)
+              cat > /locald/10-admins.ini <<EOF
+              [admins]
+              ${COUCHDB_USER} = ${COUCHDB_PASSWORD}
+              EOF
+              chown 5984:5984 /locald/10-admins.ini
+              chmod 640 /locald/10-admins.ini
+          volumeMounts:
+            - name: couchdb-locald-extra
+              mountPath: /locald
+
+        - name: fix-perms
+          image: busybox:1.36
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -eu
+              mkdir -p /data
+              chown -R 5984:5984 /data
+          volumeMounts:
+            - name: couchdb-data
+              mountPath: /data
+
+      containers:
+        - name: couchdb
+          image: couchdb:3.2.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 5984 }
+            - { name: epmd, containerPort: 4369 }
+            - { name: erlang-9100, containerPort: 9100 }
+            - { name: erlang-9101, containerPort: 9101 }
+            - { name: erlang-9102, containerPort: 9102 }
+            - { name: erlang-9103, containerPort: 9103 }
+            - { name: erlang-9104, containerPort: 9104 }
+            - { name: erlang-9105, containerPort: 9105 }
+          env:
+            - name: POD_NAMESPACE
+              valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+            - name: HOSTNAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: ERLANG_COOKIE
+              valueFrom: { secretKeyRef: { name: shisha-couchdb-admin, key: ERLANG_COOKIE } }
+          command: ["/bin/sh","-lc"]
+          args:
+            - |
+              set -eu
+              HOST_FQDN="${HOSTNAME}.couchdb-headless.${POD_NAMESPACE}.svc.cluster.local"
+              # WICHTIG: kein NODENAME exportieren!
+              export ERL_FLAGS="-name couchdb@${HOST_FQDN} -setcookie ${ERLANG_COOKIE} -kernel inet_dist_listen_min 9100 inet_dist_listen_max 9105"
+              exec /opt/couchdb/bin/couchdb
+          readinessProbe:
+            httpGet: { path: /_up, port: 5984 }
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 6
+          livenessProbe:
+            httpGet: { path: /_up, port: 5984 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 8
+          volumeMounts:
+            - name: couchdb-data
+              mountPath: /opt/couchdb/data
+            - name: erlang-cookie-file
+              mountPath: /opt/couchdb/.erlang.cookie
+              subPath: .erlang.cookie
+              readOnly: true
+            - name: couchdb-config
+              mountPath: /opt/couchdb/etc/local.d/00-local.ini
+              subPath: 00-local.ini
+              readOnly: true
+            - name: couchdb-locald-extra
+              mountPath: /opt/couchdb/etc/local.d/10-admins.ini
+              subPath: 10-admins.ini
+              readOnly: true
+
+        - name: cluster-manager
+          image: curlimages/curl:8.1.0
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -eu
+              /opt/couchdb-scripts/manager.sh
+          env:
+            - name: POD_NAMESPACE
+              valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+            - name: COUCHDB_USER
+              valueFrom: { secretKeyRef: { name: shisha-couchdb-admin, key: COUCHDB_USER } }
+            - name: COUCHDB_PASSWORD
+              valueFrom: { secretKeyRef: { name: shisha-couchdb-admin, key: COUCHDB_PASSWORD } }
+            - name: HOSTNAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh","-c","/opt/couchdb-scripts/prestop.sh || true"]
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - 'curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:5984/_up | grep -q "^200$"'
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 12
+          volumeMounts:
+            - name: couchdb-scripts
+              mountPath: /opt/couchdb-scripts
+              readOnly: true
+
+      volumes:
+        - name: couchdb-scripts
+          configMap:
+            name: couchdb-scripts
+            defaultMode: 0755
+        - name: couchdb-config
+          configMap:
+            name: couchdb-config
+        - name: couchdb-locald-extra   # Admin-INI aus init-admins
+          emptyDir: {}
+        - name: erlang-cookie-secret
+          secret:
+            secretName: shisha-couchdb-admin
+            items:
+              - key: ERLANG_COOKIE
+                path: .erlang.cookie
+        - name: erlang-cookie-file
+          emptyDir: {}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: couchdb-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: couchdb-storage-class
+        resources:
+          requests:
+            storage: 5Gi
+
+---
+# Client Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: shisha-couchdb
+  namespace: shisha
+  labels:
+    app: couchdb
+spec:
+  type: ClusterIP
+  selector:
+    app: couchdb
+  ports:
+    - { name: http, port: 5984, targetPort: 5984 }

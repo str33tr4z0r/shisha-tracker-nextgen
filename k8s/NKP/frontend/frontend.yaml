@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shisha-frontend
+  namespace: shisha
+  labels:
+    app: shisha-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shisha-frontend
+  template:
+      metadata:
+        labels:
+          app: shisha-frontend
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  topologyKey: "kubernetes.io/hostname"
+                  labelSelector:
+                    matchLabels:
+                      app: shisha-frontend
+        containers:
+          - name: frontend
+            image: ghcr.io/str33tr4z0r/shisha-tracker-nextgen-frontend:latest
+            imagePullPolicy: Always
+            ports:
+              - containerPort: 80
+                name: http
+            resources:
+              requests:
+                cpu: "200m"
+                memory: "256Mi"
+              limits:
+                cpu: "500m"
+                memory: "512Mi"
+            volumeMounts:
+              - name: nginx-conf
+                mountPath: /etc/nginx/conf.d
+                readOnly: true
+            readinessProbe:
+              httpGet:
+                path: /
+                port: http
+              initialDelaySeconds: 5
+              periodSeconds: 10
+              timeoutSeconds: 2
+            livenessProbe:
+              httpGet:
+                path: /
+                port: http
+              initialDelaySeconds: 20
+              periodSeconds: 20
+              timeoutSeconds: 2
+        volumes:
+          - name: nginx-conf
+            configMap:
+              name: shisha-frontend-nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shisha-frontend
+  namespace: shisha
+  labels:
+    app: shisha-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: shisha-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

@@ -26,7 +26,7 @@ run() {
 echo "Namespace: $NAMESPACE"
 
 # PreStage
-run kubectl apply -f k8s/K3s/PreStage/namespace.yaml
+#run kubectl apply -f k8s/NKP/PreStage/namespace.yaml
 run kubectl create secret generic shisha-couchdb-admin -n "$NAMESPACE" \
   --from-literal=username=shisha_admin \
   --from-literal=password=ichbin1AdminPasswort! \
@@ -35,29 +35,29 @@ run kubectl create secret generic shisha-couchdb-admin -n "$NAMESPACE" \
   --from-literal=COUCHDB_PASSWORD=ichbin1AdminPasswort!
 
 
-run kubectl apply -f k8s/K3s/PreStage/couchdb-storageclass.yaml -n "$NAMESPACE"
-#run kubectl apply -f k8s/K3s/couchdb-pv.yaml -n "$NAMESPACE"
-#run kubectl apply -f k8s/K3s/couchdb.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/PreStage/couchdb-storageclass.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/NKP/couchdb-pv.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/NKP/couchdb.yaml -n "$NAMESPACE"
 #run kubectl rollout status deployment/shisha-couchdb -n "$NAMESPACE" --timeout=120s
-run kubectl apply -f k8s/K3s/PreStage/ingress-traefik.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/PreStage/ingress-traefik.yaml -n "$NAMESPACE"
 
 #Couchdb
-#run kubectl apply -f k8s/K3s/database/couchdb-rbac.yaml -n "$NAMESPACE"
-#run kubectl apply -f k8s/K3s/database/couchdb-config.yaml -n "$NAMESPACE"
-#run kubectl apply -f k8s/K3s/database/couchdb-scripts-configmap.yaml -n "$NAMESPACE"
-#run kubectl apply -f k8s/K3s/database/couchdb-headless.yaml -n "$NAMESPACE"
-#run kubectl apply -f k8s/K3s/database/couchdb-service.yaml -n "$NAMESPACE"
-run kubectl apply -f k8s/K3s/database/couchdb-statefulset.yaml -n "$NAMESPACE"
-#run kubectl apply -f k8s/K3s/database/couchdb-networkpolicy.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/NKP/database/couchdb-rbac.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/NKP/database/couchdb-config.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/NKP/database/couchdb-scripts-configmap.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/NKP/database/couchdb-headless.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/NKP/database/couchdb-service.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/database/couchdb-statefulset.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/NKP/database/couchdb-networkpolicy.yaml -n "$NAMESPACE"
 run kubectl rollout status statefulset/couchdb -n "$NAMESPACE" --timeout=240s
 
 #Backend
-run kubectl apply -f k8s/K3s/backend/backend.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/backend/backend.yaml -n "$NAMESPACE"
 run kubectl rollout status deployment/shisha-backend-mock -n "$NAMESPACE" --timeout=120s
 
 #Frontend
-run kubectl apply -f k8s/K3s/frontend/shisha-frontend-nginx-configmap.yaml -n "$NAMESPACE"
-run kubectl apply -f k8s/K3s/frontend/frontend.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/frontend/shisha-frontend-nginx-configmap.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/frontend/frontend.yaml -n "$NAMESPACE"
 run kubectl rollout status deployment shisha-frontend -n "$NAMESPACE" --timeout=120s
 
 #run kubectl patch svc shisha-frontend -n "$NAMESPACE" --type='merge' -p '{"spec":{"externalIPs":["10.11.12.13"]}}'
@@ -70,16 +70,16 @@ run sleep 40
 #run kubectl logs -l job-name=shisha-sample-data -n "$NAMESPACE" --tail=200
 
 #HPA / PDBs / Optionales Monitoring
-run kubectl apply -f k8s/K3s/hpa/hpa-backend.yaml -n "$NAMESPACE"
-run kubectl apply -f k8s/K3s/hpa/hpa-frontend.yaml -n "$NAMESPACE"
-run kubectl apply -f k8s/K3s/pdb/pdb-backend.yaml -n "$NAMESPACE"
-run kubectl apply -f k8s/K3s/pdb/pdb-frontend.yaml -n "$NAMESPACE"
-run kubectl apply -f k8s/K3s/hpa/couchdb-hpa.yaml -n "$NAMESPACE"
-run kubectl apply -f k8s/K3s/pdb/couchdb-pdb.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/hpa/hpa-backend.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/hpa/hpa-frontend.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/pdb/pdb-backend.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/pdb/pdb-frontend.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/hpa/couchdb-hpa.yaml -n "$NAMESPACE"
+run kubectl apply -f k8s/NKP/pdb/couchdb-pdb.yaml -n "$NAMESPACE"
 
 
 #PostStage (optional)
-#run kubectl apply -f k8s/K3s/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/NKP/PostStage/shisha-sample-data.yaml -n "$NAMESPACE"
 
 # 9) Final checks
 echo 'Final resource check (filtered by name '"$NAMESPACE"')'

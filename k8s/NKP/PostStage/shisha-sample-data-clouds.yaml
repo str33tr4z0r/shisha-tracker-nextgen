@@ -1,0 +1,91 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: shisha-sample-data-clouds
+  namespace: shisha
+  labels:
+    app: shisha-sample-data-clouds
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 1
+  completions: 1
+  parallelism: 1
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: seed
+          image: curlimages/curl:8.2.1
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              # Embedded sample data (one JSON object per line)
+              cat <<'JSONS' > /tmp/shishas.jsonl
+              {"name": "Two Apples / Doppelapfel", "flavor": "Grüner und Roter Apfel mit Anis", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Fresh Mint / Minze", "flavor": "Minze", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Traube Minze", "flavor": "Helle Traube mit Minze", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Blaubeere Minze", "flavor": "Blaubeere mit Minze", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Kaugummi Minze", "flavor": "Kaugummi mit Minze", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Kaugummi Zimt", "flavor": "Kaugummi mit Zimt", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Orange Minze", "flavor": "Orange mit Minze", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Wassermelone", "flavor": "Wassermelone", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Tinge Tangle", "flavor": "Maracuja, Limette, Grapefruit", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Okolom", "flavor": "Holunderblüte, Limette", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Cinderella", "flavor": "Beerenmix, Himbeere, Honigmelone, Mango, Maracuja", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Ringe Rangle", "flavor": "Maracuja, Limette, Grapefruit", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Lady Killer", "flavor": "Honigmelone, Beerenmix, Mango", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Black Box", "flavor": "Acai", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Himiko", "flavor": "Limette, Kiwi, Himbeere", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Kiyoshi", "flavor": "Blutorange, Drachenfrucht", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Nubu Naga", "flavor": "Birne, Maracuja, Limette", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Mango Tango Ice", "flavor": "Mango, Maracuja, Ice", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Cold Peach", "flavor": "Pfirsich, Ice", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Cold Cherry", "flavor": "Kirsche, Ice", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Love 66", "flavor": "Wassermelone, Honigmelone, Beerenmix, Ice", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "African Queen", "flavor": "24 verschiedene Früchte", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Bonnie & Clyde", "flavor": "Grüner Apfel, Menthol", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Black Nana", "flavor": "Dunkle Traube, Minze", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Ice Kaktuz", "flavor": "Kaktuseis", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Lemon Fresh", "flavor": "Zitrone, Minze, Menthol", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Hamburg", "flavor": "Beerenmix", "manufacturer": {"name": "187 Strassenbande Shisha"}}
+              {"name": "Pistachio", "flavor": "Pistazie", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Quwi Punch", "flavor": "Kiwi", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Cloudy Mystery", "flavor": "???", "manufacturer": {"name": "Tabak-Cloudsbar"}}
+              {"name": "Darkside Wild Forest", "flavor": "Erdbeere, Waldbeere", "manufacturer": {"name": "Darkside"}}
+              {"name": "Darkside Space J", "flavor": "frische Erdbeermarmelade", "manufacturer": {"name": "Darkside"}}
+              {"name": "Darkside Space Desert", "flavor": "Tiramisu", "manufacturer": {"name": "Darkside"}}
+              {"name": "Darkside Black B", "flavor": "Brombeere", "manufacturer": {"name": "Darkside"}}
+              {"name": "Darkside Tear", "flavor": "Birne", "manufacturer": {"name": "Darkside"}}
+              {"name": "Darkside Blacktorrent", "flavor": "Schwarze Johannisbeere", "manufacturer": {"name": "Darkside"}}
+              {"name": "Darkside Breaking Red", "flavor": "Granatapfel", "manufacturer": {"name": "Darkside"}}
+              {"name": "Darkside Falling Star", "flavor": "Mango und Maracuja", "manufacturer": {"name": "Darkside"}}
+              {"name": "Darkside Cosmos", "flavor": "Zitrusfrüchte, Moosbeere", "manufacturer": {"name": "Darkside"}}
+              {"name": "Black Burn Shok kurant Shok", "flavor": "Saure schwarze Johannisbeere", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Irish CRM", "flavor": "Irischer Whisky, Sahne", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Its not black Kurant", "flavor": "rote Johannisbeere", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Kiwi Stoner", "flavor": "Kiwi, Zitrone, hauch von Süßigkeit", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Chr. Garden", "flavor": "Kirsche", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn smth Merry", "flavor": "Blaubeeren, Brombeeren, Erdbeeren, Himbeeren", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Eldrgerry Shok", "flavor": "Holunder", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Apl Strudel", "flavor": "Apfelstrudel - Apfel, Teig", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Strobery Kokonat", "flavor": "Erdbeere, Kokosnuss", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Blackmerry lmnd", "flavor": "Brombeere Limonade", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Famous Apl", "flavor": "Grüner Apfel, Ice", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Iceberg", "flavor": "Ice Bonbon", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Strobery Jham", "flavor": "Erdbeermarmelade", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Summer Baskat", "flavor": "Himbeere, Wassermelone, Orange", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Ic Babi", "flavor": "Grapefruit, Beerenmix, Ice", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Kranmerry Shok", "flavor": "Cranberries", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Pinchgerry", "flavor": "Erdbeere, Pfirsich", "manufacturer": {"name": "Black Burn"}}
+              {"name": "Black Burn Mln halls", "flavor": "Melone, Ice", "manufacturer": {"name": "Black Burn"}}
+              JSONS
+              # Post each item to backend API (uses service shisha-backend-mock:8080)
+              while IFS= read -r line; do
+                [ -z "$line" ] && continue
+                echo "POST /api/shishas: $line"
+                curl -sS -X POST http://shisha-backend-mock:8080/api/shishas -H "Content-Type: application/json" -d "$line" || echo "post failed for $line"
+              done < /tmp/shishas.jsonl
+      serviceAccountName: default

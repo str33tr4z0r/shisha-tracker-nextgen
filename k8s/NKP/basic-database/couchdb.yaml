@@ -1,0 +1,92 @@
+# CouchDB deployment manifest for staged migration
+# Single-replica Deployment with PVC and Service. For production, use StatefulSet and proper secrets.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shisha-couchdb
+  namespace: shisha
+  labels:
+    app: shisha-couchdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shisha-couchdb
+  template:
+    metadata:
+      labels:
+        app: shisha-couchdb
+    spec:
+      # initContainer removed — seeding moved into container postStart hook
+      containers:
+        - name: couchdb
+          image: couchdb:3.2.2
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: username
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shisha-couchdb-admin
+                  key: password
+          ports:
+            - containerPort: 5984
+              name: http
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    # run seeding in background so main process can start
+                    (sleep 5
+                    set -eu
+                    until curl -sSf http://localhost:5984/; do
+                      echo "waiting for local couchdb..."
+                      sleep 2
+                    done
+                    curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X PUT http://localhost:5984/shisha || true
+                    curl -sS -u "$COUCHDB_USER:$COUCHDB_PASSWORD" -X POST http://localhost:5984/shisha/_index -H "Content-Type: application/json" -d '{"index":{"fields":["type","id"]},"name":"idx_type_id","type":"json"}' || true
+                    ) &
+          volumeMounts:
+            - name: couchdb-data
+              mountPath: /opt/couchdb/data
+      volumes:
+        - name: couchdb-data
+          persistentVolumeClaim:
+            claimName: shisha-couchdb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shisha-couchdb
+  namespace: shisha
+  labels:
+    app: shisha-couchdb
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5984
+      targetPort: 5984
+      protocol: TCP
+      name: http
+  selector:
+    app: shisha-couchdb
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shisha-couchdb-pvc
+  namespace: shisha
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: ""
