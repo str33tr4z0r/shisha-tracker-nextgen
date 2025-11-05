@@ -35,7 +35,7 @@ run kubectl create secret generic shisha-couchdb-admin -n "$NAMESPACE" \
   --from-literal=COUCHDB_PASSWORD=ichbin1AdminPasswort!
 
 
-run kubectl apply -f k8s/NKP/PreStage/couchdb-storageclass.yaml -n "$NAMESPACE"
+#run kubectl apply -f k8s/NKP/PreStage/couchdb-storageclass.yaml -n "$NAMESPACE"
 #run kubectl apply -f k8s/NKP/couchdb-pv.yaml -n "$NAMESPACE"
 #run kubectl apply -f k8s/NKP/couchdb.yaml -n "$NAMESPACE"
 #run kubectl rollout status deployment/shisha-couchdb -n "$NAMESPACE" --timeout=120s

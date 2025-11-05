@@ -573,7 +573,7 @@ spec:
         name: couchdb-data
       spec:
         accessModes: ["ReadWriteOnce"]
-        storageClassName: couchdb-storage-class
+        storageClassName: nutanix-volume
         resources:
           requests:
             storage: 5Gi
